@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
+import { Link } from "react-router-dom";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -41,6 +42,9 @@ export default function Login() {
           {loading ? "Iniciando sesión..." : "Iniciar sesión"}
         </button>
       </form>
+      <p>
+        ¿No tienes cuenta? <Link to="/register">Regístrate</Link>
+      </p>
     </div>
   );
 }

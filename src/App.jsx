@@ -8,9 +8,11 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Transactions from "./pages/Transactions";
 
+//Components
+import SideBar from "./components/SideBar";
+
 function App() {
   const [session, setSession] = useState(null);
-  const [isRegister, setIsRegister] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -28,21 +30,28 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Routes>
-        {!session ? (
-          <>
+      {!session ? (
+        <>
+          <Routes>
             <Route path="/login" element={<Login />}></Route>
             <Route path="/register" element={<Register />}></Route>
             <Route path="*" element={<Navigate to="/login" />}></Route>
-          </>
-        ) : (
-          <>
-            <Route path="/" element={<Dashboard />}></Route>
-            <Route path="/transactions" element={<Transactions />}></Route>
-            <Route path="*" element={<Navigate to="/" />}></Route>
-          </>
-        )}
-      </Routes>
+          </Routes>
+        </>
+      ) : (
+        <>
+          <div className="d-flex w-100 min-vh-100">
+            <SideBar />
+            <main className="flex-grow-1 p-4 bg-light text-start">
+              <Routes>
+                <Route path="/" element={<Dashboard />}></Route>
+                <Route path="/transactions" element={<Transactions />}></Route>
+                <Route path="*" element={<Navigate to="/" />}></Route>
+              </Routes>
+            </main>
+          </div>
+        </>
+      )}
     </BrowserRouter>
   );
 }
