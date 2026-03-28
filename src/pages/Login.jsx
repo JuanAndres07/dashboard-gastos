@@ -1,33 +1,30 @@
 import { useState } from "react";
-import { supabase } from "./lib/supabase";
+import { supabase } from "../lib/supabase";
 
-export default function Register() {
+export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleRegister = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-
-    const { error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
     if (error) {
-      console.error("Error al registrar:", error.message);
+      console.error("Error al iniciar sesión:", error.message);
     } else {
-      alert("Revisa tu correo para confirmar el registro");
-      setEmail("");
-      setPassword("");
+      console.log("Inicio de sesión exitoso");
     }
     setLoading(false);
   };
 
   return (
     <div>
-      <h1>Registrarse</h1>
-      <form onSubmit={handleRegister}>
+      <h1>Iniciar sesión</h1>
+      <form onSubmit={handleLogin}>
         <input
           type="email"
           placeholder="Email"
@@ -41,7 +38,7 @@ export default function Register() {
           onChange={(e) => setPassword(e.target.value)}
         />
         <button type="submit" disabled={loading}>
-          {loading ? "Cargando..." : "Registrarse"}
+          {loading ? "Iniciando sesión..." : "Iniciar sesión"}
         </button>
       </form>
     </div>
