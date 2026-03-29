@@ -26,12 +26,17 @@ export default function SideBar() {
       <ul className="nav nav-pills flex-column mb-auto text-start">
         <li className="nav-item mb-2">
           <Link to="/" className="nav-link">
-            Dashboard
+            Inicio
           </Link>
         </li>
         <li className="mb-2">
           <Link to="/transactions" className="nav-link">
-            Transactions
+            Transacciones
+          </Link>
+        </li>
+        <li className="mb-2">
+          <Link to="/categories" className="nav-link">
+            Categorías
           </Link>
         </li>
       </ul>

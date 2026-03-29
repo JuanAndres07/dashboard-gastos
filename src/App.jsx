@@ -7,6 +7,7 @@ import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Transactions from "./pages/Transactions";
+import Categories from "./pages/Categories";
 
 //Components
 import SideBar from "./components/SideBar";
@@ -46,6 +47,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<Dashboard />}></Route>
                 <Route path="/transactions" element={<Transactions />}></Route>
+                <Route path="/categories" element={<Categories />}></Route>
                 <Route path="*" element={<Navigate to="/" />}></Route>
               </Routes>
             </main>
