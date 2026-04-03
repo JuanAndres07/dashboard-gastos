@@ -10,15 +10,30 @@ export default function Categories() {
   }, []);
 
   async function fetchCategories() {
-    const { data, error } = await supabase
+    const { data: allCategories, error: errCat } = await supabase
       .from("Category")
       .select("*")
       .order("name", { ascending: true });
-    if (error) {
-      console.error("Error al obtener las categorías:", error.message);
-    } else {
-      setCategories(data || []);
+
+    const { data: hidden, error: errHidden } = await supabase
+      .from("HiddenCategories")
+      .select("category_id");
+
+    if (errCat || errHidden) {
+      alert(
+        "Error al obtener las categorías: " + errCat?.message ||
+          errHidden?.message,
+      );
+      return;
     }
+
+    const hiddenIds = hidden?.map((h) => h.category_id || []);
+
+    const visibleCategories = allCategories.filter(
+      (cat) => !hiddenIds.includes(cat.id),
+    );
+
+    setCategories(visibleCategories);
   }
 
   async function handleAddCategory(e) {
@@ -38,6 +53,45 @@ export default function Categories() {
     } else {
       setNewCategory("");
       fetchCategories();
+    }
+  }
+
+  async function handleDeleteCategory(category_id, is_global) {
+    if (is_global) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      const confirmation = window.confirm(
+        "¿Estás seguro que deseas ocultar esta categoría?",
+      );
+      if (!confirmation) return;
+
+      const { error } = await supabase
+        .from("HiddenCategories")
+        .insert([{ user_id: user.id, category_id: category_id }]);
+
+      if (error) {
+        alert("No se pudo ocultar la categoría: " + error.message);
+      } else {
+        fetchCategories();
+      }
+    } else {
+      const confirmation = window.confirm(
+        "¿Estás seguro que deseas eliminar esta categoría?",
+      );
+      if (!confirmation) return;
+
+      const { error } = await supabase
+        .from("Category")
+        .delete()
+        .eq("id", category_id);
+
+      if (error) {
+        alert("Error al eliminar la categoría: " + error.message);
+      } else {
+        fetchCategories();
+      }
     }
   }
 
@@ -63,7 +117,15 @@ export default function Categories() {
       <ul>
         {categories.map((category) => (
           <li key={category.id}>
-            {category.name} {category.user_id ? "👤" : "🌐"}
+            {category.name}
+            {category.user_id ? "👤" : "🌐"}
+            <button
+              onClick={() =>
+                handleDeleteCategory(category.id, !category.user_id)
+              }
+            >
+              {category.user_id ? "Eliminar" : "Ocultar"}
+            </button>
           </li>
         ))}
       </ul>
