@@ -4,6 +4,8 @@ import CategoryList from "../components/CategoryList";
 
 export default function Categories() {
   const [categories, setCategories] = useState([]);
+  const [hiddenCategories, setHiddenCategories] = useState([]);
+  const [showHidden, setShowHidden] = useState(false);
   const [viewMode, setViewMode] = useState("expense");
   const [newName, setNewName] = useState("");
 
@@ -23,19 +25,24 @@ export default function Categories() {
 
     if (errCat || errHidden) {
       alert(
-        "Error al obtener las categorías: " + errCat?.message ||
-          errHidden?.message,
+        "Error al obtener las categorías: " +
+          (errCat?.message || errHidden?.message),
       );
       return;
     }
 
-    const hiddenIds = hidden?.map((h) => h.category_id || []);
+    const hiddenIds = hidden?.map((h) => h.category_id) || [];
 
     const visibleCategories = allCategories.filter(
       (cat) => !hiddenIds.includes(cat.id),
     );
 
+    const hiddenCategories = allCategories.filter((cat) =>
+      hiddenIds.includes(cat.id),
+    );
+
     setCategories(visibleCategories);
+    setHiddenCategories(hiddenCategories);
   }
 
   async function handleAddCategory(e) {
@@ -98,6 +105,24 @@ export default function Categories() {
     }
   }
 
+  async function handleUnhideCategory(category_id) {
+    const confirmation = window.confirm(
+      "¿Estás seguro que deseas mostrar esta categoría?",
+    );
+    if (!confirmation) return;
+
+    const { error } = await supabase
+      .from("HiddenCategory")
+      .delete()
+      .eq("category_id", category_id);
+
+    if (error) {
+      alert("No se pudo mostrar la categoría: " + error.message);
+    } else {
+      fetchCategories();
+    }
+  }
+
   return (
     <div>
       <h1>Gestionar categorías</h1>
@@ -129,8 +154,27 @@ export default function Categories() {
       <CategoryList
         title={viewMode === "expense" ? "Gastos" : "Ingresos"}
         list={categories.filter((cat) => cat.type === viewMode)}
-        onAction={handleDeleteCategory}
+        onAction={(cat) => handleDeleteCategory(cat.id, !cat.user_id)}
+        color={viewMode === "expense" ? "red" : "green"}
       />
+
+      <div>
+        <button onClick={() => setShowHidden(!showHidden)}>
+          {showHidden ? "🔼 Ocultar papelera" : "🔽 Mostrar papelera"}
+        </button>
+
+        {showHidden && (
+          <CategoryList
+            title={
+              viewMode === "expense" ? "Gastos ocultos" : "Ingresos ocultos"
+            }
+            list={hiddenCategories.filter((cat) => cat.type === viewMode)}
+            onAction={(cat) => handleUnhideCategory(cat.id)}
+            onLabel="Recuperar"
+            color="gray"
+          />
+        )}
+      </div>
     </div>
   );
 }

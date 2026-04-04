@@ -1,13 +1,19 @@
-export default function CategoryList({ title, list, onAction }) {
+export default function CategoryList({
+  title,
+  list,
+  onAction,
+  onLabel,
+  color,
+}) {
   return (
     <section>
-      <h3 style={{ color: title === "Ingresos" ? "green" : "red" }}>{title}</h3>
+      <h3 style={{ color: color || "black" }}>{title}</h3>
       <ul>
         {list.map((cat) => (
           <li key={cat.id}>
             {cat.name} {cat.user_id ? "👤" : "🌐"}
             <button onClick={() => onAction(cat)}>
-              {cat.user_id ? "Eliminar" : "Ocultar"}
+              {onLabel ? onLabel : cat.user_id ? "Eliminar" : "Ocultar"}
             </button>
           </li>
         ))}
