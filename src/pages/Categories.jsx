@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
+import CategoryList from "../components/CategoryList";
 
 export default function Categories() {
   const [categories, setCategories] = useState([]);
-  const [newCategory, setNewCategory] = useState("");
+  const [viewMode, setViewMode] = useState("expense");
+  const [newName, setNewName] = useState("");
 
   useEffect(() => {
     fetchCategories();
@@ -16,7 +18,7 @@ export default function Categories() {
       .order("name", { ascending: true });
 
     const { data: hidden, error: errHidden } = await supabase
-      .from("HiddenCategories")
+      .from("HiddenCategory")
       .select("category_id");
 
     if (errCat || errHidden) {
@@ -44,14 +46,15 @@ export default function Categories() {
     } = await supabase.auth.getUser();
 
     const { error } = await supabase.from("Category").insert({
-      name: newCategory,
+      name: newName,
+      type: viewMode,
       user_id: user.id,
     });
 
     if (error) {
       alert("Error al agregar la categoría: " + error.message);
     } else {
-      setNewCategory("");
+      setNewName("");
       fetchCategories();
     }
   }
@@ -68,7 +71,7 @@ export default function Categories() {
       if (!confirmation) return;
 
       const { error } = await supabase
-        .from("HiddenCategories")
+        .from("HiddenCategory")
         .insert([{ user_id: user.id, category_id: category_id }]);
 
       if (error) {
@@ -99,12 +102,21 @@ export default function Categories() {
     <div>
       <h1>Gestionar categorías</h1>
 
+      <div>
+        <button onClick={() => setViewMode("expense")}>
+          Ver categorías de Gastos
+        </button>
+        <button onClick={() => setViewMode("income")}>
+          Ver categorías de Ingresos
+        </button>
+      </div>
+
       <form onSubmit={handleAddCategory}>
         <input
           type="text"
-          placeholder="Nombre de la categoría"
-          value={newCategory}
-          onChange={(e) => setNewCategory(e.target.value)}
+          placeholder={`Nombre de la categoría de ${viewMode}`}
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
           required
         />
         <button type="submit">Agregar</button>
@@ -114,21 +126,11 @@ export default function Categories() {
 
       <h3>Tus categorías</h3>
 
-      <ul>
-        {categories.map((category) => (
-          <li key={category.id}>
-            {category.name}
-            {category.user_id ? "👤" : "🌐"}
-            <button
-              onClick={() =>
-                handleDeleteCategory(category.id, !category.user_id)
-              }
-            >
-              {category.user_id ? "Eliminar" : "Ocultar"}
-            </button>
-          </li>
-        ))}
-      </ul>
+      <CategoryList
+        title={viewMode === "expense" ? "Gastos" : "Ingresos"}
+        list={categories.filter((cat) => cat.type === viewMode)}
+        onAction={handleDeleteCategory}
+      />
     </div>
   );
 }

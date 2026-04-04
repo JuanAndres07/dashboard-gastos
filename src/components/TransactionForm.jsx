@@ -19,7 +19,7 @@ export function TransactionForm({ onTransactionAdded }) {
       .order("name", { ascending: true });
 
     const { data: hiddenCategories, error: errHidden } = await supabase
-      .from("HiddenCategories")
+      .from("HiddenCategory")
       .select("category_id");
 
     if (errCat || errHidden) {
@@ -46,7 +46,7 @@ export function TransactionForm({ onTransactionAdded }) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    const { error } = await supabase.from("Transactions").insert([
+    const { error } = await supabase.from("Transaction").insert([
       {
         amount: parseFloat(amount),
         note: description,
