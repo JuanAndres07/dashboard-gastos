@@ -111,13 +111,20 @@ export default function Categories() {
     );
     if (!confirmation) return;
 
-    const { error } = await supabase
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    const { error, count } = await supabase
       .from("HiddenCategory")
-      .delete()
-      .eq("category_id", category_id);
+      .delete({ count: "exact" })
+      .eq("category_id", category_id)
+      .eq("user_id", session.user.id);
 
     if (error) {
       alert("No se pudo mostrar la categoría: " + error.message);
+    } else if (count === 0) {
+      alert("No se encontró la categoría para mostrar");
     } else {
       fetchCategories();
     }
