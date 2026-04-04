@@ -14,6 +14,10 @@ export default function Categories() {
   }, []);
 
   async function fetchCategories() {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     const { data: allCategories, error: errCat } = await supabase
       .from("Category")
       .select("*")
@@ -21,7 +25,8 @@ export default function Categories() {
 
     const { data: hidden, error: errHidden } = await supabase
       .from("HiddenCategory")
-      .select("category_id");
+      .select("category_id")
+      .eq("user_id", user.id);
 
     if (errCat || errHidden) {
       alert(
