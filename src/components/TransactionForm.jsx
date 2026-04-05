@@ -2,7 +2,10 @@ import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 
 export function TransactionForm({ onTransactionAdded }) {
+  const [type, setType] = useState("expense");
   const [categories, setCategories] = useState([]);
+  const [filteredCategories, setFilteredCategories] = useState([]);
+
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [categoryId, setCategoryId] = useState("");
@@ -13,6 +16,10 @@ export function TransactionForm({ onTransactionAdded }) {
   }, []);
 
   async function loadCategories() {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     const { data: allCategories, error: errCat } = await supabase
       .from("Category")
       .select("*")
@@ -20,7 +27,8 @@ export function TransactionForm({ onTransactionAdded }) {
 
     const { data: hiddenCategories, error: errHidden } = await supabase
       .from("HiddenCategory")
-      .select("category_id");
+      .select("category_id")
+      .eq("user_id", user.id);
 
     if (errCat || errHidden) {
       alert(
@@ -38,6 +46,12 @@ export function TransactionForm({ onTransactionAdded }) {
     setCategories(visibleCategories);
   }
 
+  useEffect(() => {
+    const filtered = categories.filter((cat) => cat.type === type);
+    setFilteredCategories(filtered);
+    setCategoryId("");
+  }, [categories, type]);
+
   async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);
@@ -52,7 +66,7 @@ export function TransactionForm({ onTransactionAdded }) {
         note: description,
         category_id: categoryId,
         user_id: user.id,
-        type: "expense",
+        type: type,
       },
     ]);
 
@@ -72,46 +86,50 @@ export function TransactionForm({ onTransactionAdded }) {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h3>Registrar movimiento</h3>
+    <div>
+      <div>
+        <button onClick={() => setType("expense")}>Egreso</button>
+        <button onClick={() => setType("income")}>Ingreso</button>
+      </div>
+      <form onSubmit={handleSubmit}>
+        <input
+          type="number"
+          placeholder="Monto"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          required
+        />
 
-      <input
-        type="number"
-        step="0.01"
-        placeholder="Monto"
-        value={amount}
-        onChange={(e) => setAmount(e.target.value)}
-        required
-      />
+        <input
+          type="text"
+          placeholder="Descripción"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
 
-      <input
-        type="text"
-        placeholder="Descripción"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        required
-      />
-
-      <select
-        name="category"
-        id="category_id"
-        value={categoryId}
-        onChange={(e) => setCategoryId(e.target.value)}
-        required
-      >
-        <option value="" disabled>
-          Selecciona una categoría
-        </option>
-        {categories.map((category) => (
-          <option key={category.id} value={category.id}>
-            {category.name}
+        <select
+          name="category"
+          id="category_id"
+          value={categoryId}
+          onChange={(e) => setCategoryId(e.target.value)}
+          required
+        >
+          <option value="" disabled>
+            Selecciona una categoría
           </option>
-        ))}
-      </select>
 
-      <button type="submit" disabled={loading}>
-        {loading ? "Agregando..." : "Agregar"}
-      </button>
-    </form>
+          {filteredCategories.map((cat) => (
+            <option key={cat.id} value={cat.id}>
+              {cat.name}
+            </option>
+          ))}
+        </select>
+
+        <button type="submit" disabled={loading}>
+          {loading ? "Agregando..." : "Agregar "}
+          {type === "expense" ? "Egreso" : "Ingreso"}
+        </button>
+      </form>
+    </div>
   );
 }
