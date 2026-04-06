@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 
-export function TransactionTable({ limit }) {
+export function TransactionTable({ limit, user }) {
   const [transaction, setTransaction] = useState([]);
   const [viewMode, setViewMode] = useState("expense");
   const [loading, setLoading] = useState(true);
@@ -17,16 +17,6 @@ export function TransactionTable({ limit }) {
 
   async function fetchTransactions() {
     setLoading(true);
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
-
-    if (sessionError || !session) {
-      alert("No hay sesión activa");
-      setLoading(false);
-      return;
-    }
 
     let query = supabase
       .from("Transaction")
@@ -41,7 +31,7 @@ export function TransactionTable({ limit }) {
         Category (name)
         `,
       )
-      .eq("user_id", session.user.id)
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
     if (limit) {

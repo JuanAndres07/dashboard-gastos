@@ -45,9 +45,18 @@ function App() {
             <SideBar />
             <main className="flex-grow-1 p-4 bg-light text-start">
               <Routes>
-                <Route path="/" element={<Dashboard />}></Route>
-                <Route path="/transactions" element={<Transactions />}></Route>
-                <Route path="/categories" element={<Categories />}></Route>
+                <Route
+                  path="/"
+                  element={<Dashboard user={session.user} />}
+                ></Route>
+                <Route
+                  path="/transactions"
+                  element={<Transactions user={session.user} />}
+                ></Route>
+                <Route
+                  path="/categories"
+                  element={<Categories user={session.user} />}
+                ></Route>
                 <Route path="*" element={<Navigate to="/" />}></Route>
               </Routes>
             </main>

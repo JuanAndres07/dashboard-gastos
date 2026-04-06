@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 
-export function TransactionForm({ onTransactionAdded }) {
+export function TransactionForm({ onTransactionAdded, user }) {
   const [type, setType] = useState("expense");
   const [categories, setCategories] = useState([]);
   const [filteredCategories, setFilteredCategories] = useState([]);
@@ -16,10 +16,6 @@ export function TransactionForm({ onTransactionAdded }) {
   }, []);
 
   async function loadCategories() {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
     const { data: allCategories, error: errCat } = await supabase
       .from("Category")
       .select("*")
@@ -55,10 +51,6 @@ export function TransactionForm({ onTransactionAdded }) {
   async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
 
     const { error } = await supabase.from("Transaction").insert([
       {

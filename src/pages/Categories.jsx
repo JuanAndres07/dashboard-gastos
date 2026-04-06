@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import CategoryList from "../components/CategoryList";
 
-export default function Categories() {
+export default function Categories({ user }) {
   const [categories, setCategories] = useState([]);
   const [hiddenCategories, setHiddenCategories] = useState([]);
   const [showHidden, setShowHidden] = useState(false);
@@ -14,10 +14,6 @@ export default function Categories() {
   }, []);
 
   async function fetchCategories() {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
     const { data: allCategories, error: errCat } = await supabase
       .from("Category")
       .select("*")
@@ -53,10 +49,6 @@ export default function Categories() {
   async function handleAddCategory(e) {
     e.preventDefault();
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
     const { error } = await supabase.from("Category").insert({
       name: newName,
       type: viewMode,
@@ -73,10 +65,6 @@ export default function Categories() {
 
   async function handleDeleteCategory(category_id, is_global) {
     if (is_global) {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
       const confirmation = window.confirm(
         "¿Estás seguro que deseas ocultar esta categoría?",
       );
@@ -116,15 +104,11 @@ export default function Categories() {
     );
     if (!confirmation) return;
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
     const { error, count } = await supabase
       .from("HiddenCategory")
       .delete({ count: "exact" })
       .eq("category_id", category_id)
-      .eq("user_id", session.user.id);
+      .eq("user_id", user.id);
 
     if (error) {
       alert("No se pudo mostrar la categoría: " + error.message);
