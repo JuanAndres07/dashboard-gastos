@@ -1,0 +1,115 @@
+/* Estilos para la página de Login (Refinados) */
+
+.login-container {
+  overflow: hidden;
+  background-color: white;
+}
+
+/* Lado Izquierdo con fondo interactivo */
+.login-visual-section {
+  position: relative;
+  background-color: var(--bg-light);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.interactive-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(0, 82, 204, 0.15) 0%,
+    transparent 50%
+  );
+  pointer-events: none;
+  z-index: -1;
+  transition: background 0.15s ease-out;
+}
+
+/* Contenedor del Formulario */
+.form-wrapper {
+  max-width: 450px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-control:focus {
+  background-color: white !important;
+  border-color: var(--primary-color) !important;
+  box-shadow: none !important;
+}
+
+.input-group-text {
+  border: 1px solid #e2e8f0;
+  border-right: none;
+  background-color: var(--bg-light);
+  color: #64748b;
+  padding-left: 16px;
+}
+
+.input-group:focus-within .input-group-text {
+  border-color: var(--primary-color);
+  background-color: white;
+}
+
+/* Etiquetas y Textos */
+.headline {
+  color: #05345c;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+  display: block;
+}
+
+/* Botón de envío */
+.btn-submit {
+  background: linear-gradient(135deg, var(--primary-color) 0%, #3b82f6 100%);
+  border: none;
+  padding: 16px;
+  border-radius: 12px;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 10px;
+  box-shadow: 0 4px 15px rgba(0, 82, 204, 0.2);
+  transition: all 0.3s ease;
+}
+
+.btn-submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 82, 204, 0.3);
+  filter: brightness(1.1);
+}
+
+.btn-submit:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Elemento decorativo */
+.feature-badge {
+  background: white;
+  padding: 8px 16px;
+  border-radius: 100px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--primary-color);
+  margin-top: 24px;
+}
+
+.footer-text {
+  margin-top: auto;
+  padding-bottom: 20px;
+  color: #94a3b8;
+  font-size: 0.8rem;
+}

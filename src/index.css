@@ -23,7 +23,7 @@ h6,
 .headline {
   font-family: "Manrope", sans-serif;
   font-weight: 700;
-  color: #0052cc;
+  color: #05345c;
 }
 
 label,
@@ -44,4 +44,8 @@ label,
 .btn-primary {
   background-color: var(--primary-color);
   font-family: "Inter", sans-serif;
+}
+
+.bg-light {
+  background-color: var(--bg-light) !important;
 }
