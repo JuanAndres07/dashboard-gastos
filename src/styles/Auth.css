@@ -1,12 +1,12 @@
-/* Estilos para la página de Login (Refinados) */
+/* Estilos compartidos para Autenticación (Login y Registro) */
 
-.login-container {
+.auth-container {
   overflow: hidden;
   background-color: white;
 }
 
 /* Lado Izquierdo con fondo interactivo */
-.login-visual-section {
+.auth-visual-section {
   position: relative;
   background-color: var(--bg-light);
   overflow: hidden;

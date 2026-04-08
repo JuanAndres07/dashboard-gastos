@@ -1,8 +1,9 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { supabase } from "../lib/supabase";
 import { Link } from "react-router-dom";
 import { IconMail, IconLockPassword, IconChartPie } from "@tabler/icons-react";
-import "../styles/Login.css";
+import AuthVisualSection from "../components/AuthVisualSection";
+import "../styles/Auth.css";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -11,22 +12,11 @@ export default function Login() {
   const [rememberMe, setRememberMe] = useState(() => {
     return localStorage.getItem("supabase.auth.rememberMe") === "true";
   });
-  const leftSectionRef = useRef(null);
-
-  const handleMouseMove = (e) => {
-    if (!leftSectionRef.current) return;
-    const { left, top, width, height } =
-      leftSectionRef.current.getBoundingClientRect();
-    const x = ((e.clientX - left) / width) * 100;
-    const y = ((e.clientY - top) / height) * 100;
-    leftSectionRef.current.style.setProperty("--mouse-x", `${x}%`);
-    leftSectionRef.current.style.setProperty("--mouse-y", `${y}%`);
-  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+
     // Guardar preferencia para el customStorage
     localStorage.setItem("supabase.auth.rememberMe", rememberMe);
 
@@ -35,7 +25,7 @@ export default function Login() {
       password,
     });
     if (error) {
-      console.error("Error al iniciar sesión:", error.message);
+      alert("Error al iniciar sesión: " + error.message);
     } else {
       console.log("Inicio de sesión exitoso");
     }
@@ -43,31 +33,24 @@ export default function Login() {
   };
 
   return (
-    <div className="container-fluid vh-100 login-container">
+    <div className="container-fluid vh-100 auth-container">
       <div className="row h-100">
-        {/* Columna Izquierda: Espacio para imágenes/visuales */}
-        <div
-          ref={leftSectionRef}
-          onMouseMove={handleMouseMove}
-          className="col-lg-6 login-visual-section d-none d-lg-flex"
-        >
-          <div className="interactive-bg"></div>
-          <div className="text-center p-5" style={{ zIndex: 2 }}>
-            <img src="/Logo.png" alt="Logo" width={400} />
-            <h1 className="display-5 mb-3">
+        {/* Columna Izquierda: Centralizada en AuthVisualSection */}
+        <AuthVisualSection
+          title={
+            <>
               <span className="text-primary">Domina</span> tu dinero, <br />
               <span className="text-primary">Diseña</span> tu futuro
-            </h1>
-            <p className="lead text-secondary opacity-75">
+            </>
+          }
+          subtitle={
+            <>
               Gestionar tus gastos no tiene por qué ser complicado. <br />
               Una interfaz limpia para un control total.
-            </p>
-            <div className="feature-badge">
-              <IconChartPie size={20} />
-              <span>Analítica inteligente en tiempo real</span>
-            </div>
-          </div>
-        </div>
+            </>
+          }
+          badgeText="Analítica inteligente en tiempo real"
+        />
 
         {/* Columna Derecha: Formulario de Login */}
         <div className="col-lg-6 d-flex flex-column align-items-center h-100 p-4">
@@ -131,7 +114,7 @@ export default function Login() {
                         setRememberMe(checked);
                         localStorage.setItem(
                           "supabase.auth.rememberMe",
-                          checked
+                          checked,
                         );
                       }}
                     />
