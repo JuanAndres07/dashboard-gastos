@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   IconMail,
   IconLockPassword,
@@ -16,6 +16,7 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -65,11 +66,7 @@ export default function Register() {
           "Este correo ya está registrado. Por favor, intenta iniciar sesión.",
         );
       } else {
-        alert("¡Registro exitoso! Revisa tu correo para confirmar tu cuenta.");
-        setName("");
-        setEmail("");
-        setPassword("");
-        setConfirmPassword("");
+        navigate("/confirm-email");
       }
     }
     setLoading(false);
