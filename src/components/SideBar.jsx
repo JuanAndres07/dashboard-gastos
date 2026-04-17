@@ -1,7 +1,19 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { NavLink, Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import {
+  IconLayoutDashboard,
+  IconReceipt,
+  IconCategory,
+  IconLogout,
+  IconChevronLeft,
+  IconChevronRight,
+} from "@tabler/icons-react";
+import "./SideBar.css";
 
 export default function SideBar() {
+  const [isExpanded, setIsExpanded] = useState(true);
+
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -11,39 +23,79 @@ export default function SideBar() {
     }
   };
 
+  const toggleSidebar = () => {
+    setIsExpanded(!isExpanded);
+  };
+
   return (
-    <aside
-      className="d-flex flex-column p-3"
-      style={{ width: "280px", minHeight: "100vh" }}
-    >
-      <Link
-        to="/"
-        className="d-flex align-items-center text-black text-decoration-none"
+    <aside className={`sidebar ${!isExpanded ? "collapsed" : ""}`}>
+      <button
+        className="toggle-btn"
+        onClick={toggleSidebar}
+        title={isExpanded ? "Contraer" : "Expandir"}
       >
-        <span className="fs-4">Mis Gastos</span>
-      </Link>
-      <hr />
-      <ul className="nav nav-pills flex-column mb-auto text-start">
-        <li className="nav-item mb-2">
-          <Link to="/" className="nav-link">
-            Inicio
-          </Link>
+        {isExpanded ? (
+          <IconChevronLeft size={16} />
+        ) : (
+          <IconChevronRight size={16} />
+        )}
+      </button>
+
+      <div className="sidebar-header">
+        <Link to="/" className="d-flex align-items-center text-decoration-none">
+          {isExpanded ? (
+            <img
+              src="/LogoHorizontal.png"
+              alt="FinFlow Logo"
+              className="logo-img expanded"
+            />
+          ) : (
+            <img src="/Icon.png" alt="Menu" className="logo-img collapsed" />
+          )}
+        </Link>
+      </div>
+
+      <ul className="nav-list">
+        <li className="nav-item">
+          <NavLink
+            to="/"
+            className={({ isActive }) =>
+              `nav-link-custom ${isActive ? "active" : ""}`
+            }
+            end
+          >
+            <IconLayoutDashboard size={22} />
+            <span className="link-text">Inicio</span>
+          </NavLink>
         </li>
-        <li className="mb-2">
-          <Link to="/transactions" className="nav-link">
-            Transacciones
-          </Link>
+        <li className="nav-item">
+          <NavLink
+            to="/transactions"
+            className={({ isActive }) =>
+              `nav-link-custom ${isActive ? "active" : ""}`
+            }
+          >
+            <IconReceipt size={22} />
+            <span className="link-text">Transacciones</span>
+          </NavLink>
         </li>
-        <li className="mb-2">
-          <Link to="/categories" className="nav-link">
-            Categorías
-          </Link>
+        <li className="nav-item">
+          <NavLink
+            to="/categories"
+            className={({ isActive }) =>
+              `nav-link-custom ${isActive ? "active" : ""}`
+            }
+          >
+            <IconCategory size={22} />
+            <span className="link-text">Categorías</span>
+          </NavLink>
         </li>
       </ul>
-      <hr />
-      <div className="dropdown">
-        <button onClick={handleLogout} className="btn btn-danger w-100">
-          Cerrar sesión
+
+      <div className="footer-section">
+        <button onClick={handleLogout} className="logout-btn">
+          <IconLogout size={20} />
+          <span className="logout-text">Cerrar sesión</span>
         </button>
       </div>
     </aside>

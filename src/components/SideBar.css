@@ -1,0 +1,162 @@
+/* SideBar Styles */
+.sidebar {
+  --sidebar-expanded-width: 240px;
+  --sidebar-collapsed-width: 100px;
+  width: var(--sidebar-expanded-width);
+  min-height: 100vh;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(180deg, #ffffff 0%, #f8faff 100%);
+  border-right: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow-x: hidden;
+  z-index: 100;
+}
+
+.sidebar.collapsed {
+  width: var(--sidebar-collapsed-width);
+}
+
+.sidebar-header {
+  height: 80px;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  margin-bottom: 1rem;
+}
+
+.sidebar.collapsed .sidebar-header {
+  justify-content: center;
+  padding: 0;
+}
+
+.logo-img {
+  height: auto;
+  transition: all 0.3s ease;
+}
+
+.logo-img.expanded {
+  max-width: 180px;
+}
+
+.logo-img.collapsed {
+  max-width: 50px;
+}
+
+.nav-list {
+  list-style: none;
+  padding: 0 0.75rem;
+  margin: 0;
+  flex-grow: 1;
+}
+
+.nav-item {
+  margin-bottom: 0.5rem;
+}
+
+.nav-link-custom {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  color: #64748b;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.sidebar.collapsed .nav-link-custom {
+  justify-content: center;
+  padding: 0.75rem 0;
+}
+
+.nav-link-custom:hover {
+  background-color: rgba(0, 82, 204, 0.05);
+  color: #0052cc;
+}
+
+.nav-link-custom.active {
+  background-color: #0052cc;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 82, 204, 0.2);
+}
+
+.link-text {
+  margin-left: 0.75rem;
+  font-weight: 500;
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+.sidebar.collapsed .link-text {
+  opacity: 0;
+  display: none;
+}
+
+.toggle-btn {
+  position: absolute;
+  top: 28px;
+  right: -12px;
+  width: 24px;
+  height: 24px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  z-index: 101;
+  transition: transform 0.3s ease;
+}
+
+.sidebar.collapsed .toggle-btn {
+  right: calc(50% - 12px);
+  top: 80px; /* Move it down a bit when collapsed to not overlap with logo space if any */
+}
+
+/* Better position for toggle button */
+.toggle-btn-container {
+  padding: 0.5rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.sidebar.collapsed .toggle-btn-container {
+  justify-content: center;
+}
+
+.footer-section {
+  padding: 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.logout-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-radius: 12px;
+  border: none;
+  background-color: #fff1f2;
+  color: #e11d48;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.logout-btn:hover {
+  background-color: #ffe4e6;
+  color: #be123c;
+}
+
+.sidebar.collapsed .logout-btn {
+  padding: 0.75rem 0;
+}
+
+.sidebar.collapsed .logout-text {
+  display: none;
+}
