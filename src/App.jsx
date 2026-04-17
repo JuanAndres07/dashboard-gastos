@@ -37,12 +37,12 @@ function App() {
     } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setLoading(false);
-      
-      // Capturamos el evento específico de recuperación de contraseña
+
+      // Catch password recovery event
       if (event === "PASSWORD_RECOVERY") {
         setIsRecovery(true);
       } else if (event === "SIGNED_OUT") {
-        // Cuando terminamos el proceso y se cierra sesión, liberamos el "secuestro" de la interfaz
+        // When we finish the process and log out, we release the "kidnapping" of the interface
         setIsRecovery(false);
       }
     });
@@ -60,23 +60,12 @@ function App() {
     );
   }
 
-  // Si detectamos el evento de recuperación de contraseña, forzamos la vista
-  // IMPORTANTE: Esto arregla el caso donde Supabase envía al usuario a "/" por falta de configuración del "Redirect URL"
-  if (isRecovery) {
-    return (
-      <BrowserRouter>
-        <Routes>
-          <Route path="*" element={<UpdatePassword />} />
-        </Routes>
-      </BrowserRouter>
-    );
-  }
-
   return (
     <BrowserRouter>
       <Routes>
-
-        {!session ? (
+        {isRecovery ? (
+          <Route path="*" element={<UpdatePassword />} />
+        ) : !session ? (
           // Public Routes
           <>
             <Route path="/login" element={<Login />} />
@@ -88,10 +77,10 @@ function App() {
         ) : (
           // Private Routes
           <>
-            {/* Rutas especiales para usuarios autenticados sin el layout del dashboard */}
+            {/* Special route for authenticated user */}
             <Route path="/update-password" element={<UpdatePassword />} />
 
-            {/* Routes WITH Sidebar (Nested Layout) */}
+            {/* Routes with Sidebar and Dashboard Layout */}
             <Route
               element={
                 <div className="d-flex w-100 min-vh-100">
@@ -112,7 +101,7 @@ function App() {
                 element={<Categories user={session.user} />}
               />
             </Route>
-
+            <Route path="*" element={<Navigate to="/" />} />
           </>
         )}
       </Routes>
