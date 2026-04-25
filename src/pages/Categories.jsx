@@ -17,12 +17,12 @@ export default function Categories({ user }) {
     const { data: allCategories, error: errCat } = await supabase
       .from("Category")
       .select("*")
+      .eq("is_deleted", false)
       .order("name", { ascending: true });
 
     const { data: hidden, error: errHidden } = await supabase
-      .from("HiddenCategory")
-      .select("category_id")
-      .eq("user_id", user.id);
+      .from("TrashView")
+      .select("*");
 
     if (errCat || errHidden) {
       alert(
@@ -32,88 +32,113 @@ export default function Categories({ user }) {
       return;
     }
 
-    const hiddenIds = hidden?.map((h) => h.category_id) || [];
-
     const visibleCategories = allCategories.filter(
-      (cat) => !hiddenIds.includes(cat.id),
-    );
-
-    const hiddenCategories = allCategories.filter((cat) =>
-      hiddenIds.includes(cat.id),
+      (cat) => !hidden.some((h) => h.id === cat.id),
     );
 
     setCategories(visibleCategories);
-    setHiddenCategories(hiddenCategories);
+    setHiddenCategories(hidden);
   }
 
   async function handleAddCategory(e) {
     e.preventDefault();
 
-    const { error } = await supabase.from("Category").insert({
-      name: newName,
+    const cleanName = newName.trim();
+    if (!cleanName) return;
+
+    const formattedName =
+      cleanName.charAt(0).toUpperCase() + cleanName.slice(1).toLowerCase();
+
+    if (
+      categories.some(
+        (c) =>
+          c.name.toLowerCase() === formattedName.toLowerCase() &&
+          c.type === viewMode,
+      )
+    ) {
+      alert(
+        "Ya existe una categoría activa con ese nombre. (error detectado dentro del if)",
+      );
+      setNewName("");
+      return;
+    }
+
+    const categoryToRestore = hiddenCategories.find(
+      (cat) =>
+        cat.name.toLowerCase() === formattedName.toLowerCase() &&
+        cat.type === viewMode,
+    );
+
+    if (categoryToRestore) {
+      await handleUnhideCategory(
+        categoryToRestore,
+        `Ya existe una categoría oculta con ese nombre. ¿Deseas mostrarla?`,
+      );
+      setNewName("");
+      return;
+    }
+
+    const { error: insertError } = await supabase.from("Category").insert({
+      name: formattedName,
       type: viewMode,
       user_id: user.id,
     });
 
+    if (insertError) {
+      alert("Error al agregar la categoría: " + insertError.message);
+      return;
+    }
+
+    setNewName("");
+    fetchCategories();
+  }
+
+  async function handleDeleteCategory(category_id, is_global) {
+    const actionLabel = is_global ? "ocultar" : "eliminar";
+    if (
+      !window.confirm(`¿Estás seguro que deseas ${actionLabel} esta categoría?`)
+    )
+      return;
+
+    const query = is_global
+      ? supabase
+          .from("HiddenCategory")
+          .insert([{ user_id: user.id, category_id }])
+      : supabase
+          .from("Category")
+          .update({ is_deleted: true })
+          .eq("id", category_id);
+
+    const { error } = await query;
+
     if (error) {
-      alert("Error al agregar la categoría: " + error.message);
+      alert(`Error al ${actionLabel} la categoría: ${error.message}`);
     } else {
-      setNewName("");
       fetchCategories();
     }
   }
 
-  async function handleDeleteCategory(category_id, is_global) {
-    if (is_global) {
-      const confirmation = window.confirm(
-        "¿Estás seguro que deseas ocultar esta categoría?",
-      );
-      if (!confirmation) return;
+  async function handleUnhideCategory(
+    category,
+    message = "¿Estás seguro que deseas mostrar esta categoría?",
+  ) {
+    if (!window.confirm(message)) return;
 
-      const { error } = await supabase
-        .from("HiddenCategory")
-        .insert([{ user_id: user.id, category_id: category_id }]);
+    const query = category.is_global
+      ? supabase
+          .from("HiddenCategory")
+          .delete()
+          .eq("category_id", category.id)
+          .eq("user_id", user.id)
+      : supabase
+          .from("Category")
+          .update({ is_deleted: false })
+          .eq("id", category.id);
 
-      if (error) {
-        alert("No se pudo ocultar la categoría: " + error.message);
-      } else {
-        fetchCategories();
-      }
-    } else {
-      const confirmation = window.confirm(
-        "¿Estás seguro que deseas eliminar esta categoría?",
-      );
-      if (!confirmation) return;
-
-      const { error } = await supabase
-        .from("Category")
-        .delete()
-        .eq("id", category_id);
-
-      if (error) {
-        alert("Error al eliminar la categoría: " + error.message);
-      } else {
-        fetchCategories();
-      }
-    }
-  }
-
-  async function handleUnhideCategory(category_id) {
-    const confirmation = window.confirm(
-      "¿Estás seguro que deseas mostrar esta categoría?",
-    );
-    if (!confirmation) return;
-
-    const { error, count } = await supabase
-      .from("HiddenCategory")
-      .delete({ count: "exact" })
-      .eq("category_id", category_id)
-      .eq("user_id", user.id);
+    const { error } = await query;
 
     if (error) {
       alert("No se pudo mostrar la categoría: " + error.message);
-    } else if (count === 0) {
-      alert("No se encontró la categoría para mostrar");
     } else {
       fetchCategories();
     }
@@ -165,7 +190,7 @@ export default function Categories({ user }) {
               viewMode === "expense" ? "Gastos ocultos" : "Ingresos ocultos"
             }
             list={hiddenCategories.filter((cat) => cat.type === viewMode)}
-            onAction={(cat) => handleUnhideCategory(cat.id)}
+            onAction={(cat) => handleUnhideCategory(cat)}
             onLabel="Recuperar"
             color="gray"
           />
