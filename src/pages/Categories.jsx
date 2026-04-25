@@ -93,6 +93,37 @@ export default function Categories({ user }) {
     fetchCategories();
   }
 
+  async function handleEditCategory(category, newName) {
+    const cleanName = newName.trim();
+    if (!cleanName || cleanName === category.name) return;
+
+    const formattedName =
+      cleanName.charAt(0).toUpperCase() + cleanName.slice(1).toLowerCase();
+
+    if (
+      categories.some(
+        (c) =>
+          c.id !== category.id &&
+          c.name.toLowerCase() === formattedName.toLowerCase() &&
+          c.type === viewMode,
+      )
+    ) {
+      alert("Ya existe una categoría activa con ese nombre.");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("Category")
+      .update({ name: formattedName })
+      .eq("id", category.id);
+
+    if (error) {
+      alert("Error al editar la categoría: " + error.message);
+    } else {
+      fetchCategories();
+    }
+  }
+
   async function handleDeleteCategory(category_id, is_global) {
     const actionLabel = is_global ? "ocultar" : "eliminar";
     if (
@@ -176,6 +207,7 @@ export default function Categories({ user }) {
         title={viewMode === "expense" ? "Gastos" : "Ingresos"}
         list={categories.filter((cat) => cat.type === viewMode)}
         onAction={(cat) => handleDeleteCategory(cat.id, !cat.user_id)}
+        onEdit={handleEditCategory}
         color={viewMode === "expense" ? "red" : "green"}
       />
 
