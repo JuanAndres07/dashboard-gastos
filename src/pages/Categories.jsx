@@ -112,6 +112,20 @@ export default function Categories({ user }) {
       return;
     }
 
+    if (
+      hiddenCategories.some(
+        (c) =>
+          c.id !== category.id &&
+          c.name.toLowerCase() === formattedName.toLowerCase() &&
+          c.type === viewMode,
+      )
+    ) {
+      alert(
+        "Ya existe una categoría oculta con ese nombre, puedes mostrarla desde la papelera",
+      );
+      return;
+    }
+
     const { error } = await supabase
       .from("Category")
       .update({ name: formattedName })
@@ -119,8 +133,10 @@ export default function Categories({ user }) {
 
     if (error) {
       alert("Error al editar la categoría: " + error.message);
+      return false;
     } else {
       fetchCategories();
+      return true;
     }
   }
 

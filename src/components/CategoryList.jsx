@@ -21,12 +21,17 @@ export default function CategoryList({
     setEditName("");
   };
 
-  const handleSaveEdit = (cat) => {
+  const handleSaveEdit = async (cat) => {
     if (onEdit) {
-      onEdit(cat, editName);
+      const saved = await onEdit(cat, editName);
+      if (saved) {
+        setEditingId(null);
+        setEditName("");
+      }
+    } else {
+      setEditingId(null);
+      setEditName("");
     }
-    setEditingId(null);
-    setEditName("");
   };
 
   return (
