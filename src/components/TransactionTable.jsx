@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 
-export function TransactionTable({ limit, user }) {
+export function TransactionTable({ limit, user, trigger }) {
   const [transaction, setTransaction] = useState([]);
   const [viewMode, setViewMode] = useState("expense");
   const [loading, setLoading] = useState(true);
@@ -13,7 +13,7 @@ export function TransactionTable({ limit, user }) {
     return () => {
       controller.abort();
     };
-  }, [limit, viewMode]);
+  }, [limit, viewMode, trigger]);
 
   async function fetchTransactions() {
     setLoading(true);
@@ -32,6 +32,7 @@ export function TransactionTable({ limit, user }) {
         `,
       )
       .eq("user_id", user.id)
+      .eq("type", viewMode)
       .order("created_at", { ascending: false });
 
     if (limit) {
@@ -48,8 +49,6 @@ export function TransactionTable({ limit, user }) {
     setTransaction(data);
     setLoading(false);
   }
-
-  const filteredData = transaction.filter((t) => t.type === viewMode);
 
   return (
     <div>
@@ -71,19 +70,27 @@ export function TransactionTable({ limit, user }) {
             </tr>
           </thead>
           <tbody>
-            {filteredData.map((t) => (
+            {transaction.map((t) => (
               <tr key={t.id}>
                 <td>{new Date(t.created_at).toLocaleDateString()}</td>
                 <td>{t.note || "Sin descripción"}</td>
                 <td>{t.Category.name}</td>
-                <td>${t.amount.toFixed(2)}</td>
+                <td>
+                  {t.type === "expense" ? "-" : "+"}
+                  {Intl.NumberFormat("en-US", {
+                    minimumFractionDigits: 2,
+                    style: "currency",
+                    currency: "USD",
+                    maximumFractionDigits: 4,
+                  }).format(Number(t.amount))}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       )}
 
-      {filteredData.length === 0 && !loading && (
+      {transaction.length === 0 && !loading && (
         <p>No hay movimientos para mostrar</p>
       )}
     </div>

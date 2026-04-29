@@ -52,9 +52,16 @@ export function TransactionForm({ onTransactionAdded, user }) {
     e.preventDefault();
     setLoading(true);
 
+    if (!amount || Number(amount) <= 0) {
+      alert("El monto debe ser mayor a 0");
+      setAmount("");
+      setLoading(false);
+      return;
+    }
+
     const { error } = await supabase.from("Transaction").insert([
       {
-        amount: parseFloat(amount),
+        amount: amount,
         note: description,
         category_id: categoryId,
         user_id: user.id,
@@ -77,6 +84,16 @@ export function TransactionForm({ onTransactionAdded, user }) {
     setLoading(false);
   }
 
+  function handleAmountChange(e) {
+    const value = e.target.value;
+    const decimal = value.split(".");
+
+    if (decimal.length > 1 && decimal[1].length > 4) {
+      return;
+    }
+    setAmount(value);
+  }
+
   return (
     <div>
       <div>
@@ -88,7 +105,8 @@ export function TransactionForm({ onTransactionAdded, user }) {
           type="number"
           placeholder="Monto"
           value={amount}
-          onChange={(e) => setAmount(e.target.value)}
+          onChange={(e) => handleAmountChange(e)}
+          step="0.0001"
           required
         />
 
