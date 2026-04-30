@@ -8,14 +8,14 @@ export function TransactionTable({ limit, user, trigger }) {
 
   useEffect(() => {
     const controller = new AbortController();
-    fetchTransactions();
+    fetchTransactions(controller.signal);
 
     return () => {
       controller.abort();
     };
   }, [limit, viewMode, trigger]);
 
-  async function fetchTransactions() {
+  async function fetchTransactions(signal) {
     setLoading(true);
 
     let query = supabase
@@ -33,7 +33,8 @@ export function TransactionTable({ limit, user, trigger }) {
       )
       .eq("user_id", user.id)
       .eq("type", viewMode)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .abortSignal(signal);
 
     if (limit) {
       query = query.limit(limit);
@@ -74,7 +75,7 @@ export function TransactionTable({ limit, user, trigger }) {
               <tr key={t.id}>
                 <td>{new Date(t.created_at).toLocaleDateString()}</td>
                 <td>{t.note || "Sin descripción"}</td>
-                <td>{t.Category.name}</td>
+                <td>{t.Category?.name}</td>
                 <td>
                   {t.type === "expense" ? "-" : "+"}
                   {Intl.NumberFormat("en-US", {
