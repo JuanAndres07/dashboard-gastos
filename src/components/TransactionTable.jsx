@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
+import { formatCurrency } from "../utilities/formatters";
 
 export function TransactionTable({ limit, user, trigger }) {
   const [transaction, setTransaction] = useState([]);
@@ -43,7 +44,10 @@ export function TransactionTable({ limit, user, trigger }) {
     const { data, error } = await query;
 
     if (error) {
-      alert("Error al obtener transacciones", error);
+      const isAbortError = error.message?.includes('AbortError') || error.name === 'AbortError';
+      if (!isAbortError) {
+        alert("Error al obtener transacciones: " + error.message);
+      }
       return;
     }
 
@@ -78,12 +82,7 @@ export function TransactionTable({ limit, user, trigger }) {
                 <td>{t.Category?.name}</td>
                 <td>
                   {t.type === "expense" ? "-" : "+"}
-                  {Intl.NumberFormat("en-US", {
-                    minimumFractionDigits: 2,
-                    style: "currency",
-                    currency: "USD",
-                    maximumFractionDigits: 4,
-                  }).format(Number(t.amount))}
+                  {formatCurrency(t.amount)}
                 </td>
               </tr>
             ))}

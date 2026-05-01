@@ -2,36 +2,52 @@ import { TransactionForm } from "../components/TransactionForm";
 import { TransactionTable } from "../components/TransactionTable";
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
+import { formatCurrency } from "../utilities/formatters";
 
 export default function Dashboard({ user }) {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [summary, setSummary] = useState({ total_income: 0, total_expense: 0, balance: 0 });
-  const [monthlySummary, setMonthlySummary] = useState({ total_income: 0, total_expense: 0, balance: 0 });
+  const [summary, setSummary] = useState({
+    total_income: 0,
+    total_expense: 0,
+    balance: 0,
+  });
+  const [monthlySummary, setMonthlySummary] = useState({
+    total_income: 0,
+    total_expense: 0,
+    balance: 0,
+  });
   const [loading, setLoading] = useState(true);
 
   const refreshData = () => {
     setRefreshTrigger((prev) => prev + 1);
   };
 
-  const fetchTransactions = async () => {
+  const fetchTransactions = async (signal) => {
     setLoading(true);
     try {
       const now = new Date();
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const startOfMonth = `${year}-${month}-01`;
 
-      // Ejecutar ambas llamadas en paralelo usando Promise.all
+      const lastDay = new Date(year, now.getMonth() + 1, 0).getDate();
+      const endOfMonth = `${year}-${month}-${String(lastDay).padStart(2, "0")}`;
+
       const [allResponse, monthResponse] = await Promise.all([
-        supabase.rpc("get_financial_summary", {
-          p_user_id: user.id,
-          p_start_date: null,
-          p_end_date: null,
-        }),
-        supabase.rpc("get_financial_summary", {
-          p_user_id: user.id,
-          p_start_date: startOfMonth,
-          p_end_date: endOfMonth,
-        }),
+        supabase
+          .rpc("get_financial_summary", {
+            p_user_id: user.id,
+            p_start_date: null,
+            p_end_date: null,
+          })
+          .abortSignal(signal),
+        supabase
+          .rpc("get_financial_summary", {
+            p_user_id: user.id,
+            p_start_date: startOfMonth,
+            p_end_date: endOfMonth,
+          })
+          .abortSignal(signal),
       ]);
 
       const { data: allData, error: allError } = allResponse;
@@ -40,12 +56,27 @@ export default function Dashboard({ user }) {
       if (allError) throw allError;
       if (monthError) throw monthError;
 
-      // Asumimos que la función retorna un array con un objeto o un objeto directamente
-      if (allData) setSummary(Array.isArray(allData) ? allData[0] : allData);
-      if (monthData) setMonthlySummary(Array.isArray(monthData) ? monthData[0] : monthData);
+      if (allData) {
+        const data = Array.isArray(allData) ? allData[0] : allData;
+        setSummary({
+          ...data,
+          balance: (data.total_income || 0) - (data.total_expense || 0),
+        });
+      }
 
+      if (monthData) {
+        const data = Array.isArray(monthData) ? monthData[0] : monthData;
+        setMonthlySummary({
+          ...data,
+          balance: (data.total_income || 0) - (data.total_expense || 0),
+        });
+      }
     } catch (error) {
-      console.error("Error al obtener el resumen financiero:", error);
+      const isAbortError =
+        error.message?.includes("AbortError") || error.name === "AbortError";
+      if (!isAbortError) {
+        console.error("Error al obtener el resumen financiero:", error);
+      }
     } finally {
       setLoading(false);
     }
@@ -53,7 +84,9 @@ export default function Dashboard({ user }) {
 
   useEffect(() => {
     if (user?.id) {
-      fetchTransactions();
+      const controller = new AbortController();
+      fetchTransactions(controller.signal);
+      return () => controller.abort();
     }
   }, [user?.id, refreshTrigger]);
 
@@ -70,37 +103,51 @@ export default function Dashboard({ user }) {
           <div className="card border-0 shadow-sm bg-primary text-white h-100">
             <div className="card-body">
               <h6 className="card-subtitle mb-2 opacity-75">Balance Total</h6>
-              <h2 className="card-title fw-bold">{summary.balance}</h2>
-              <div className="mt-3 small">
-                <span className="me-2 text-white-50">Ingresos: {summary.total_income}</span>
-                <span className="text-white-50">Gastos: {summary.total_expense}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="col-md-4">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
-              <h6 className="card-subtitle mb-2 text-muted">Este Mes</h6>
-              <h2 className={`card-title fw-bold ${monthlySummary.balance >= 0 ? 'text-success' : 'text-danger'}`}>
-                {monthlySummary.balance}
+              <h2 className="card-title fw-bold">
+                {formatCurrency(summary.balance)}
               </h2>
-              <div className="mt-3 small d-flex justify-content-between">
-                <span className="text-success">↑ {monthlySummary.total_income}</span>
-                <span className="text-danger">↓ {monthlySummary.total_expense}</span>
+              <div className="mt-3 small">
+                <span className="me-2 text-white-50">
+                  Ingresos: {formatCurrency(summary.total_income)}
+                </span>
+                <span className="text-white-50">
+                  Gastos: {formatCurrency(summary.total_expense)}
+                </span>
               </div>
             </div>
           </div>
         </div>
 
         <div className="col-md-4">
-           {/* Espacio para otra métrica o acción rápida */}
-           <div className="card border-0 shadow-sm h-100 d-flex align-items-center justify-content-center p-3">
-              <button className="btn btn-outline-primary w-100 h-100 py-3" onClick={refreshData}>
-                <i className="bi bi-arrow-clockwise me-2"></i> Actualizar Datos
-              </button>
-           </div>
+          <div className="card border-0 shadow-sm h-100">
+            <div className="card-body">
+              <h6 className="card-subtitle mb-2 text-muted">Este Mes</h6>
+              <h2
+                className={`card-title fw-bold ${monthlySummary.balance >= 0 ? "text-success" : "text-danger"}`}
+              >
+                {formatCurrency(monthlySummary.balance)}
+              </h2>
+              <div className="mt-3 small d-flex justify-content-between">
+                <span className="text-success">
+                  ↑ {formatCurrency(monthlySummary.total_income)}
+                </span>
+                <span className="text-danger">
+                  ↓ {formatCurrency(monthlySummary.total_expense)}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-md-4">
+          <div className="card border-0 shadow-sm h-100 d-flex align-items-center justify-content-center p-3">
+            <button
+              className="btn btn-outline-primary w-100 h-100 py-3"
+              onClick={refreshData}
+            >
+              <i className="bi bi-arrow-clockwise me-2"></i> Actualizar Datos
+            </button>
+          </div>
         </div>
       </div>
 
@@ -122,7 +169,11 @@ export default function Dashboard({ user }) {
               <button className="btn btn-sm btn-light">Ver todo</button>
             </div>
             <div className="card-body p-0">
-              <TransactionTable limit={5} user={user} trigger={refreshTrigger} />
+              <TransactionTable
+                limit={5}
+                user={user}
+                trigger={refreshTrigger}
+              />
             </div>
           </div>
         </div>
