@@ -3,6 +3,7 @@ import { TransactionTable } from "../components/TransactionTable";
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { formatCurrency } from "../utilities/formatters";
+import { useTransactions } from "../hooks/useTransactions";
 
 export default function Dashboard({ user }) {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -21,6 +22,17 @@ export default function Dashboard({ user }) {
   const refreshData = () => {
     setRefreshTrigger((prev) => prev + 1);
   };
+
+  const {
+    transactions,
+    loading: loadingTransactions,
+    viewMode,
+    setViewMode,
+  } = useTransactions({
+    user,
+    limit: 5,
+    trigger: refreshTrigger,
+  });
 
   const fetchTransactions = async (signal) => {
     setLoading(true);
@@ -170,9 +182,10 @@ export default function Dashboard({ user }) {
             </div>
             <div className="card-body p-0">
               <TransactionTable
-                limit={5}
-                user={user}
-                trigger={refreshTrigger}
+                transactions={transactions}
+                loading={loadingTransactions}
+                viewMode={viewMode}
+                setViewMode={setViewMode}
               />
             </div>
           </div>

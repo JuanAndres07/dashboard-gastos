@@ -1,46 +1,16 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
+import { useCategories } from "../hooks/useCategories";
 
 export function TransactionForm({ onTransactionAdded, user }) {
   const [type, setType] = useState("expense");
-  const [categories, setCategories] = useState([]);
+  const { categories, loading: loadingCategories } = useCategories(user);
   const [filteredCategories, setFilteredCategories] = useState([]);
 
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    loadCategories();
-  }, []);
-
-  async function loadCategories() {
-    const { data: allCategories, error: errCat } = await supabase
-      .from("Category")
-      .select("*")
-      .order("name", { ascending: true });
-
-    const { data: hiddenCategories, error: errHidden } = await supabase
-      .from("HiddenCategory")
-      .select("category_id")
-      .eq("user_id", user.id);
-
-    if (errCat || errHidden) {
-      alert(
-        "Error al cargar las categorías: " + errCat?.message ||
-          errHidden?.message,
-      );
-      return;
-    }
-
-    const hiddenIds = hiddenCategories?.map((h) => h.category_id || []);
-
-    const visibleCategories =
-      allCategories?.filter((cat) => !hiddenIds.includes(cat.id)) || [];
-
-    setCategories(visibleCategories);
-  }
 
   useEffect(() => {
     const filtered = categories.filter((cat) => cat.type === type);

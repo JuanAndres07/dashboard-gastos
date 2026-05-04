@@ -1,193 +1,70 @@
-import { useState, useEffect } from "react";
-import { supabase } from "../lib/supabase";
+import { useState } from "react";
 import CategoryList from "../components/CategoryList";
+import useManageCategories from "../hooks/useManageCategories";
 
 export default function Categories({ user }) {
-  const [categories, setCategories] = useState([]);
-  const [hiddenCategories, setHiddenCategories] = useState([]);
+  const {
+    categories,
+    hiddenCategories,
+    addCategory,
+    editCategory,
+    deleteCategory,
+    unhideCategory,
+  } = useManageCategories(user);
+
   const [showHidden, setShowHidden] = useState(false);
   const [viewMode, setViewMode] = useState("expense");
   const [newName, setNewName] = useState("");
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  async function fetchCategories() {
-    const { data: allCategories, error: errCat } = await supabase
-      .from("Category")
-      .select("*")
-      .eq("is_deleted", false)
-      .order("name", { ascending: true });
-
-    const { data: hidden, error: errHidden } = await supabase
-      .from("TrashView")
-      .select("*");
-
-    if (errCat || errHidden) {
-      alert(
-        "Error al obtener las categorías: " +
-          (errCat?.message || errHidden?.message),
-      );
-      return;
-    }
-
-    const visibleCategories = allCategories.filter(
-      (cat) => !hidden.some((h) => h.id === cat.id),
-    );
-
-    setCategories(visibleCategories);
-    setHiddenCategories(hidden);
-  }
-
   async function handleAddCategory(e) {
     e.preventDefault();
+    const result = await addCategory(newName, viewMode);
 
-    const cleanName = newName.trim();
-    if (!cleanName) return;
-
-    const formattedName =
-      cleanName.charAt(0).toUpperCase() + cleanName.slice(1).toLowerCase();
-
-    if (
-      categories.some(
-        (c) =>
-          c.name.toLowerCase() === formattedName.toLowerCase() &&
-          c.type === viewMode,
-      )
-    ) {
-      alert(
-        "Ya existe una categoría activa con ese nombre. (error detectado dentro del if)",
-      );
-      setNewName("");
-      return;
-    }
-
-    const categoryToRestore = hiddenCategories.find(
-      (cat) =>
-        cat.name.toLowerCase() === formattedName.toLowerCase() &&
-        cat.type === viewMode,
-    );
-
-    if (categoryToRestore) {
-      await handleUnhideCategory(
-        categoryToRestore,
-        `Ya existe una categoría oculta con ese nombre. ¿Deseas mostrarla?`,
-      );
-      setNewName("");
-      return;
-    }
-
-    const { error: insertError } = await supabase.from("Category").insert({
-      name: formattedName,
-      type: viewMode,
-      user_id: user.id,
-    });
-
-    if (insertError) {
-      alert("Error al agregar la categoría: " + insertError.message);
+    if (!result.success) {
+      if (result.code === "DUPLICATE_HIDDEN") {
+        if (window.confirm(result.message)) {
+          const restoreResult = await unhideCategory(result.categoryToRestore);
+          if (!restoreResult.success) alert(restoreResult.message);
+          setNewName("");
+        }
+      } else {
+        alert(result.message);
+      }
       return;
     }
 
     setNewName("");
-    fetchCategories();
   }
 
-  async function handleEditCategory(category, newName) {
-    const cleanName = newName.trim();
-    if (!cleanName || cleanName === category.name) return;
-
-    const formattedName =
-      cleanName.charAt(0).toUpperCase() + cleanName.slice(1).toLowerCase();
-
-    if (
-      categories.some(
-        (c) =>
-          c.id !== category.id &&
-          c.name.toLowerCase() === formattedName.toLowerCase() &&
-          c.type === viewMode,
-      )
-    ) {
-      alert("Ya existe una categoría activa con ese nombre.");
-      return;
-    }
-
-    if (
-      hiddenCategories.some(
-        (c) =>
-          c.id !== category.id &&
-          c.name.toLowerCase() === formattedName.toLowerCase() &&
-          c.type === viewMode,
-      )
-    ) {
-      alert(
-        "Ya existe una categoría oculta con ese nombre, puedes mostrarla desde la papelera",
-      );
-      return;
-    }
-
-    const { error } = await supabase
-      .from("Category")
-      .update({ name: formattedName })
-      .eq("id", category.id);
-
-    if (error) {
-      alert("Error al editar la categoría: " + error.message);
+  async function onEditCategory(category, name) {
+    const result = await editCategory(category, name, viewMode);
+    if (!result.success) {
+      alert(result.message);
       return false;
-    } else {
-      fetchCategories();
-      return true;
     }
+    return true;
   }
 
-  async function handleDeleteCategory(category_id, is_global) {
+  async function onDeleteCategory(category_id, is_global) {
     const actionLabel = is_global ? "ocultar" : "eliminar";
     if (
       !window.confirm(`¿Estás seguro que deseas ${actionLabel} esta categoría?`)
     )
       return;
 
-    const query = is_global
-      ? supabase
-          .from("HiddenCategory")
-          .insert([{ user_id: user.id, category_id }])
-      : supabase
-          .from("Category")
-          .update({ is_deleted: true })
-          .eq("id", category_id);
-
-    const { error } = await query;
-
-    if (error) {
-      alert(`Error al ${actionLabel} la categoría: ${error.message}`);
-    } else {
-      fetchCategories();
+    const result = await deleteCategory(category_id, is_global);
+    if (!result.success) {
+      alert(result.message);
     }
   }
 
-  async function handleUnhideCategory(
-    category,
-    message = "¿Estás seguro que deseas mostrar esta categoría?",
-  ) {
-    if (!window.confirm(message)) return;
+  async function onUnhideCategory(category) {
+    if (!window.confirm("¿Estás seguro que deseas mostrar esta categoría?"))
+      return;
 
-    const query = category.is_global
-      ? supabase
-          .from("HiddenCategory")
-          .delete()
-          .eq("category_id", category.id)
-          .eq("user_id", user.id)
-      : supabase
-          .from("Category")
-          .update({ is_deleted: false })
-          .eq("id", category.id);
-
-    const { error } = await query;
-
-    if (error) {
-      alert("No se pudo mostrar la categoría: " + error.message);
-    } else {
-      fetchCategories();
+    const result = await unhideCategory(category);
+    if (!result.success) {
+      alert(result.message);
     }
   }
 
@@ -222,8 +99,8 @@ export default function Categories({ user }) {
       <CategoryList
         title={viewMode === "expense" ? "Gastos" : "Ingresos"}
         list={categories.filter((cat) => cat.type === viewMode)}
-        onAction={(cat) => handleDeleteCategory(cat.id, !cat.user_id)}
-        onEdit={handleEditCategory}
+        onAction={(cat) => onDeleteCategory(cat.id, !cat.user_id)}
+        onEdit={onEditCategory}
         color={viewMode === "expense" ? "red" : "green"}
       />
 
@@ -238,7 +115,7 @@ export default function Categories({ user }) {
               viewMode === "expense" ? "Gastos ocultos" : "Ingresos ocultos"
             }
             list={hiddenCategories.filter((cat) => cat.type === viewMode)}
-            onAction={(cat) => handleUnhideCategory(cat)}
+            onAction={(cat) => onUnhideCategory(cat)}
             onLabel="Recuperar"
             color="gray"
           />
@@ -247,3 +124,4 @@ export default function Categories({ user }) {
     </div>
   );
 }
+
