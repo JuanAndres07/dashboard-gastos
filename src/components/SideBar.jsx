@@ -8,6 +8,7 @@ import {
   IconLogout,
   IconChevronLeft,
   IconChevronRight,
+  IconRefresh,
 } from "@tabler/icons-react";
 import "./SideBar.css";
 
@@ -88,6 +89,17 @@ export default function SideBar() {
           >
             <IconCategory size={22} />
             <span className="link-text">Categorías</span>
+          </NavLink>
+        </li>
+        <li className="nav-item">
+          <NavLink
+            to="/subscriptions"
+            className={({ isActive }) =>
+              `nav-link-custom ${isActive ? "active" : ""}`
+            }
+          >
+            <IconRefresh size={22} />
+            <span className="link-text">Suscripciones</span>
           </NavLink>
         </li>
       </ul>

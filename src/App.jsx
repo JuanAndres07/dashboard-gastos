@@ -17,6 +17,7 @@ import UpdatePassword from "./pages/UpdatePassword";
 import Dashboard from "./pages/Dashboard";
 import Transactions from "./pages/Transactions";
 import Categories from "./pages/Categories";
+import Subscriptions from "./pages/Subscriptions";
 
 //Components
 import SideBar from "./components/SideBar";
@@ -99,6 +100,10 @@ function App() {
               <Route
                 path="/categories"
                 element={<Categories user={session.user} />}
+              />
+              <Route
+                path="/subscriptions"
+                element={<Subscriptions user={session.user} />}
               />
             </Route>
             <Route path="*" element={<Navigate to="/" />} />
