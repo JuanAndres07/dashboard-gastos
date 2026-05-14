@@ -18,6 +18,7 @@ import Dashboard from "./pages/Dashboard";
 import Transactions from "./pages/Transactions";
 import Categories from "./pages/Categories";
 import Subscriptions from "./pages/Subscriptions";
+import Budgets from "./pages/Budgets";
 
 //Components
 import SideBar from "./components/SideBar";
@@ -104,6 +105,10 @@ function App() {
               <Route
                 path="/subscriptions"
                 element={<Subscriptions user={session.user} />}
+              />
+              <Route
+                path="/budgets"
+                element={<Budgets user={session.user} />}
               />
             </Route>
             <Route path="*" element={<Navigate to="/" />} />
