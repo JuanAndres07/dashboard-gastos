@@ -1,110 +1,26 @@
-import { useState, useEffect } from "react";
-import { supabase } from "../lib/supabase";
-import { useCategories } from "../hooks/useCategories";
+import { useBudgets } from "../hooks/useBudgets";
+import { formatCurrency } from "../utilities/formatters";
 
 export default function Budgets({ user }) {
-  const { categories, loading: loadingCategories } = useCategories(user);
-
-  const formatLocalDate = (date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
-
-  const [formData, setFormData] = useState({
-    category_id: "",
-    amount: "",
-    valid_from: formatLocalDate(new Date()),
-    valid_to: "",
-  });
-
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState({ type: "", text: "" });
-
-  // Estados para presupuestos consumidos desde la RPC
-  const [budgets, setBudgets] = useState([]);
-  const [loadingBudgets, setLoadingBudgets] = useState(true);
-
-  // Filtros de fecha (mes actual por defecto)
-  const now = new Date();
-  const firstDay = formatLocalDate(new Date(now.getFullYear(), now.getMonth(), 1));
-  const lastDay = formatLocalDate(new Date(now.getFullYear(), now.getMonth() + 1, 0));
-
-  const [dateFilters, setDateFilters] = useState({
-    p_start_date: firstDay,
-    p_end_date: lastDay,
-  });
-
-  const activeBudgetCategoryIds = new Set(budgets.map((b) => b.category_id));
-  const expenseCategories = categories.filter(
-    (cat) => cat.type === "expense" && !activeBudgetCategoryIds.has(cat.id),
-  );
-
-  async function fetchBudgets() {
-    if (!user?.id) return;
-    setLoadingBudgets(true);
-    const { data, error } = await supabase.rpc("get_user_budgets", {
-      p_start_date: dateFilters.p_start_date,
-      p_end_date: dateFilters.p_end_date,
-    });
-
-    if (error) {
-      console.error("Error fetching budgets:", error.message);
-    } else {
-      setBudgets(data || []);
-    }
-    setLoadingBudgets(false);
-  }
-
-  useEffect(() => {
-    fetchBudgets();
-  }, [user?.id, dateFilters.p_start_date, dateFilters.p_end_date]);
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setLoading(true);
-    setMessage({ type: "", text: "" });
-
-    const { category_id, amount, valid_from, valid_to } = formData;
-
-    const { error } = await supabase.from("Budget").insert([
-      {
-        user_id: user.id,
-        category_id: category_id,
-        amount: parseFloat(amount),
-        valid_from: valid_from,
-        valid_to: valid_to || null,
-      },
-    ]);
-
-    if (error) {
-      setMessage({
-        type: "danger",
-        text: "Error al crear presupuesto: " + error.message,
-      });
-    } else {
-      setMessage({ type: "success", text: "Presupuesto creado con éxito" });
-      setFormData({
-        category_id: "",
-        amount: "",
-        valid_from: formatLocalDate(new Date()),
-        valid_to: "",
-      });
-      fetchBudgets();
-    }
-    setLoading(false);
-  }
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setDateFilters((prev) => ({ ...prev, [name]: value }));
-  };
+  const {
+    formData,
+    loading,
+    message,
+    setMessage,
+    budgets,
+    loadingBudgets,
+    editingBudget,
+    setEditingBudget,
+    loadingEdit,
+    editError,
+    dateFilters,
+    expenseCategories,
+    loadingCategories,
+    handleSubmit,
+    handleEditSubmit,
+    handleChange,
+    handleFilterChange,
+  } = useBudgets(user);
 
   return (
     <div className="container py-4">
@@ -180,37 +96,7 @@ export default function Budgets({ user }) {
               </div>
             </div>
 
-            <div className="col-md-6">
-              <label htmlFor="valid_from" className="form-label">
-                Válido desde
-              </label>
-              <input
-                type="date"
-                id="valid_from"
-                name="valid_from"
-                className="form-control"
-                value={formData.valid_from}
-                onChange={handleChange}
-                required
-              />
-            </div>
 
-            <div className="col-md-6">
-              <label htmlFor="valid_to" className="form-label">
-                Válido hasta (Opcional)
-              </label>
-              <input
-                type="date"
-                id="valid_to"
-                name="valid_to"
-                className="form-control"
-                value={formData.valid_to}
-                onChange={handleChange}
-              />
-              <div className="form-text">
-                Dejar vacío para que el presupuesto sea permanente.
-              </div>
-            </div>
 
             <div className="col-12 mt-4">
               <button
@@ -269,26 +155,45 @@ export default function Budgets({ user }) {
         ) : budgets.length > 0 ? (
           budgets.map((budget) => {
             const percentage = (budget.spent / budget.total_budget) * 100;
+            const isOverBudget = budget.remaining < 0;
+            const absRemaining = Math.abs(budget.remaining || 0);
+
             const variant =
               percentage > 100
-                ? "danger"
+                ? "dark"
                 : percentage > 80
-                ? "warning"
-                : "success";
+                  ? "secondary"
+                  : "info";
 
             return (
               <div key={budget.category_id} className="col-md-4 mb-4">
                 <div className="card h-100 shadow-sm border-0">
                   <div className="card-body">
-                    <h5 className="card-title h6 text-uppercase text-muted mb-3">
-                      {budget.category_name}
-                    </h5>
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                      <h5 className="card-title h6 text-uppercase text-muted mb-0">
+                        {budget.category_name}
+                      </h5>
+                      <button
+                        className="btn btn-sm btn-outline-secondary py-1 px-2 border-0"
+                        onClick={() =>
+                          setEditingBudget({
+                            category_id: budget.category_id,
+                            category_name: budget.category_name,
+                            current_amount: budget.total_budget,
+                            new_amount: budget.total_budget,
+                          })
+                        }
+                        title="Editar presupuesto"
+                      >
+                        <i className="bi bi-pencil me-1"></i> Editar
+                      </button>
+                    </div>
                     <div className="d-flex justify-content-between align-items-end mb-2">
                       <span className="h4 mb-0">
-                        ${budget.spent?.toFixed(2) || "0.00"}
+                        {formatCurrency(budget.spent)}
                       </span>
                       <span className="text-muted small">
-                        de ${budget.total_budget?.toFixed(2) || "0.00"}
+                        de {formatCurrency(budget.total_budget)}
                       </span>
                     </div>
 
@@ -303,14 +208,16 @@ export default function Budgets({ user }) {
                       ></div>
                     </div>
 
-                    <div className="d-flex justify-content-between">
-                      <span className="small text-muted">Restante:</span>
+                    <div className="d-flex justify-content-between align-items-center">
+                      <span className="small text-muted">
+                        {isOverBudget ? "Sobrepasado por:" : "Disponible:"}
+                      </span>
                       <span
                         className={`small fw-bold ${
-                          budget.remaining < 0 ? "text-danger" : "text-success"
+                          isOverBudget ? "text-dark" : "text-info"
                         }`}
                       >
-                        ${budget.remaining?.toFixed(2) || "0.00"}
+                        {formatCurrency(absRemaining)}
                       </span>
                     </div>
                   </div>
@@ -326,6 +233,101 @@ export default function Budgets({ user }) {
           </div>
         )}
       </div>
+
+      {/* Modal de Edición de Presupuesto */}
+      {editingBudget && (
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content shadow">
+              <div className="modal-header border-0 pb-0">
+                <h5 className="modal-title fw-bold">Editar Presupuesto</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setEditingBudget(null)}
+                  disabled={loadingEdit}
+                ></button>
+              </div>
+              <form onSubmit={handleEditSubmit}>
+                <div className="modal-body">
+                  {editError && (
+                    <div className="alert alert-danger py-2 text-sm mb-3">
+                      {editError}
+                    </div>
+                  )}
+                  <div className="mb-3">
+                    <label className="form-label text-muted small text-uppercase">
+                      Categoría
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control fw-medium bg-light"
+                      value={editingBudget.category_name}
+                      disabled
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label htmlFor="edit_amount" className="form-label">
+                      Nuevo Monto Mensual
+                    </label>
+                    <div className="input-group">
+                      <span className="input-group-text">$</span>
+                      <input
+                        type="number"
+                        id="edit_amount"
+                        className="form-control"
+                        step="0.01"
+                        min="0"
+                        value={editingBudget.new_amount}
+                        onChange={(e) =>
+                          setEditingBudget({
+                            ...editingBudget,
+                            new_amount: e.target.value,
+                          })
+                        }
+                        required
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="modal-footer border-0 pt-0">
+                  <button
+                    type="button"
+                    className="btn btn-light"
+                    onClick={() => setEditingBudget(null)}
+                    disabled={loadingEdit}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={loadingEdit}
+                  >
+                    {loadingEdit ? (
+                      <>
+                        <span
+                          className="spinner-border spinner-border-sm me-2"
+                          role="status"
+                          aria-hidden="true"
+                        ></span>
+                        Guardando...
+                      </>
+                    ) : (
+                      "Guardar Cambios"
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
