@@ -19,6 +19,7 @@ import Transactions from "./pages/Transactions";
 import Categories from "./pages/Categories";
 import Subscriptions from "./pages/Subscriptions";
 import Budgets from "./pages/Budgets";
+import Configuration from "./pages/Configuration";
 
 //Components
 import SideBar from "./components/SideBar";
@@ -109,6 +110,10 @@ function App() {
               <Route
                 path="/budgets"
                 element={<Budgets user={session.user} />}
+              />
+              <Route
+                path="/configuration"
+                element={<Configuration user={session.user} />}
               />
             </Route>
             <Route path="*" element={<Navigate to="/" />} />

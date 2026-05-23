@@ -160,9 +160,9 @@ export default function Budgets({ user }) {
 
             const variant =
               percentage > 100
-                ? "dark"
+                ? "danger"
                 : percentage > 80
-                  ? "secondary"
+                  ? "warning"
                   : "info";
 
             return (
@@ -214,7 +214,7 @@ export default function Budgets({ user }) {
                       </span>
                       <span
                         className={`small fw-bold ${
-                          isOverBudget ? "text-dark" : "text-info"
+                          isOverBudget ? "text-danger" : "text-info"
                         }`}
                       >
                         {formatCurrency(absRemaining)}

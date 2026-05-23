@@ -35,7 +35,7 @@ export default function Subscriptions({ user }) {
       <div className="row justify-content-center">
         <div className="col-md-8">
           <div className="card shadow-sm">
-            <div className="card-header bg-white">
+            <div className="card-header bg-transparent">
               <h3 className="card-title mb-0">Nueva Suscripción</h3>
             </div>
             <div className="card-body">
@@ -158,7 +158,7 @@ export default function Subscriptions({ user }) {
       <div className="row justify-content-center mt-5">
         <div className="col-md-10">
           <div className="card shadow-sm">
-            <div className="card-header bg-white">
+            <div className="card-header bg-transparent">
               <h3 className="card-title mb-0">Mis Suscripciones</h3>
             </div>
             <div className="card-body p-0">

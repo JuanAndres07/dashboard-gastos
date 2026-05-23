@@ -73,12 +73,12 @@ export default function Transactions({ user }) {
 
   return (
     <div className="container py-4">
-      <h1 className="fw-bold mb-4 text-dark">Mis Transacciones</h1>
+      <h1 className="fw-bold mb-4">Mis Transacciones</h1>
       
       <div className="row">
         <div className="col-lg-4 mb-4">
           <div className="card shadow-sm border-0 sticky-top" style={{ top: '20px' }}>
-            <div className="card-header bg-white py-3">
+            <div className="card-header bg-transparent py-3">
               <h5 className="mb-0 fw-bold">Agregar Movimiento</h5>
             </div>
             <div className="card-body">
@@ -89,7 +89,7 @@ export default function Transactions({ user }) {
         
         <div className="col-lg-8">
           <div className="card shadow-sm border-0">
-            <div className="card-header bg-white py-3">
+            <div className="card-header bg-transparent py-3">
               <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                 <h5 className="mb-0 fw-bold">Historial de Movimientos</h5>
                 
@@ -123,7 +123,7 @@ export default function Transactions({ user }) {
 
             {/* Paginación */}
             {!loadingTransactions && totalCount > 0 && (
-              <div className="card-footer bg-white py-3">
+              <div className="card-footer bg-transparent py-3">
                 <div className="d-flex justify-content-between align-items-center">
                   <span className="small text-muted">
                     Mostrando {transactions.length} de {totalCount} resultados

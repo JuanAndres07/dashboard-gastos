@@ -2,7 +2,7 @@
 
 .auth-container {
   overflow: hidden;
-  background-color: white;
+  background-color: var(--settings-card-bg);
 }
 
 /* Lado Izquierdo con fondo interactivo */
@@ -41,27 +41,28 @@
 }
 
 .form-control:focus {
-  background-color: white !important;
+  background-color: var(--settings-card-bg) !important;
   border-color: var(--primary-color) !important;
   box-shadow: none !important;
+  color: var(--text-color) !important;
 }
 
 .input-group-text {
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--sidebar-border);
   border-right: none;
   background-color: var(--bg-light);
-  color: #64748b;
+  color: var(--text-color);
   padding-left: 16px;
 }
 
 .input-group:focus-within .input-group-text {
   border-color: var(--primary-color);
-  background-color: white;
+  background-color: var(--settings-card-bg);
 }
 
 /* Etiquetas y Textos */
 .headline {
-  color: #05345c;
+  color: var(--headings-color);
   font-weight: 600;
   font-size: 0.9rem;
   margin-bottom: 8px;
@@ -94,7 +95,8 @@
 
 /* Elemento decorativo */
 .feature-badge {
-  background: white;
+  background: var(--settings-card-bg);
+  border: var(--card-border);
   padding: 8px 16px;
   border-radius: 100px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);

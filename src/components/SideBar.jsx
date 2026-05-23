@@ -10,6 +10,7 @@ import {
   IconChevronRight,
   IconRefresh,
   IconClockDollar,
+  IconSettings,
 } from "@tabler/icons-react";
 import "./SideBar.css";
 
@@ -112,6 +113,17 @@ export default function SideBar() {
           >
             <IconClockDollar size={22} />
             <span className="link-text">Presupuestos</span>
+          </NavLink>
+        </li>
+        <li className="nav-item">
+          <NavLink
+            to="/configuration"
+            className={({ isActive }) =>
+              `nav-link-custom ${isActive ? "active" : ""}`
+            }
+          >
+            <IconSettings size={22} />
+            <span className="link-text">Configuración</span>
           </NavLink>
         </li>
       </ul>

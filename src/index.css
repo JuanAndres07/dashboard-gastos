@@ -5,13 +5,50 @@
   --secondary-color: #71768b;
   --tertiary-color: #856e99;
   --bg-light: #f0f4ff;
+  --text-color: #64748b;
+  --headings-color: #05345c;
+  
+  /* Sidebar colors */
+  --sidebar-bg-gradient-start: #ffffff;
+  --sidebar-bg-gradient-end: #f8faff;
+  --sidebar-border: rgba(0, 0, 0, 0.05);
+  --sidebar-text: #64748b;
+  --sidebar-text-hover: #0052cc;
+  --sidebar-link-hover-bg: rgba(0, 82, 204, 0.05);
+  --toggle-btn-bg: #ffffff;
+  
+  /* Settings components */
+  --card-border: 1px solid rgba(0, 0, 0, 0.08);
+  --settings-card-bg: #ffffff;
+  --settings-active-border: #0052cc;
+}
+
+[data-bs-theme="dark"] {
+  --bg-light: #0b1220;
+  --text-color: #94a3b8;
+  --headings-color: #f8fafc;
+  
+  /* Sidebar colors */
+  --sidebar-bg-gradient-start: #111827;
+  --sidebar-bg-gradient-end: #0f172a;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-text: #94a3b8;
+  --sidebar-text-hover: #3b82f6;
+  --sidebar-link-hover-bg: rgba(59, 130, 246, 0.1);
+  --toggle-btn-bg: #1f2937;
+  
+  /* Settings components */
+  --card-border: 1px solid rgba(255, 255, 255, 0.1);
+  --settings-card-bg: #1e293b;
+  --settings-active-border: #3b82f6;
 }
 
 body {
   font-family: "Inter", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: #64748b;
+  color: var(--text-color);
+  background-color: var(--bg-light);
 }
 
 h1,
@@ -23,7 +60,7 @@ h6,
 .headline {
   font-family: "Manrope", sans-serif;
   font-weight: 700;
-  color: #05345c;
+  color: var(--headings-color);
 }
 
 label,
@@ -48,4 +85,26 @@ label,
 
 .bg-light {
   background-color: var(--bg-light) !important;
+}
+
+.settings-card {
+  background-color: var(--settings-card-bg);
+  border: var(--card-border);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.settings-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+}
+
+[data-bs-theme="dark"] .settings-card:hover {
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.settings-card.active {
+  border-color: var(--settings-active-border) !important;
+  box-shadow: 0 0 0 1px var(--settings-active-border);
 }

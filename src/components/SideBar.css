@@ -5,8 +5,8 @@
   width: var(--sidebar-expanded-width);
   min-height: 100vh;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: linear-gradient(180deg, #ffffff 0%, #f8faff 100%);
-  border-right: 1px solid rgba(0, 0, 0, 0.05);
+  background: linear-gradient(180deg, var(--sidebar-bg-gradient-start) 0%, var(--sidebar-bg-gradient-end) 100%);
+  border-right: 1px solid var(--sidebar-border);
   display: flex;
   flex-direction: column;
   position: relative;
@@ -60,7 +60,7 @@
   align-items: center;
   padding: 0.75rem 1rem;
   border-radius: 12px;
-  color: #64748b;
+  color: var(--sidebar-text);
   text-decoration: none;
   transition: all 0.2s ease;
   white-space: nowrap;
@@ -72,8 +72,8 @@
 }
 
 .nav-link-custom:hover {
-  background-color: rgba(0, 82, 204, 0.05);
-  color: #0052cc;
+  background-color: var(--sidebar-link-hover-bg);
+  color: var(--sidebar-text-hover);
 }
 
 .nav-link-custom.active {
@@ -100,8 +100,8 @@
   right: -12px;
   width: 24px;
   height: 24px;
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: var(--toggle-btn-bg);
+  border: 1px solid var(--sidebar-border);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -130,7 +130,7 @@
 
 .footer-section {
   padding: 1rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  border-top: 1px solid var(--sidebar-border);
 }
 
 .logout-btn {

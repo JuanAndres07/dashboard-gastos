@@ -105,7 +105,7 @@ export default function Dashboard({ user }) {
   return (
     <div className="container-fluid py-4">
       <header className="mb-4">
-        <h1 className="fw-bold text-dark">Panel de Control</h1>
+        <h1 className="fw-bold">Panel de Control</h1>
         <p className="text-muted">Bienvenido de nuevo, {user.email}</p>
       </header>
 
@@ -166,7 +166,7 @@ export default function Dashboard({ user }) {
       <div className="row">
         <div className="col-lg-4 mb-4">
           <div className="card border-0 shadow-sm h-100">
-            <div className="card-header bg-white border-0 py-3">
+            <div className="card-header bg-transparent border-0 py-3">
               <h5 className="mb-0 fw-bold">Nueva Transacción</h5>
             </div>
             <div className="card-body">
@@ -176,7 +176,7 @@ export default function Dashboard({ user }) {
         </div>
         <div className="col-lg-8">
           <div className="card border-0 shadow-sm">
-            <div className="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+            <div className="card-header bg-transparent border-0 py-3 d-flex justify-content-between align-items-center">
               <h5 className="mb-0 fw-bold">Movimientos Recientes</h5>
               <button className="btn btn-sm btn-light">Ver todo</button>
             </div>
