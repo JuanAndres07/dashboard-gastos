@@ -4,8 +4,10 @@ import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { formatCurrency } from "../utilities/formatters";
 import { useTransactions } from "../hooks/useTransactions";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function Dashboard({ user }) {
+  const { profile } = useAuth();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [summary, setSummary] = useState({
     total_income: 0,
@@ -106,7 +108,7 @@ export default function Dashboard({ user }) {
     <div className="container-fluid py-4">
       <header className="mb-4">
         <h1 className="fw-bold">Panel de Control</h1>
-        <p className="text-muted">Bienvenido de nuevo, {user.email}</p>
+        <p className="text-muted">Bienvenido de nuevo, {profile?.fullname || user.email}</p>
       </header>
 
       {/* Tarjetas de Resumen */}
