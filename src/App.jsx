@@ -19,6 +19,7 @@ import Transactions from "./pages/Transactions";
 import Categories from "./pages/Categories";
 import Subscriptions from "./pages/Subscriptions";
 import Budgets from "./pages/Budgets";
+import Analysis from "./pages/Analysis";
 import Configuration from "./pages/Configuration";
 
 //Components
@@ -110,6 +111,10 @@ function App() {
               <Route
                 path="/budgets"
                 element={<Budgets user={session.user} />}
+              />
+              <Route
+                path="/analysis"
+                element={<Analysis user={session.user} />}
               />
               <Route
                 path="/configuration"
