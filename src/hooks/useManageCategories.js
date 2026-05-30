@@ -42,7 +42,7 @@ export default function useManageCategories(user) {
     fetchCategories();
   }, [fetchCategories]);
 
-  async function addCategory(name, type) {
+  async function addCategory(name, type, icon = "IconCoin") {
     const cleanName = name.trim();
     if (!cleanName) return { success: false, message: "El nombre es requerido" };
 
@@ -81,6 +81,7 @@ export default function useManageCategories(user) {
       name: formattedName,
       type: type,
       user_id: user.id,
+      icon: icon,
     });
 
     if (insertError) {
@@ -91,41 +92,53 @@ export default function useManageCategories(user) {
     return { success: true, message: "Categoría agregada con éxito" };
   }
 
-  async function editCategory(category, newName, type) {
+  async function editCategory(category, newName, type, icon) {
     const cleanName = newName.trim();
-    if (!cleanName || cleanName === category.name) return { success: true };
+    if (!cleanName) return { success: false, message: "El nombre es requerido" };
 
     const formattedName =
       cleanName.charAt(0).toUpperCase() + cleanName.slice(1).toLowerCase();
 
-    if (
-      categories.some(
-        (c) =>
-          c.id !== category.id &&
-          c.name.toLowerCase() === formattedName.toLowerCase() &&
-          c.type === type,
-      )
-    ) {
-      return { success: false, message: "Ya existe una categoría activa con ese nombre." };
+    const nameChanged = formattedName !== category.name;
+    const iconChanged = icon && icon !== category.icon;
+
+    if (!nameChanged && !iconChanged) return { success: true };
+
+    if (nameChanged) {
+      if (
+        categories.some(
+          (c) =>
+            c.id !== category.id &&
+            c.name.toLowerCase() === formattedName.toLowerCase() &&
+            c.type === type,
+        )
+      ) {
+        return { success: false, message: "Ya existe una categoría activa con ese nombre." };
+      }
+
+      if (
+        hiddenCategories.some(
+          (c) =>
+            c.id !== category.id &&
+            c.name.toLowerCase() === formattedName.toLowerCase() &&
+            c.type === type,
+        )
+      ) {
+        return {
+          success: false,
+          message: "Ya existe una categoría oculta con ese nombre, puedes mostrarla desde la papelera",
+        };
+      }
     }
 
-    if (
-      hiddenCategories.some(
-        (c) =>
-          c.id !== category.id &&
-          c.name.toLowerCase() === formattedName.toLowerCase() &&
-          c.type === type,
-      )
-    ) {
-      return {
-        success: false,
-        message: "Ya existe una categoría oculta con ese nombre, puedes mostrarla desde la papelera",
-      };
+    const updateFields = { name: formattedName };
+    if (icon) {
+      updateFields.icon = icon;
     }
 
     const { error } = await supabase
       .from("Category")
-      .update({ name: formattedName })
+      .update(updateFields)
       .eq("id", category.id);
 
     if (error) {

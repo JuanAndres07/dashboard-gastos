@@ -1,5 +1,6 @@
 import { useState } from "react";
 import CategoryList from "../components/CategoryList";
+import IconPicker from "../components/IconPicker";
 import useManageCategories from "../hooks/useManageCategories";
 
 export default function Categories({ user }) {
@@ -15,10 +16,11 @@ export default function Categories({ user }) {
   const [showHidden, setShowHidden] = useState(false);
   const [viewMode, setViewMode] = useState("expense");
   const [newName, setNewName] = useState("");
+  const [selectedIcon, setSelectedIcon] = useState("IconCoin");
 
   async function handleAddCategory(e) {
     e.preventDefault();
-    const result = await addCategory(newName, viewMode);
+    const result = await addCategory(newName, viewMode, selectedIcon);
 
     if (!result.success) {
       if (result.code === "DUPLICATE_HIDDEN") {
@@ -26,6 +28,7 @@ export default function Categories({ user }) {
           const restoreResult = await unhideCategory(result.categoryToRestore);
           if (!restoreResult.success) alert(restoreResult.message);
           setNewName("");
+          setSelectedIcon("IconCoin");
         }
       } else {
         alert(result.message);
@@ -34,10 +37,11 @@ export default function Categories({ user }) {
     }
 
     setNewName("");
+    setSelectedIcon("IconCoin");
   }
 
-  async function onEditCategory(category, name) {
-    const result = await editCategory(category, name, viewMode);
+  async function onEditCategory(category, name, icon) {
+    const result = await editCategory(category, name, viewMode, icon);
     if (!result.success) {
       alert(result.message);
       return false;
@@ -81,15 +85,20 @@ export default function Categories({ user }) {
         </button>
       </div>
 
-      <form onSubmit={handleAddCategory}>
+      <form onSubmit={handleAddCategory} className="d-flex align-items-center gap-2 my-3">
         <input
           type="text"
+          className="form-control"
+          style={{ maxWidth: "300px" }}
           placeholder={`Nombre de la categoría de ${viewMode}`}
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
           required
         />
-        <button type="submit">Agregar</button>
+        <IconPicker value={selectedIcon} onChange={setSelectedIcon} />
+        <button type="submit" className="btn btn-primary">
+          Agregar
+        </button>
       </form>
 
       <hr />
