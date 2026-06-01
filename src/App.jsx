@@ -9,11 +9,11 @@ import { useState, useEffect } from "react";
 import { supabase } from "./lib/supabase";
 
 //Pages
-import Register from "./pages/Register";
-import Login from "./pages/Login";
-import ConfirmEmail from "./pages/ConfirmEmail";
-import ForgotPassword from "./pages/ForgotPassword";
-import UpdatePassword from "./pages/UpdatePassword";
+import Register from "./pages/auth/Register";
+import Login from "./pages/auth/Login";
+import ConfirmEmail from "./pages/auth/ConfirmEmail";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import UpdatePassword from "./pages/auth/UpdatePassword";
 import Dashboard from "./pages/Dashboard";
 import Transactions from "./pages/Transactions";
 import Categories from "./pages/Categories";
