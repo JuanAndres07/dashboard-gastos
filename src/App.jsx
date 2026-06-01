@@ -23,7 +23,7 @@ import Analysis from "./pages/Analysis";
 import Configuration from "./pages/Configuration";
 
 //Components
-import SideBar from "./components/SideBar";
+import Layout from "./components/Layout";
 
 function App() {
   const [session, setSession] = useState(null);
@@ -56,9 +56,9 @@ function App() {
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center vh-100">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Cargando...</span>
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" role="status">
+          <span className="sr-only">Cargando...</span>
         </div>
       </div>
     );
@@ -85,16 +85,7 @@ function App() {
             <Route path="/update-password" element={<UpdatePassword />} />
 
             {/* Routes with Sidebar and Dashboard Layout */}
-            <Route
-              element={
-                <div className="d-flex w-100 min-vh-100">
-                  <SideBar />
-                  <main className="flex-grow-1 p-4 bg-light text-start">
-                    <Outlet />
-                  </main>
-                </div>
-              }
-            >
+            <Route element={<Layout />}>
               <Route path="/" element={<Dashboard user={session.user} />} />
               <Route
                 path="/transactions"

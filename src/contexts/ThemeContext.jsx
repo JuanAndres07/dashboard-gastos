@@ -20,7 +20,7 @@ export function ThemeProvider({ children }) {
 
   // Solo pinta el tema en la pantalla (HTML), NO escribe en localStorage
   const applyTheme = (newTheme) => {
-    document.documentElement.setAttribute("data-bs-theme", newTheme);
+    document.documentElement.setAttribute("data-theme", newTheme);
   };
 
   useEffect(() => {

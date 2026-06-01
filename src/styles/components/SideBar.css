@@ -1,0 +1,82 @@
+/* Custom Sidebar widths and transitions */
+.sidebar {
+  --sidebar-expanded-width: 240px;
+  --sidebar-collapsed-width: 100px;
+  width: var(--sidebar-expanded-width);
+  min-height: 100vh;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(180deg, var(--sidebar-bg-gradient-start) 0%, var(--sidebar-bg-gradient-end) 100%);
+  border-right: 1px solid var(--sidebar-border);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow-x: hidden;
+  z-index: 100;
+}
+
+.sidebar.collapsed {
+  width: var(--sidebar-collapsed-width);
+}
+
+/* --- Media Queries Responsivas (Tablet / Móvil) --- */
+
+/* 1. Tabletas (768px a 1024px): Colapsar sidebar automáticamente a 100px */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .sidebar {
+    width: var(--sidebar-collapsed-width) !important;
+  }
+  .sidebar .link-text,
+  .sidebar .logout-text,
+  .sidebar .expanded {
+    display: none !important;
+  }
+  .sidebar .collapsed {
+    display: block !important;
+  }
+  .sidebar .nav-link-custom {
+    justify-content: center !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  .sidebar .logout-btn {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+}
+
+/* 2. Móviles (< 768px): Cajón deslizante (Drawer) */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: var(--sidebar-expanded-width) !important;
+    transform: translateX(-100%);
+    z-index: 1000;
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+  
+  /* Forzar que en móviles se vea expandido para poder leer los textos */
+  .sidebar .link-text,
+  .sidebar .logout-text,
+  .sidebar .expanded {
+    display: inline-block !important;
+  }
+  .sidebar .collapsed {
+    display: none !important;
+  }
+  .sidebar .nav-link-custom {
+    justify-content: flex-start !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+  .sidebar .logout-btn {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+}
