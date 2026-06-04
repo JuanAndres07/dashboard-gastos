@@ -65,47 +65,92 @@ export function TransactionForm({ onTransactionAdded, user }) {
   }
 
   return (
-    <div>
-      <div>
-        <button onClick={() => setType("expense")}>Egreso</button>
-        <button onClick={() => setType("income")}>Ingreso</button>
-      </div>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="number"
-          placeholder="Monto"
-          value={amount}
-          onChange={(e) => handleAmountChange(e)}
-          step="0.0001"
-          required
-        />
-
-        <input
-          type="text"
-          placeholder="Descripción"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-
-        <select
-          name="category"
-          id="category_id"
-          value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value)}
-          required
+    <div className="space-y-4 text-left">
+      <div className="flex bg-(--bg-light) p-1 rounded-xl gap-1">
+        <button
+          type="button"
+          onClick={() => setType("expense")}
+          className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all duration-300 ease-in-out cursor-pointer ${
+            type === "expense"
+              ? "bg-white text-(--danger-color) shadow-[0_2px_8px_rgba(239,68,68,0.08)]"
+              : "text-(--text-color) hover:text-(--headings-color) hover:bg-(--sidebar-link-hover-bg)"
+          }`}
         >
-          <option value="" disabled>
-            Selecciona una categoría
-          </option>
+          Egreso
+        </button>
+        <button
+          type="button"
+          onClick={() => setType("income")}
+          className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all duration-300 ease-in-out cursor-pointer ${
+            type === "income"
+              ? "bg-white text-(--success-color) shadow-[0_2px_8px_rgba(16,185,129,0.08)]"
+              : "text-(--text-color) hover:text-(--headings-color) hover:bg-(--sidebar-link-hover-bg)"
+          }`}
+        >
+          Ingreso
+        </button>
+      </div>
 
-          {filteredCategories.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.name}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="amount" className="text-xs font-semibold text-(--text-color) tracking-wide">
+            Monto
+          </label>
+          <input
+            id="amount"
+            type="number"
+            placeholder="0.00"
+            value={amount}
+            onChange={(e) => handleAmountChange(e)}
+            step="0.0001"
+            required
+            className="w-full px-4 py-3 bg-(--bg-light) border border-(--sidebar-border) rounded-xl text-(--text-color) placeholder-(--text-color)/50 text-sm focus:outline-none focus:ring-2 focus:ring-(--primary-color) focus:border-transparent transition-all duration-300"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="description" className="text-xs font-semibold text-(--text-color) tracking-wide">
+            Descripción
+          </label>
+          <input
+            id="description"
+            type="text"
+            placeholder="Ej. Supermercado, Alquiler, etc."
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="w-full px-4 py-3 bg-(--bg-light) border border-(--sidebar-border) rounded-xl text-(--text-color) placeholder-(--text-color)/50 text-sm focus:outline-none focus:ring-2 focus:ring-(--primary-color) focus:border-transparent transition-all duration-300"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="category_id" className="text-xs font-semibold text-(--text-color) tracking-wide">
+            Categoría
+          </label>
+          <select
+            name="category"
+            id="category_id"
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+            required
+            className="w-full px-4 py-3 bg-(--bg-light) border border-(--sidebar-border) rounded-xl text-(--text-color) text-sm focus:outline-none focus:ring-2 focus:ring-(--primary-color) focus:border-transparent transition-all duration-300 cursor-pointer"
+          >
+            <option value="" disabled>
+              Selecciona una categoría
             </option>
-          ))}
-        </select>
 
-        <button type="submit" disabled={loading}>
+            {filteredCategories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-(--primary-color) text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 ease-in-out hover:opacity-90 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_4px_12px_rgba(0,82,204,0.15)] hover:shadow-[0_6px_20px_rgba(0,82,204,0.25)] cursor-pointer mt-2"
+        >
           {loading ? "Agregando..." : "Agregar "}
           {type === "expense" ? "Egreso" : "Ingreso"}
         </button>

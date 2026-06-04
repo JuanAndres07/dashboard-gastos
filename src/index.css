@@ -6,6 +6,8 @@
   --color-secondary: var(--secondary-color);
   --color-tertiary: var(--tertiary-color);
   --color-light: var(--bg-light);
+  --color-success: var(--success-color);
+  --color-danger: var(--danger-color);
 }
 
 :root {
@@ -15,6 +17,8 @@
   --bg-light: #f0f4ff;
   --text-color: #64748b;
   --headings-color: #05345c;
+  --success-color: #10b981;
+  --danger-color: #ef4444;
 
   /* Sidebar colors */
   --sidebar-bg-gradient-start: #ffffff;
@@ -35,6 +39,8 @@
   --bg-light: #0b1220;
   --text-color: #94a3b8;
   --headings-color: #f8fafc;
+  --success-color: #34d399;
+  --danger-color: #f87171;
 
   /* Sidebar colors */
   --sidebar-bg-gradient-start: #111827;
