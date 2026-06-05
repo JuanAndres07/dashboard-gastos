@@ -33,6 +33,15 @@
   .sidebar .collapsed {
     display: block !important;
   }
+  .sidebar .sidebar-header {
+    justify-content: center !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  .sidebar .sidebar-header > div {
+    justify-content: center !important;
+    gap: 0 !important;
+  }
   .sidebar .nav-link-custom {
     justify-content: center !important;
     padding-left: 0 !important;

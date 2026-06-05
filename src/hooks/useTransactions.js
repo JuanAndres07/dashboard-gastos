@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 
-export function useTransactions({ user, limit, initialViewMode = "expense", trigger, categoryId, page = 1, pageSize = 20 }) {
+export function useTransactions({ user, limit, initialViewMode = "expense", trigger, categoryId, page = 1, pageSize = 20, startDate, endDate, search }) {
   const [transactions, setTransactions] = useState([]);
   const [viewMode, setViewMode] = useState(initialViewMode);
   const [loading, setLoading] = useState(true);
@@ -41,6 +41,18 @@ export function useTransactions({ user, limit, initialViewMode = "expense", trig
           query = query.eq("category_id", categoryId);
         }
 
+        if (startDate) {
+          query = query.gte("created_at", startDate);
+        }
+
+        if (endDate) {
+          query = query.lte("created_at", `${endDate}T23:59:59.999Z`);
+        }
+
+        if (search) {
+          query = query.ilike("note", `%${search}%`);
+        }
+
         if (limit) {
           query = query.limit(limit);
         } else {
@@ -77,7 +89,7 @@ export function useTransactions({ user, limit, initialViewMode = "expense", trig
     return () => {
       controller.abort();
     };
-  }, [user?.id, limit, viewMode, trigger, categoryId, page, pageSize]);
+  }, [user?.id, limit, viewMode, trigger, categoryId, page, pageSize, startDate, endDate, search]);
 
   return {
     transactions,
