@@ -3,8 +3,9 @@ import { TransactionForm } from "../components/TransactionForm";
 import { useState, useEffect } from "react";
 import { useTransactions } from "../hooks/useTransactions";
 import { useCategories } from "../hooks/useCategories";
-import { IconPlus, IconX, IconSearch } from "@tabler/icons-react";
+import { IconPlus, IconSearch } from "@tabler/icons-react";
 import { Pagination } from "../components/Pagination";
+import Modal from "../components/Modal";
 
 export default function Transactions({ user }) {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -101,7 +102,7 @@ export default function Transactions({ user }) {
           {/* Barra de Filtros Dedicada */}
           <div className="flex flex-col md:flex-row flex-wrap items-stretch md:items-center gap-4 bg-(--bg-light)/20 rounded-xl">
             {/* Buscador */}
-            <div className="relative grow md:grow-0 min-w-200px lg:min-w-280px">
+            <div className="relative grow md:grow-0 min-w-50 md:min-w-70">
               <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-(--text-color)/50">
                 <IconSearch size={18} />
               </span>
@@ -202,42 +203,19 @@ export default function Transactions({ user }) {
       </div>
 
       {/* Modal para Agregar Movimiento */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-1100 flex items-center justify-center p-4">
-          {/* Backdrop difuminado */}
-          <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity duration-300 ease-in-out"
-            onClick={() => setIsModalOpen(false)}
-          ></div>
-
-          {/* Tarjeta del Modal */}
-          <div
-            className="relative w-full max-w-md bg-(--settings-card-bg) rounded-2xl p-6 shadow-2xl transition-all duration-300 ease-in-out transform scale-100"
-            style={{ border: "var(--card-border)" }}
-          >
-            <div className="flex justify-between items-center mb-5">
-              <h2 className="text-lg font-bold text-(--headings-color)">
-                Registrar Movimiento
-              </h2>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="p-1.5 rounded-lg text-(--text-color) hover:bg-(--sidebar-link-hover-bg) hover:text-(--headings-color) transition-all duration-200 cursor-pointer"
-                aria-label="Cerrar modal"
-              >
-                <IconX size={18} />
-              </button>
-            </div>
-
-            <TransactionForm
-              onTransactionAdded={() => {
-                refreshData();
-                setIsModalOpen(false);
-              }}
-              user={user}
-            />
-          </div>
-        </div>
-      )}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Registrar Movimiento"
+      >
+        <TransactionForm
+          onTransactionAdded={() => {
+            refreshData();
+            setIsModalOpen(false);
+          }}
+          user={user}
+        />
+      </Modal>
     </div>
   );
 }

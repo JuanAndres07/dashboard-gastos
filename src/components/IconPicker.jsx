@@ -1,8 +1,15 @@
 import { useState, useRef, useEffect } from "react";
-import iconDictionary, { iconNames, iconTranslations } from "../utilities/iconDictionary";
+import iconDictionary, {
+  iconNames,
+  iconTranslations,
+} from "../utilities/iconDictionary";
 import { IconSearch, IconChevronDown } from "@tabler/icons-react";
 
-export default function IconPicker({ value, onChange, btnClassName = "btn btn-outline-secondary" }) {
+export default function IconPicker({
+  value,
+  onChange,
+  btnClassName = "px-4 py-2 bg-(--settings-card-bg) border border-(--sidebar-border) rounded-xl text-(--headings-color) hover:bg-(--sidebar-link-hover-bg) text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300 cursor-pointer",
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const containerRef = useRef(null);
@@ -10,7 +17,10 @@ export default function IconPicker({ value, onChange, btnClassName = "btn btn-ou
   // Close when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target)
+      ) {
         setIsOpen(false);
       }
     }
@@ -31,45 +41,41 @@ export default function IconPicker({ value, onChange, btnClassName = "btn btn-ou
   });
 
   return (
-    <div className="position-relative d-inline-block" ref={containerRef}>
+    <div className="relative inline-block" ref={containerRef}>
       <button
         type="button"
-        className={`${btnClassName} d-flex align-items-center gap-2`}
+        className={`${btnClassName} flex items-center gap-2 justify-between min-w-40`}
         onClick={() => setIsOpen(!isOpen)}
-        style={{ minWidth: "160px", justifyContent: "space-between" }}
       >
-        <div className="d-flex align-items-center gap-2 text-start text-truncate" style={{ maxWidth: "180px" }}>
-          {SelectedIcon && <SelectedIcon size={20} className="flex-shrink-0" />}
-          <span className="text-truncate" style={{ fontSize: "0.9rem" }}>
-            {value ? (iconTranslations[value] || value.replace("Icon", "")) : "Icono"}
+        <div className="flex items-center gap-2 text-start truncate max-w-45">
+          {SelectedIcon && <SelectedIcon size={20} className="shrink-0" />}
+          <span className="truncate text-[13px]">
+            {value
+              ? iconTranslations[value] || value.replace("Icon", "")
+              : "Icono"}
           </span>
         </div>
-        <IconChevronDown size={16} className="text-muted flex-shrink-0" />
+        <IconChevronDown
+          size={16}
+          className="text-(--text-color)/60 shrink-0"
+        />
       </button>
 
       {isOpen && (
         <div
-          className="card shadow-lg position-absolute mt-1 p-2"
+          className="absolute left-0 mt-2 p-3 bg-(--settings-card-bg) rounded-xl shadow-xl z-50 w-75 max-h-87.5 flex flex-col transition-all duration-200"
           style={{
-            zIndex: 1050,
-            width: "300px",
-            maxHeight: "350px",
-            overflow: "hidden",
-            left: 0,
-            top: "100%",
-            backgroundColor: "var(--settings-card-bg, #ffffff)",
             border: "var(--card-border)",
-            borderRadius: "12px",
           }}
         >
           {/* Search bar */}
-          <div className="input-group input-group-sm mb-2">
-            <span className="input-group-text bg-transparent border-end-0">
-              <IconSearch size={14} className="text-muted" />
+          <div className="relative mb-3">
+            <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-(--text-color)/50">
+              <IconSearch size={16} />
             </span>
             <input
               type="text"
-              className="form-control border-start-0 ps-0 shadow-none"
+              className="w-full pl-9 pr-4 py-2 bg-(--bg-light)/50 border border-(--sidebar-border) rounded-xl text-(--headings-color) placeholder:text-(--text-color)/40 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300"
               placeholder="Buscar icono..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -79,30 +85,25 @@ export default function IconPicker({ value, onChange, btnClassName = "btn btn-ou
 
           {/* Grid of icons */}
           <div
-            className="d-grid gap-1 overflow-auto pe-1"
+            className="grid grid-cols-5 gap-1 overflow-y-auto pr-1 pb-1"
             style={{
-              gridTemplateColumns: "repeat(5, 1fr)",
-              maxHeight: "260px",
-              paddingBottom: "4px",
+              maxHeight: "240px",
             }}
           >
             {filteredIconNames.map((name) => {
               const IconComp = iconDictionary[name];
               const isSelected = value === name;
-              const titleText = iconTranslations[name] || name.replace("Icon", "");
+              const titleText =
+                iconTranslations[name] || name.replace("Icon", "");
               return (
                 <button
                   key={name}
                   type="button"
-                  className={`btn p-2 d-flex align-items-center justify-content-center rounded-3 transition-all ${
+                  className={`aspect-square p-2 flex items-center justify-center rounded-lg transition-all duration-200 cursor-pointer ${
                     isSelected
-                      ? "btn-primary"
-                      : "btn-light border-0"
+                      ? "bg-(--primary-color) text-white shadow-xs"
+                      : "hover:bg-(--sidebar-link-hover-bg) text-(--text-color) hover:text-(--headings-color)"
                   }`}
-                  style={{
-                    aspectRatio: "1",
-                    backgroundColor: isSelected ? undefined : "transparent",
-                  }}
                   onClick={() => {
                     onChange(name);
                     setIsOpen(false);
@@ -110,12 +111,15 @@ export default function IconPicker({ value, onChange, btnClassName = "btn btn-ou
                   }}
                   title={titleText}
                 >
-                  <IconComp size={22} className={isSelected ? "text-white" : "text-secondary"} />
+                  <IconComp
+                    size={22}
+                    className={isSelected ? "text-white" : "text-current"}
+                  />
                 </button>
               );
             })}
             {filteredIconNames.length === 0 && (
-              <div className="text-center py-4 text-muted col-span-5" style={{ gridColumn: "span 5" }}>
+              <div className="text-center py-6 text-xs text-(--text-color)/60 col-span-5">
                 No se encontraron iconos
               </div>
             )}
