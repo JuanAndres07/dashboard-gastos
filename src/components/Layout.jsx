@@ -45,7 +45,7 @@ export default function Layout() {
       <SideBar isMobileOpen={isMobileOpen} setIsMobileOpen={setIsMobileOpen} />
 
       {/* Contenido principal */}
-      <main className="grow p-6 text-left w-full md:w-auto">
+      <main className="grow p-6 text-left w-full md:w-auto min-w-0">
         <Outlet />
       </main>
     </div>
