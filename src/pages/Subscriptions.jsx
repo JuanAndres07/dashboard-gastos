@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useSubscriptions } from "../hooks/useSubscriptions";
-import { IconPlus } from "@tabler/icons-react";
+import { IconPlus, IconCreditCardOff } from "@tabler/icons-react";
 import { formatCurrency } from "../utilities/formatters";
 import Modal from "../components/Modal";
 import { Pagination } from "../components/Pagination";
@@ -102,20 +102,7 @@ export default function Subscriptions({ user }) {
         ) : subscriptions.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
             <div className="w-16 h-16 rounded-full bg-(--bg-light) flex items-center justify-center mb-4 transition-transform duration-300 hover:scale-105">
-              <svg
-                className="w-8 h-8 text-(--text-color)/50"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="1.5"
-                  d="M20 12H4M20 12a8 8 0 11-16 0 8 8 0 0116 0z"
-                />
-              </svg>
+              <IconCreditCardOff size={32} stroke={1.5} className="text-(--text-color)/50" />
             </div>
             <h3 className="text-base font-semibold text-(--headings-color) mb-1">
               Sin suscripciones

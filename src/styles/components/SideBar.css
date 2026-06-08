@@ -3,13 +3,15 @@
   --sidebar-expanded-width: 240px;
   --sidebar-collapsed-width: 100px;
   width: var(--sidebar-expanded-width);
-  min-height: 100vh;
+  height: 100vh;
+  position: sticky;
+  top: 0;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background: linear-gradient(180deg, var(--sidebar-bg-gradient-start) 0%, var(--sidebar-bg-gradient-end) 100%);
   border-right: 1px solid var(--sidebar-border);
   display: flex;
   flex-direction: column;
-  position: relative;
+  overflow-y: auto;
   overflow-x: hidden;
   z-index: 100;
 }

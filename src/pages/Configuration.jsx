@@ -1,7 +1,7 @@
 import { useTheme } from "../contexts/ThemeContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useState, useEffect } from "react";
-import { IconSun, IconMoon, IconCheck, IconUser, IconMail, IconLock, IconKey } from "@tabler/icons-react";
+import { IconSun, IconMoon, IconCheck, IconUser, IconMail, IconLock, IconKey, IconX } from "@tabler/icons-react";
 
 export default function Configuration() {
   const { theme, setTheme } = useTheme();
@@ -96,328 +96,401 @@ export default function Configuration() {
   };
 
   return (
-    <div className="container py-4">
-      <header className="mb-5">
-        <h1 className="fw-bold mb-2">Configuración</h1>
-        <p className="text-muted">Personaliza la apariencia y el comportamiento de tu panel de control.</p>
+    <div className="w-full space-y-6 text-left">
+      <header className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-extrabold text-(--headings-color) tracking-tight">
+            Configuración
+          </h1>
+          <p className="text-sm text-(--text-color)/85 mt-1">
+            Personaliza la apariencia y el comportamiento de tu panel de control.
+          </p>
+        </div>
       </header>
 
-      <div className="row">
-        <div className="col-lg-8">
+      <div className="flex flex-col gap-6 w-full">
+        <div className="flex flex-col lg:flex-row gap-6">
           {/* Card de Configuración de Perfil */}
-          <div className="card border-0 shadow-sm mb-4">
-            <div className="card-body p-4">
-              <h5 className="card-title fw-bold mb-1">Información de Perfil</h5>
-              <p className="text-muted small mb-4">
-                Actualiza tus datos personales para personalizar tu experiencia en la aplicación.
-              </p>
+          <div
+            className="flex-1 bg-(--settings-card-bg) rounded-2xl p-6 transition-all duration-300 ease-in-out"
+            style={{ border: "var(--card-border)" }}
+          >
+            <h2 className="text-lg font-bold text-(--headings-color) mb-1">
+              Información de Perfil
+            </h2>
+            <p className="text-sm text-(--text-color)/85 mb-6">
+              Actualiza tus datos personales para personalizar tu experiencia en la aplicación.
+            </p>
 
-              <form onSubmit={handleSubmit}>
-                <div className="row g-3">
-                  <div className="col-md-6">
-                    <label className="form-label fw-semibold small text-secondary">Nombre Completo</label>
-                    <div className="input-group">
-                      <span className="input-group-text bg-light border-end-0">
-                        <IconUser size={20} stroke={1.5} className="text-muted" />
-                      </span>
-                      <input
-                        type="text"
-                        className="form-control bg-light border-start-0 ps-0"
-                        placeholder="Tu nombre completo"
-                        value={fullname}
-                        onChange={(e) => setFullname(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="col-md-6">
-                    <label className="form-label fw-semibold small text-secondary">Correo Electrónico</label>
-                    <div className="input-group">
-                      <span className="input-group-text bg-light border-end-0 opacity-75">
-                        <IconMail size={20} stroke={1.5} className="text-muted" />
-                      </span>
-                      <input
-                        type="email"
-                        className="form-control bg-light border-start-0 ps-0 opacity-75"
-                        value={user?.email || ""}
-                        disabled
-                        readOnly
-                      />
-                    </div>
-                  </div>
-
-                  <div className="col-12 mt-4">
-                    <button
-                      type="submit"
-                      className="btn btn-primary d-inline-flex align-items-center gap-2 px-4 py-2"
-                      disabled={isSaving}
-                      style={{ transition: "all 0.2s ease" }}
-                    >
-                      {isSaving ? (
-                        <>
-                          <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                          Guardando...
-                        </>
-                      ) : (
-                        <>
-                          <IconCheck size={18} stroke={2.5} />
-                          Guardar Cambios
-                        </>
-                      )}
-                    </button>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="block text-xs font-semibold text-(--text-color) uppercase tracking-wider mb-1.5">
+                    Nombre Completo
+                  </label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-(--text-color)/70">
+                      <IconUser size={20} stroke={1.5} />
+                    </span>
+                    <input
+                      type="text"
+                      className="w-full pl-11 pr-4 py-3 bg-(--bg-light) border border-(--sidebar-border) rounded-xl text-(--headings-color) placeholder-(--text-color)/50 text-sm focus:outline-none focus:ring-2 focus:ring-(--primary-color) focus:border-transparent transition-all duration-300"
+                      placeholder="Tu nombre completo"
+                      value={fullname}
+                      onChange={(e) => setFullname(e.target.value)}
+                      required
+                    />
                   </div>
                 </div>
-              </form>
 
-              {message.text && (
-                <div className={`alert alert-${message.type} mt-3 mb-0 d-flex align-items-center gap-2 py-2 px-3 border-0 shadow-sm`} role="alert" style={{ transition: "all 0.3s ease" }}>
-                  <small className="fw-semibold">{message.text}</small>
+                <div className="flex flex-col gap-1.5">
+                  <label className="block text-xs font-semibold text-(--text-color) uppercase tracking-wider mb-1.5">
+                    Correo Electrónico
+                  </label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-(--text-color)/50">
+                      <IconMail size={20} stroke={1.5} />
+                    </span>
+                    <input
+                      type="email"
+                      className="w-full pl-11 pr-4 py-3 bg-(--bg-light)/60 border border-(--sidebar-border) rounded-xl text-(--headings-color) text-sm opacity-60 cursor-not-allowed transition-all duration-300"
+                      value={user?.email || ""}
+                      disabled
+                      readOnly
+                    />
+                  </div>
                 </div>
-              )}
-            </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  className="flex items-center gap-2 bg-(--primary-color) text-white font-semibold py-2.5 px-5 rounded-xl transition-all duration-300 ease-in-out hover:opacity-90 active:scale-[0.99] shadow-[0_4px_12px_rgba(0,82,204,0.15)] hover:shadow-[0_6px_20px_rgba(0,82,204,0.25)] cursor-pointer text-sm shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isSaving}
+                >
+                  {isSaving ? (
+                    <>
+                      <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
+                      <span>Guardando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <IconCheck size={18} stroke={2.5} />
+                      <span>Guardar Cambios</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+
+            {message.text && (
+              <div
+                className={`p-3 mt-4 rounded-xl border flex justify-between items-center transition-all duration-300 ${
+                  message.type === "danger"
+                    ? "bg-(--danger-color)/10 border-(--danger-color)/20 text-(--danger-color)"
+                    : "bg-(--success-color)/10 border-(--success-color)/20 text-(--success-color)"
+                }`}
+              >
+                <span className="text-xs font-semibold">{message.text}</span>
+                <button
+                  type="button"
+                  className="p-1 rounded-lg hover:bg-black/5 text-current transition-all duration-200 cursor-pointer"
+                  onClick={() => setMessage({ type: "", text: "" })}
+                  aria-label="Cerrar mensaje"
+                >
+                  <IconX size={14} />
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Card de Cambiar Correo Electrónico */}
-          <div className="card border-0 shadow-sm mb-4">
-            <div className="card-body p-4">
-              <h5 className="card-title fw-bold mb-1">Cambiar Correo Electrónico</h5>
-              <p className="text-muted small mb-4">
-                Actualiza tu dirección de correo electrónico. Se enviará un mensaje de confirmación para validar el cambio.
-              </p>
+          <div
+            className="flex-1 bg-(--settings-card-bg) rounded-2xl p-6 transition-all duration-300 ease-in-out"
+            style={{ border: "var(--card-border)" }}
+          >
+            <h2 className="text-lg font-bold text-(--headings-color) mb-1">
+              Cambiar Correo Electrónico
+            </h2>
+            <p className="text-sm text-(--text-color)/85 mb-6">
+              Actualiza tu dirección de correo electrónico. Se enviará un mensaje de confirmación para validar el cambio.
+            </p>
 
-              <form onSubmit={handleUpdateEmail}>
-                <div className="row g-3">
-                  <div className="col-md-6">
-                    <label className="form-label fw-semibold small text-secondary">Nuevo Correo Electrónico</label>
-                    <div className="input-group">
-                      <span className="input-group-text bg-light border-end-0">
-                        <IconMail size={20} stroke={1.5} className="text-muted" />
-                      </span>
-                      <input
-                        type="email"
-                        className="form-control bg-light border-start-0 ps-0"
-                        placeholder="nuevo@correo.com"
-                        value={newEmail}
-                        onChange={(e) => setNewEmail(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="col-md-6">
-                    <label className="form-label fw-semibold small text-secondary">Contraseña Actual</label>
-                    <div className="input-group">
-                      <span className="input-group-text bg-light border-end-0">
-                        <IconLock size={20} stroke={1.5} className="text-muted" />
-                      </span>
-                      <input
-                        type="password"
-                        className="form-control bg-light border-start-0 ps-0"
-                        placeholder="Tu contraseña actual"
-                        value={emailCurrentPassword}
-                        onChange={(e) => setEmailCurrentPassword(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="col-12 mt-4">
-                    <button
-                      type="submit"
-                      className="btn btn-primary d-inline-flex align-items-center gap-2 px-4 py-2"
-                      disabled={isSavingEmail}
-                      style={{ transition: "all 0.2s ease" }}
-                    >
-                      {isSavingEmail ? (
-                        <>
-                          <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                          Actualizando Correo...
-                        </>
-                      ) : (
-                        <>
-                          <IconCheck size={18} stroke={2.5} />
-                          Actualizar Correo
-                        </>
-                      )}
-                    </button>
+            <form onSubmit={handleUpdateEmail} className="space-y-4">
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="block text-xs font-semibold text-(--text-color) uppercase tracking-wider mb-1.5">
+                    Nuevo Correo Electrónico
+                  </label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-(--text-color)/70">
+                      <IconMail size={20} stroke={1.5} />
+                    </span>
+                    <input
+                      type="email"
+                      className="w-full pl-11 pr-4 py-3 bg-(--bg-light) border border-(--sidebar-border) rounded-xl text-(--headings-color) placeholder-(--text-color)/50 text-sm focus:outline-none focus:ring-2 focus:ring-(--primary-color) focus:border-transparent transition-all duration-300"
+                      placeholder="nuevo@correo.com"
+                      value={newEmail}
+                      onChange={(e) => setNewEmail(e.target.value)}
+                      required
+                    />
                   </div>
                 </div>
-              </form>
 
-              {emailMessage.text && (
-                <div className={`alert alert-${emailMessage.type} mt-3 mb-0 d-flex align-items-center gap-2 py-2 px-3 border-0 shadow-sm`} role="alert" style={{ transition: "all 0.3s ease" }}>
-                  <small className="fw-semibold">{emailMessage.text}</small>
+                <div className="flex flex-col gap-1.5">
+                  <label className="block text-xs font-semibold text-(--text-color) uppercase tracking-wider mb-1.5">
+                    Contraseña Actual
+                  </label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-(--text-color)/70">
+                      <IconLock size={20} stroke={1.5} />
+                    </span>
+                    <input
+                      type="password"
+                      className="w-full pl-11 pr-4 py-3 bg-(--bg-light) border border-(--sidebar-border) rounded-xl text-(--headings-color) placeholder-(--text-color)/50 text-sm focus:outline-none focus:ring-2 focus:ring-(--primary-color) focus:border-transparent transition-all duration-300"
+                      placeholder="Tu contraseña actual"
+                      value={emailCurrentPassword}
+                      onChange={(e) => setEmailCurrentPassword(e.target.value)}
+                      required
+                    />
+                  </div>
                 </div>
-              )}
-            </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  className="flex items-center gap-2 bg-(--primary-color) text-white font-semibold py-2.5 px-5 rounded-xl transition-all duration-300 ease-in-out hover:opacity-90 active:scale-[0.99] shadow-[0_4px_12px_rgba(0,82,204,0.15)] hover:shadow-[0_6px_20px_rgba(0,82,204,0.25)] cursor-pointer text-sm shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isSavingEmail}
+                >
+                  {isSavingEmail ? (
+                    <>
+                      <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
+                      <span>Actualizando Correo...</span>
+                    </>
+                  ) : (
+                    <>
+                      <IconCheck size={18} stroke={2.5} />
+                      <span>Actualizar Correo</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+
+            {emailMessage.text && (
+              <div
+                className={`p-3 mt-4 rounded-xl border flex justify-between items-center transition-all duration-300 ${
+                  emailMessage.type === "danger"
+                    ? "bg-(--danger-color)/10 border-(--danger-color)/20 text-(--danger-color)"
+                    : "bg-(--success-color)/10 border-(--success-color)/20 text-(--success-color)"
+                }`}
+              >
+                <span className="text-xs font-semibold">{emailMessage.text}</span>
+                <button
+                  type="button"
+                  className="p-1 rounded-lg hover:bg-black/5 text-current transition-all duration-200 cursor-pointer"
+                  onClick={() => setEmailMessage({ type: "", text: "" })}
+                  aria-label="Cerrar mensaje"
+                >
+                  <IconX size={14} />
+                </button>
+              </div>
+            )}
           </div>
+        </div>
 
           {/* Card de Cambiar Contraseña */}
-          <div className="card border-0 shadow-sm mb-4">
-            <div className="card-body p-4">
-              <h5 className="card-title fw-bold mb-1">Cambiar Contraseña</h5>
-              <p className="text-muted small mb-4">
-                Actualiza tu contraseña para mantener tu cuenta segura.
-              </p>
+          <div
+            className="w-full bg-(--settings-card-bg) rounded-2xl p-6 transition-all duration-300 ease-in-out"
+            style={{ border: "var(--card-border)" }}
+          >
+            <h2 className="text-lg font-bold text-(--headings-color) mb-1">
+              Cambiar Contraseña
+            </h2>
+            <p className="text-sm text-(--text-color)/85 mb-6">
+              Actualiza tu contraseña para mantener tu cuenta segura.
+            </p>
 
-              <form onSubmit={handleUpdatePassword}>
-                <div className="row g-3">
-                  <div className="col-md-4">
-                    <label className="form-label fw-semibold small text-secondary">Contraseña Actual</label>
-                    <div className="input-group">
-                      <span className="input-group-text bg-light border-end-0">
-                        <IconLock size={20} stroke={1.5} className="text-muted" />
-                      </span>
-                      <input
-                        type="password"
-                        className="form-control bg-light border-start-0 ps-0"
-                        placeholder="Contraseña actual"
-                        value={passwordCurrentPassword}
-                        onChange={(e) => setPasswordCurrentPassword(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="col-md-4">
-                    <label className="form-label fw-semibold small text-secondary">Nueva Contraseña</label>
-                    <div className="input-group">
-                      <span className="input-group-text bg-light border-end-0">
-                        <IconKey size={20} stroke={1.5} className="text-muted" />
-                      </span>
-                      <input
-                        type="password"
-                        className="form-control bg-light border-start-0 ps-0"
-                        placeholder="Mínimo 6 caracteres"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="col-md-4">
-                    <label className="form-label fw-semibold small text-secondary">Confirmar Nueva Contraseña</label>
-                    <div className="input-group">
-                      <span className="input-group-text bg-light border-end-0">
-                        <IconKey size={20} stroke={1.5} className="text-muted" />
-                      </span>
-                      <input
-                        type="password"
-                        className="form-control bg-light border-start-0 ps-0"
-                        placeholder="Repite la nueva contraseña"
-                        value={confirmNewPassword}
-                        onChange={(e) => setConfirmNewPassword(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="col-12 mt-4">
-                    <button
-                      type="submit"
-                      className="btn btn-primary d-inline-flex align-items-center gap-2 px-4 py-2"
-                      disabled={isSavingPassword}
-                      style={{ transition: "all 0.2s ease" }}
-                    >
-                      {isSavingPassword ? (
-                        <>
-                          <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                          Actualizando Contraseña...
-                        </>
-                      ) : (
-                        <>
-                          <IconCheck size={18} stroke={2.5} />
-                          Actualizar Contraseña
-                        </>
-                      )}
-                    </button>
+            <form onSubmit={handleUpdatePassword} className="space-y-4">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1 flex flex-col gap-1.5">
+                  <label className="block text-xs font-semibold text-(--text-color) uppercase tracking-wider mb-1.5">
+                    Contraseña Actual
+                  </label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-(--text-color)/70">
+                      <IconLock size={20} stroke={1.5} />
+                    </span>
+                    <input
+                      type="password"
+                      className="w-full pl-11 pr-4 py-3 bg-(--bg-light) border border-(--sidebar-border) rounded-xl text-(--headings-color) placeholder-(--text-color)/50 text-sm focus:outline-none focus:ring-2 focus:ring-(--primary-color) focus:border-transparent transition-all duration-300"
+                      placeholder="Contraseña actual"
+                      value={passwordCurrentPassword}
+                      onChange={(e) => setPasswordCurrentPassword(e.target.value)}
+                      required
+                    />
                   </div>
                 </div>
-              </form>
 
-              {passwordMessage.text && (
-                <div className={`alert alert-${passwordMessage.type} mt-3 mb-0 d-flex align-items-center gap-2 py-2 px-3 border-0 shadow-sm`} role="alert" style={{ transition: "all 0.3s ease" }}>
-                  <small className="fw-semibold">{passwordMessage.text}</small>
+                <div className="flex-1 flex flex-col gap-1.5">
+                  <label className="block text-xs font-semibold text-(--text-color) uppercase tracking-wider mb-1.5">
+                    Nueva Contraseña
+                  </label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-(--text-color)/70">
+                      <IconKey size={20} stroke={1.5} />
+                    </span>
+                    <input
+                      type="password"
+                      className="w-full pl-11 pr-4 py-3 bg-(--bg-light) border border-(--sidebar-border) rounded-xl text-(--headings-color) placeholder-(--text-color)/50 text-sm focus:outline-none focus:ring-2 focus:ring-(--primary-color) focus:border-transparent transition-all duration-300"
+                      placeholder="Mínimo 6 caracteres"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      required
+                    />
+                  </div>
                 </div>
-              )}
-            </div>
+
+                <div className="flex-1 flex flex-col gap-1.5">
+                  <label className="block text-xs font-semibold text-(--text-color) uppercase tracking-wider mb-1.5">
+                    Confirmar Nueva Contraseña
+                  </label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-(--text-color)/70">
+                      <IconKey size={20} stroke={1.5} />
+                    </span>
+                    <input
+                      type="password"
+                      className="w-full pl-11 pr-4 py-3 bg-(--bg-light) border border-(--sidebar-border) rounded-xl text-(--headings-color) placeholder-(--text-color)/50 text-sm focus:outline-none focus:ring-2 focus:ring-(--primary-color) focus:border-transparent transition-all duration-300"
+                      placeholder="Repite la nueva contraseña"
+                      value={confirmNewPassword}
+                      onChange={(e) => setConfirmNewPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  className="flex items-center gap-2 bg-(--primary-color) text-white font-semibold py-2.5 px-5 rounded-xl transition-all duration-300 ease-in-out hover:opacity-90 active:scale-[0.99] shadow-[0_4px_12px_rgba(0,82,204,0.15)] hover:shadow-[0_6px_20px_rgba(0,82,204,0.25)] cursor-pointer text-sm shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isSavingPassword}
+                >
+                  {isSavingPassword ? (
+                    <>
+                      <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
+                      <span>Actualizando Contraseña...</span>
+                    </>
+                  ) : (
+                    <>
+                      <IconCheck size={18} stroke={2.5} />
+                      <span>Actualizar Contraseña</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+
+            {passwordMessage.text && (
+              <div
+                className={`p-3 mt-4 rounded-xl border flex justify-between items-center transition-all duration-300 ${
+                  passwordMessage.type === "danger"
+                    ? "bg-(--danger-color)/10 border-(--danger-color)/20 text-(--danger-color)"
+                    : "bg-(--success-color)/10 border-(--success-color)/20 text-(--success-color)"
+                }`}
+              >
+                <span className="text-xs font-semibold">{passwordMessage.text}</span>
+                <button
+                  type="button"
+                  className="p-1 rounded-lg hover:bg-black/5 text-current transition-all duration-200 cursor-pointer"
+                  onClick={() => setPasswordMessage({ type: "", text: "" })}
+                  aria-label="Cerrar mensaje"
+                >
+                  <IconX size={14} />
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Card de Configuración de Tema */}
-          <div className="card border-0 shadow-sm mb-4">
-            <div className="card-body p-4">
-              <h5 className="card-title fw-bold mb-1">Apariencia</h5>
-              <p className="text-muted small mb-4">
-                Elige cómo deseas ver la interfaz de FinFlow en tu dispositivo.
-              </p>
+          <div
+            className="w-full bg-(--settings-card-bg) rounded-2xl p-6 transition-all duration-300 ease-in-out"
+            style={{ border: "var(--card-border)" }}
+          >
+            <h2 className="text-lg font-bold text-(--headings-color) mb-1">
+              Apariencia
+            </h2>
+            <p className="text-sm text-(--text-color)/85 mb-6">
+              Elige cómo deseas ver la interfaz de FinFlow en tu dispositivo.
+            </p>
 
-              <div className="row g-3">
-                {/* Opción Tema Claro */}
-                <div className="col-md-6">
-                  <div
-                    onClick={() => setTheme("light")}
-                    className={`settings-card p-4 d-flex flex-column align-items-center text-center h-100 ${
-                      theme === "light" ? "active" : ""
-                    }`}
-                  >
-                    <div
-                      className={`p-3 rounded-circle mb-3 ${
-                        theme === "light"
-                          ? "bg-primary-subtle text-primary"
-                          : "bg-light text-secondary"
-                      }`}
-                      style={{ transition: "all 0.2s ease" }}
-                    >
-                      <IconSun size={32} stroke={1.5} />
-                    </div>
-                    <h6 className="fw-bold mb-1">Claro</h6>
-                    <p className="text-muted small mb-3">
-                      Ideal para ambientes muy iluminados.
-                    </p>
-                    {theme === "light" && (
-                      <span className="badge bg-primary d-inline-flex align-items-center gap-1 py-2 px-3 rounded-pill">
-                        <IconCheck size={14} stroke={2.5} /> Activo
-                      </span>
-                    )}
-                  </div>
+            <div className="flex flex-col sm:flex-row gap-4">
+              {/* Opción Tema Claro */}
+              <div
+                onClick={() => setTheme("light")}
+                className={`settings-card flex-1 p-6 flex flex-col items-center text-center transition-all duration-300 ease-in-out ${
+                  theme === "light" ? "active" : ""
+                }`}
+              >
+                <div
+                  className={`p-3.5 rounded-full mb-3 transition-all duration-300 ${
+                    theme === "light"
+                      ? "bg-(--primary-color)/10 text-(--primary-color)"
+                      : "bg-(--bg-light) text-(--text-color)"
+                  }`}
+                >
+                  <IconSun size={32} stroke={1.5} />
                 </div>
+                <h3 className="text-sm font-bold text-(--headings-color) mb-1">
+                  Claro
+                </h3>
+                <p className="text-xs text-(--text-color)/80 mb-4">
+                  Ideal para ambientes muy iluminados.
+                </p>
+                {theme === "light" ? (
+                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-(--primary-color)/10 text-(--primary-color) text-xs font-semibold rounded-full">
+                    <IconCheck size={14} stroke={2.5} /> Activo
+                  </span>
+                ) : (
+                  <div className="h-6">{/* Placeholder to keep cards aligned */}</div>
+                )}
+              </div>
 
-                {/* Opción Tema Oscuro */}
-                <div className="col-md-6">
-                  <div
-                    onClick={() => setTheme("dark")}
-                    className={`settings-card p-4 d-flex flex-column align-items-center text-center h-100 ${
-                      theme === "dark" ? "active" : ""
-                    }`}
-                  >
-                    <div
-                      className={`p-3 rounded-circle mb-3 ${
-                        theme === "dark"
-                          ? "bg-primary text-white"
-                          : "bg-light text-secondary"
-                      }`}
-                      style={{ transition: "all 0.2s ease" }}
-                    >
-                      <IconMoon size={32} stroke={1.5} />
-                    </div>
-                    <h6 className="fw-bold mb-1">Oscuro</h6>
-                    <p className="text-muted small mb-3">
-                      Ideal para descansar la vista en ambientes oscuros.
-                    </p>
-                    {theme === "dark" && (
-                      <span className="badge bg-primary d-inline-flex align-items-center gap-1 py-2 px-3 rounded-pill">
-                        <IconCheck size={14} stroke={2.5} /> Activo
-                      </span>
-                    )}
-                  </div>
+              {/* Opción Tema Oscuro */}
+              <div
+                onClick={() => setTheme("dark")}
+                className={`settings-card flex-1 p-6 flex flex-col items-center text-center transition-all duration-300 ease-in-out ${
+                  theme === "dark" ? "active" : ""
+                }`}
+              >
+                <div
+                  className={`p-3.5 rounded-full mb-3 transition-all duration-300 ${
+                    theme === "dark"
+                      ? "bg-(--primary-color)/20 text-(--primary-color)"
+                      : "bg-(--bg-light) text-(--text-color)"
+                  }`}
+                >
+                  <IconMoon size={32} stroke={1.5} />
                 </div>
+                <h3 className="text-sm font-bold text-(--headings-color) mb-1">
+                  Oscuro
+                </h3>
+                <p className="text-xs text-(--text-color)/80 mb-4">
+                  Ideal para descansar la vista en ambientes oscuros.
+                </p>
+                {theme === "dark" ? (
+                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-(--primary-color)/10 text-(--primary-color) text-xs font-semibold rounded-full">
+                    <IconCheck size={14} stroke={2.5} /> Activo
+                  </span>
+                ) : (
+                  <div className="h-6">{/* Placeholder to keep cards aligned */}</div>
+                )}
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
   );
 }
