@@ -5,7 +5,6 @@ import { formatCurrency, formatLocalDate } from "../utilities/formatters";
 
 export const CATEGORY_COLORS = [
   "#3b82f6", // Azul
-  "#8b5cf6", // Morado
   "#ec4899", // Rosado
   "#f59e0b", // Ámbar
   "#14b8a6", // Turquesa
@@ -14,6 +13,7 @@ export const CATEGORY_COLORS = [
   "#10b981", // Esmeralda
   "#6366f1", // Índigo
   "#eab308", // Amarillo
+  "#8b5cf6", // Morado
 ];
 
 export function useAnalysisPage(user) {
@@ -129,7 +129,9 @@ export function useAnalysisPage(user) {
       textColor: textMuted,
       gridColor: isDark ? "rgba(255, 255, 255, 0.06)" : "rgba(0, 0, 0, 0.04)",
       tooltipBg: isDark ? "#1e293b" : "#ffffff",
-      tooltipBorder: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.06)",
+      tooltipBorder: isDark
+        ? "rgba(255, 255, 255, 0.1)"
+        : "rgba(0, 0, 0, 0.06)",
       tooltipText: isDark ? "#f8fafc" : "#05345c",
       cardBg: isDark ? "#1e293b" : "#ffffff",
       borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.08)",
@@ -151,7 +153,10 @@ export function useAnalysisPage(user) {
           label: "Ingresos",
           data: sortedEvolutionData.map((d) => Number(d.income)),
           borderColor: themeStyles.success,
-          backgroundColor: theme === "dark" ? "rgba(52, 211, 153, 0.08)" : "rgba(16, 185, 129, 0.06)",
+          backgroundColor:
+            theme === "dark"
+              ? "rgba(52, 211, 153, 0.08)"
+              : "rgba(16, 185, 129, 0.06)",
           fill: true,
           tension: 0.4,
           borderWidth: 3,
@@ -165,7 +170,10 @@ export function useAnalysisPage(user) {
           label: "Gastos",
           data: sortedEvolutionData.map((d) => Number(d.expense)),
           borderColor: themeStyles.danger,
-          backgroundColor: theme === "dark" ? "rgba(248, 113, 113, 0.08)" : "rgba(239, 68, 68, 0.06)",
+          backgroundColor:
+            theme === "dark"
+              ? "rgba(248, 113, 113, 0.08)"
+              : "rgba(239, 68, 68, 0.06)",
           fill: true,
           tension: 0.4,
           borderWidth: 3,
@@ -212,12 +220,18 @@ export function useAnalysisPage(user) {
       scales: {
         x: {
           grid: { display: false },
-          ticks: { color: themeStyles.textColor, font: { family: "Inter", size: 11 } },
+          ticks: {
+            color: themeStyles.textColor,
+            font: { family: "Inter", size: 11 },
+          },
         },
         y: {
           grid: { color: themeStyles.gridColor, drawTicks: false },
           border: { dash: [4, 4] },
-          ticks: { color: themeStyles.textColor, font: { family: "Inter", size: 11 } },
+          ticks: {
+            color: themeStyles.textColor,
+            font: { family: "Inter", size: 11 },
+          },
         },
       },
     };

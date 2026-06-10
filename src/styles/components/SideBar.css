@@ -7,13 +7,18 @@
   position: sticky;
   top: 0;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: linear-gradient(180deg, var(--sidebar-bg-gradient-start) 0%, var(--sidebar-bg-gradient-end) 100%);
+  background: linear-gradient(
+    180deg,
+    var(--sidebar-bg-gradient-start) 0%,
+    var(--sidebar-bg-gradient-end) 100%
+  );
   border-right: 1px solid var(--sidebar-border);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
   overflow-x: hidden;
   z-index: 100;
+  flex-shrink: 0;
 }
 
 .sidebar.collapsed {
@@ -23,7 +28,7 @@
 /* --- Media Queries Responsivas (Tablet / Móvil) --- */
 
 /* 1. Tabletas (768px a 1024px): Colapsar sidebar automáticamente a 100px */
-@media (min-width: 768px) and (max-width: 1024px) {
+@media (min-width: 768px) and (max-width: 1200px) {
   .sidebar {
     width: var(--sidebar-collapsed-width) !important;
   }
@@ -67,11 +72,11 @@
     z-index: 1000;
     transition: transform 0.3s ease-in-out;
   }
-  
+
   .sidebar.mobile-open {
     transform: translateX(0);
   }
-  
+
   /* Forzar que en móviles se vea expandido para poder leer los textos */
   .sidebar .link-text,
   .sidebar .logout-text,

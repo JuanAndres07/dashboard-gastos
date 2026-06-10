@@ -28,7 +28,7 @@ export function useTransactions({ user, limit, initialViewMode = "expense", trig
             type,
             created_at,
             category_id,
-            Category (name)
+            Category (name, icon)
             `,
             { count: "exact" }
           )
