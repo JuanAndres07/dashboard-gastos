@@ -271,9 +271,9 @@ export default function Dashboard({ user }) {
             <div className="flex bg-(--bg-light) p-1 rounded-xl gap-1 w-fit mb-5">
               <button
                 type="button"
-                className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 ease-in-out cursor-pointer ${
+                className={`px-5 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all duration-300 ease-in-out cursor-pointer ${
                   viewMode === "expense"
-                    ? "bg-(--danger-color) text-white shadow-xs"
+                    ? "bg-(--danger-color) text-white shadow-md shadow-danger/10"
                     : "text-(--text-color) hover:text-(--headings-color) hover:bg-(--sidebar-link-hover-bg)"
                 }`}
                 onClick={() => setViewMode("expense")}
@@ -282,9 +282,9 @@ export default function Dashboard({ user }) {
               </button>
               <button
                 type="button"
-                className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 ease-in-out cursor-pointer ${
+                className={`px-5 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all duration-300 ease-in-out cursor-pointer ${
                   viewMode === "income"
-                    ? "bg-(--success-color) text-white shadow-xs"
+                    ? "bg-(--success-color) text-white shadow-md shadow-success/10"
                     : "text-(--text-color) hover:text-(--headings-color) hover:bg-(--sidebar-link-hover-bg)"
                 }`}
                 onClick={() => setViewMode("income")}

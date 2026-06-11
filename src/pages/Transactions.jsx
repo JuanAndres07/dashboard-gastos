@@ -100,9 +100,9 @@ export default function Transactions({ user }) {
           </div>
 
           {/* Barra de Filtros Dedicada */}
-          <div className="flex flex-col md:flex-row flex-wrap items-stretch md:items-center gap-4 bg-(--bg-light)/20 rounded-xl">
+          <div className="flex flex-col md:flex-row flex-wrap items-stretch md:items-center gap-4">
             {/* Buscador */}
-            <div className="relative grow md:grow-0 min-w-50 md:min-w-70">
+            <div className="relative grow md:grow-0 min-w-0 md:min-w-70 w-full md:w-auto">
               <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-(--text-color)/50">
                 <IconSearch size={18} />
               </span>
@@ -116,7 +116,7 @@ export default function Transactions({ user }) {
             </div>
 
             {/* Filtro de Categorías */}
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
               <label
                 htmlFor="catFilter"
                 className="text-xs font-semibold text-(--text-color) whitespace-nowrap uppercase tracking-wider"
@@ -125,7 +125,7 @@ export default function Transactions({ user }) {
               </label>
               <select
                 id="catFilter"
-                className="px-3 py-2 bg-(--settings-card-bg) border border-(--sidebar-border) rounded-xl text-(--headings-color) text-xs font-medium focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300 cursor-pointer"
+                className="w-full min-w-0 sm:w-auto px-3 py-2 bg-(--settings-card-bg) border border-(--sidebar-border) rounded-xl text-(--headings-color) text-xs font-medium focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300 cursor-pointer"
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
               >
@@ -139,25 +139,25 @@ export default function Transactions({ user }) {
             </div>
 
             {/* Filtro de Fechas */}
-            <div className="flex items-center gap-2 grow sm:grow-0">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 grow sm:grow-0 w-full sm:w-auto">
               <label className="text-xs font-semibold text-(--text-color) whitespace-nowrap uppercase tracking-wider">
                 Rango:
               </label>
-              <div className="flex items-center gap-1.5 w-full">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 w-full sm:w-auto">
                 <input
                   type="date"
                   aria-label="Fecha de inicio"
-                  className="w-full sm:w-auto px-3 py-2 bg-(--settings-card-bg) border border-(--sidebar-border) rounded-xl text-(--headings-color) text-xs font-medium focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300 cursor-pointer"
+                  className="w-full min-w-0 sm:w-auto px-3 py-2 bg-(--settings-card-bg) border border-(--sidebar-border) rounded-xl text-(--headings-color) text-xs font-medium focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300 cursor-pointer"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
                 />
-                <span className="text-xs text-(--text-color)/50 font-medium">
+                <span className="text-xs text-(--text-color)/50 font-medium shrink-0 text-center sm:text-left">
                   a
                 </span>
                 <input
                   type="date"
                   aria-label="Fecha de fin"
-                  className="w-full sm:w-auto px-3 py-2 bg-(--settings-card-bg) border border-(--sidebar-border) rounded-xl text-(--headings-color) text-xs font-medium focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300 cursor-pointer"
+                  className="w-full min-w-0 sm:w-auto px-3 py-2 bg-(--settings-card-bg) border border-(--sidebar-border) rounded-xl text-(--headings-color) text-xs font-medium focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300 cursor-pointer"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
                 />
@@ -173,7 +173,7 @@ export default function Transactions({ user }) {
                   setEndDate("");
                   setSearchTerm("");
                 }}
-                className="px-3.5 py-2 text-xs font-semibold text-[#e11d48] bg-[#fff1f2] hover:bg-[#ffe4e6] rounded-xl transition-all duration-300 cursor-pointer shrink-0 ml-auto"
+                className="px-3.5 py-2 text-xs font-semibold text-[#e11d48] dark:text-[#f87171] bg-[#fff1f2] dark:bg-[#ef4444]/10 hover:bg-[#ffe4e6] dark:hover:bg-[#ef4444]/20 rounded-xl transition-all duration-300 cursor-pointer shrink-0 w-full sm:w-auto sm:ml-auto text-center"
                 title="Limpiar todos los filtros"
               >
                 Limpiar Filtros
@@ -188,6 +188,7 @@ export default function Transactions({ user }) {
             loading={loadingTransactions}
             viewMode={viewMode}
             setViewMode={handleSetViewMode}
+            onTransactionDeleted={refreshData}
           />
         </div>
 

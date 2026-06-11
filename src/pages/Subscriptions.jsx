@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useSubscriptions } from "../hooks/useSubscriptions";
-import { IconPlus, IconCreditCardOff } from "@tabler/icons-react";
+import { IconPlus, IconCreditCardOff, IconPencil, IconTrash, IconCheck, IconX, IconCreditCard } from "@tabler/icons-react";
 import { formatCurrency } from "../utilities/formatters";
 import Modal from "../components/Modal";
 import { Pagination } from "../components/Pagination";
+import { iconDictionary } from "../utilities/iconDictionary";
 
 export default function Subscriptions({ user }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -112,204 +113,401 @@ export default function Subscriptions({ user }) {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto w-full -mx-6 sm:mx-0">
-            <table className="w-full border-collapse text-left text-sm">
-              <thead className="bg-(--bg-light)/50">
-                <tr className="border-b border-(--sidebar-border)">
-                  <th className="px-6 py-3.5 text-xs font-semibold text-(--text-color)/70 uppercase tracking-wider">
-                    Nombre
-                  </th>
-                  <th className="px-6 py-3.5 text-xs font-semibold text-(--text-color)/70 uppercase tracking-wider">
-                    Categoría
-                  </th>
-                  <th className="px-6 py-3.5 text-xs font-semibold text-(--text-color)/70 uppercase tracking-wider">
-                    Monto
-                  </th>
-                  <th className="px-6 py-3.5 text-xs font-semibold text-(--text-color)/70 uppercase tracking-wider">
-                    Frecuencia
-                  </th>
-                  <th className="px-6 py-3.5 text-xs font-semibold text-(--text-color)/70 uppercase tracking-wider">
-                    Último Pago
-                  </th>
-                  <th className="px-6 py-3.5 text-xs font-semibold text-(--text-color)/70 uppercase tracking-wider">
-                    Próximo Pago
-                  </th>
-                  <th className="px-6 py-3.5 text-xs font-semibold text-(--text-color)/70 uppercase tracking-wider text-center">
-                    Acciones
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-(--sidebar-border)/40">
-                {paginatedSubscriptions.map((sub) => (
-                  <tr
-                    key={sub.id}
-                    className="hover:bg-(--sidebar-link-hover-bg)/30 transition-all duration-200 ease-in-out"
+          <>
+            {/* Vista Móvil / Tablet (Tarjetas para pantallas menores a lg) */}
+            <div className="block lg:hidden space-y-4">
+            {paginatedSubscriptions.map((sub) => {
+              const CategoryIcon = iconDictionary[sub.Category?.icon] || IconCreditCard;
+              const isEditing = editingId === sub.id;
+              
+              if (isEditing) {
+                return (
+                  <div 
+                    key={sub.id} 
+                    className="p-4 bg-(--settings-card-bg) border border-(--sidebar-border) rounded-2xl space-y-4"
+                    style={{ border: "var(--card-border)" }}
                   >
-                    {editingId === sub.id ? (
-                      <>
-                        <td className="px-6 py-3">
+                    <div className="flex justify-between items-center pb-2 border-b border-(--sidebar-border)/40">
+                      <h4 className="font-bold text-(--headings-color) text-xs uppercase tracking-wider">
+                        Editar Suscripción
+                      </h4>
+                    </div>
+
+                    <div className="space-y-3">
+                      {/* Nombre */}
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[10px] font-bold text-(--text-color) uppercase tracking-wide">Nombre</label>
+                        <input
+                          type="text"
+                          className="w-full px-3 py-2 bg-(--bg-light) border border-(--sidebar-border) rounded-xl text-xs font-semibold text-(--headings-color) focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300"
+                          value={editValues.name}
+                          onChange={(e) =>
+                            setEditValues({
+                              ...editValues,
+                              name: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+
+                      {/* Categoría */}
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[10px] font-bold text-(--text-color) uppercase tracking-wide">Categoría</label>
+                        <select
+                          className="w-full px-3 py-2 bg-(--bg-light) border border-(--sidebar-border) rounded-xl text-xs font-semibold text-(--text-color) focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300 cursor-pointer"
+                          value={editValues.category_id}
+                          onChange={(e) =>
+                            setEditValues({
+                              ...editValues,
+                              category_id: e.target.value,
+                            })
+                          }
+                        >
+                          {expenseCategories.map((cat) => (
+                            <option key={cat.id} value={cat.id}>
+                              {cat.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Monto */}
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[10px] font-bold text-(--text-color) uppercase tracking-wide">Monto</label>
+                        <div className="relative">
+                          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-xs font-semibold text-(--text-color)/70">
+                            $
+                          </span>
                           <input
-                            type="text"
-                            className="w-full px-2.5 py-1.5 bg-(--bg-light) border border-(--sidebar-border) rounded-lg text-xs font-semibold text-(--headings-color) focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300"
-                            value={editValues.name}
+                            type="number"
+                            step="0.01"
+                            className="w-full pl-6 pr-3 py-2 bg-(--bg-light) border border-(--sidebar-border) rounded-xl text-xs font-semibold text-(--headings-color) focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300"
+                            value={editValues.amount}
                             onChange={(e) =>
                               setEditValues({
                                 ...editValues,
-                                name: e.target.value,
+                                amount: e.target.value,
                               })
                             }
                           />
-                        </td>
-                        <td className="px-6 py-3">
-                          <select
-                            className="w-full px-2.5 py-1.5 bg-(--bg-light) border border-(--sidebar-border) rounded-lg text-xs font-semibold text-(--text-color) focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300 cursor-pointer"
-                            value={editValues.category_id}
-                            onChange={(e) =>
-                              setEditValues({
-                                ...editValues,
-                                category_id: e.target.value,
-                              })
-                            }
-                          >
-                            {expenseCategories.map((cat) => (
-                              <option key={cat.id} value={cat.id}>
-                                {cat.name}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
-                        <td className="px-6 py-3">
-                          <div className="relative">
-                            <span className="absolute inset-y-0 left-0 flex items-center pl-2 text-xs font-semibold text-(--text-color)/70">
-                              $
-                            </span>
+                        </div>
+                      </div>
+
+                      {/* Frecuencia */}
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[10px] font-bold text-(--text-color) uppercase tracking-wide">Frecuencia</label>
+                        <select
+                          className="w-full px-3 py-2 bg-(--bg-light) border border-(--sidebar-border) rounded-xl text-xs font-semibold text-(--text-color) focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300 cursor-pointer"
+                          value={editValues.frequency}
+                          onChange={(e) =>
+                            setEditValues({
+                              ...editValues,
+                              frequency: e.target.value,
+                            })
+                          }
+                        >
+                          {frequencies.map((freq) => (
+                            <option key={freq.value} value={freq.value}>
+                              {freq.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Próximo Pago */}
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[10px] font-bold text-(--text-color) uppercase tracking-wide">Próximo Pago</label>
+                        <input
+                          type="date"
+                          className="w-full px-3 py-2 bg-(--bg-light) border border-(--sidebar-border) rounded-xl text-xs font-semibold text-(--text-color) focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300 cursor-pointer"
+                          value={editValues.next_payment_date}
+                          onChange={(e) =>
+                            setEditValues({
+                              ...editValues,
+                              next_payment_date: e.target.value,
+                            })
+                          }
+                          min={today}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 pt-2">
+                      <button
+                        onClick={() => handleUpdate(sub)}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-white bg-(--success-color) hover:opacity-90 active:scale-[0.98] rounded-xl transition-all duration-200 cursor-pointer shadow-[0_2px_8px_rgba(16,185,129,0.15)]"
+                      >
+                        <IconCheck size={16} />
+                        <span>Guardar</span>
+                      </button>
+                      <button
+                        onClick={() => setEditingId(null)}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-(--text-color) bg-(--bg-light) border border-(--sidebar-border) hover:bg-(--sidebar-link-hover-bg) hover:text-(--headings-color) active:scale-[0.98] rounded-xl transition-all duration-200 cursor-pointer"
+                      >
+                        <IconX size={16} />
+                        <span>Cancelar</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <div 
+                  key={sub.id} 
+                  className="flex items-center justify-between p-4 bg-(--settings-card-bg) rounded-2xl border border-(--sidebar-border) transition-all duration-300 gap-3"
+                  style={{ border: "var(--card-border)" }}
+                >
+                  <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                    <div className="p-3 rounded-xl shrink-0 bg-(--sidebar-link-hover-bg) text-(--primary-color) flex items-center justify-center w-11 h-11">
+                      <CategoryIcon size={22} />
+                    </div>
+                    
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-semibold text-(--headings-color) text-sm truncate leading-snug">
+                        {sub.name}
+                      </h4>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <span className="text-[10px] font-bold tracking-wider uppercase text-(--text-color) bg-(--bg-light) dark:bg-(--bg-light)/20 px-2 py-0.5 rounded-md">
+                          {sub.Category?.name || "Sin categoría"}
+                        </span>
+                        <span className="text-[10px] font-semibold text-(--primary-color) bg-(--sidebar-link-hover-bg) px-2 py-0.5 rounded-md">
+                          {getFrequencyLabel(sub.frequency)}
+                        </span>
+                        <span className="text-[10px] font-medium text-(--text-color)/80">
+                          Próximo: {new Date(sub.next_payment_date).toLocaleDateString(undefined, {
+                            month: 'short',
+                            day: 'numeric',
+                            year: '2-digit'
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="font-bold text-sm text-(--danger-color) whitespace-nowrap mr-1">
+                      -{formatCurrency(sub.amount)}
+                    </span>
+                    
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => startEdit(sub)}
+                        className="p-1.5 rounded-lg text-(--text-color)/50 hover:text-(--primary-color) hover:bg-(--primary-color)/10 transition-all duration-200 cursor-pointer"
+                        title="Editar suscripción"
+                      >
+                        <IconPencil size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(sub.id)}
+                        className="p-1.5 rounded-lg text-(--text-color)/50 hover:text-(--danger-color) hover:bg-(--danger-color)/10 transition-all duration-200 cursor-pointer"
+                        title="Eliminar suscripción"
+                      >
+                        <IconTrash size={16} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Vista Escritorio (Tabla para pantallas >= lg) */}
+          <div 
+            className="hidden lg:block overflow-x-auto rounded-2xl border border-(--sidebar-border)" 
+            style={{ border: "var(--card-border)" }}
+          >
+            <table className="w-full border-collapse text-left text-sm">
+              <thead className="bg-(--bg-light) border-b border-(--sidebar-border)">
+                <tr>
+                  <th className="px-6 py-4 text-xs font-bold text-(--headings-color) uppercase tracking-wider">Nombre</th>
+                  <th className="px-6 py-4 text-xs font-bold text-(--headings-color) uppercase tracking-wider">Categoría</th>
+                  <th className="px-6 py-4 text-xs font-bold text-(--headings-color) uppercase tracking-wider">Monto</th>
+                  <th className="px-6 py-4 text-xs font-bold text-(--headings-color) uppercase tracking-wider">Frecuencia</th>
+                  <th className="px-6 py-4 text-xs font-bold text-(--headings-color) uppercase tracking-wider">Último Pago</th>
+                  <th className="px-6 py-4 text-xs font-bold text-(--headings-color) uppercase tracking-wider">Próximo Pago</th>
+                  <th className="px-6 py-4 text-xs font-bold text-(--headings-color) uppercase tracking-wider text-center w-28">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-(--sidebar-border)/40 bg-(--settings-card-bg)">
+                {paginatedSubscriptions.map((sub) => {
+                  const CategoryIcon = iconDictionary[sub.Category?.icon] || IconCreditCard;
+                  const isEditing = editingId === sub.id;
+                  return (
+                    <tr 
+                      key={sub.id}
+                      className="hover:bg-(--sidebar-link-hover-bg)/30 transition-all duration-200 ease-in-out"
+                    >
+                      {isEditing ? (
+                        <>
+                          <td className="px-6 py-3">
                             <input
-                              type="number"
-                              step="0.01"
-                              className="w-full pl-5 pr-2 py-1.5 bg-(--bg-light) border border-(--sidebar-border) rounded-lg text-xs font-semibold text-(--headings-color) focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300"
-                              value={editValues.amount}
+                              type="text"
+                              className="w-full px-2.5 py-1.5 bg-(--bg-light) border border-(--sidebar-border) rounded-lg text-xs font-semibold text-(--headings-color) focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300"
+                              value={editValues.name}
                               onChange={(e) =>
                                 setEditValues({
                                   ...editValues,
-                                  amount: e.target.value,
+                                  name: e.target.value,
                                 })
                               }
                             />
-                          </div>
-                        </td>
-                        <td className="px-6 py-3">
-                          <select
-                            className="w-full px-2.5 py-1.5 bg-(--bg-light) border border-(--sidebar-border) rounded-lg text-xs font-semibold text-(--text-color) focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300 cursor-pointer"
-                            value={editValues.frequency}
-                            onChange={(e) =>
-                              setEditValues({
-                                ...editValues,
-                                frequency: e.target.value,
-                              })
-                            }
-                          >
-                            {frequencies.map((freq) => (
-                              <option key={freq.value} value={freq.value}>
-                                {freq.label}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
-                        <td className="px-6 py-3 text-xs text-(--text-color)/50 font-medium">
-                          -
-                        </td>
-                        <td className="px-6 py-3">
-                          <input
-                            type="date"
-                            className="w-full px-2.5 py-1.5 bg-(--bg-light) border border-(--sidebar-border) rounded-lg text-xs font-semibold text-(--text-color) focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300 cursor-pointer"
-                            value={editValues.next_payment_date}
-                            onChange={(e) =>
-                              setEditValues({
-                                ...editValues,
-                                next_payment_date: e.target.value,
-                              })
-                            }
-                            min={today}
-                          />
-                        </td>
-                        <td className="px-6 py-3 text-right">
-                          <div className="flex items-center gap-1.5 justify-end">
-                            <button
-                              className="px-2.5 py-1.5 text-[11px] font-semibold text-white bg-(--success-color) hover:opacity-90 active:scale-[0.98] rounded-lg transition-all duration-200 cursor-pointer shadow-[0_2px_8px_rgba(16,185,129,0.15)]"
-                              onClick={() => handleUpdate(sub)}
+                          </td>
+                          <td className="px-6 py-3">
+                            <select
+                              className="w-full px-2.5 py-1.5 bg-(--bg-light) border border-(--sidebar-border) rounded-lg text-xs font-semibold text-(--text-color) focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300 cursor-pointer"
+                              value={editValues.category_id}
+                              onChange={(e) =>
+                                setEditValues({
+                                  ...editValues,
+                                  category_id: e.target.value,
+                                })
+                              }
                             >
-                              Guardar
-                            </button>
-                            <button
-                              className="px-2.5 py-1.5 text-[11px] font-semibold text-(--text-color) bg-(--bg-light) border border-(--sidebar-border) hover:bg-(--sidebar-link-hover-bg) hover:text-(--headings-color) active:scale-[0.98] rounded-lg transition-all duration-200 cursor-pointer"
-                              onClick={() => setEditingId(null)}
+                              {expenseCategories.map((cat) => (
+                                <option key={cat.id} value={cat.id}>
+                                  {cat.name}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="px-6 py-3">
+                            <div className="relative">
+                              <span className="absolute inset-y-0 left-0 flex items-center pl-2 text-xs font-semibold text-(--text-color)/70">
+                                $
+                              </span>
+                              <input
+                                type="number"
+                                step="0.01"
+                                className="w-full pl-5 pr-2 py-1.5 bg-(--bg-light) border border-(--sidebar-border) rounded-lg text-xs font-semibold text-(--headings-color) focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300"
+                                value={editValues.amount}
+                                onChange={(e) =>
+                                  setEditValues({
+                                    ...editValues,
+                                    amount: e.target.value,
+                                  })
+                                }
+                              />
+                            </div>
+                          </td>
+                          <td className="px-6 py-3">
+                            <select
+                              className="w-full px-2.5 py-1.5 bg-(--bg-light) border border-(--sidebar-border) rounded-lg text-xs font-semibold text-(--text-color) focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300 cursor-pointer"
+                              value={editValues.frequency}
+                              onChange={(e) =>
+                                setEditValues({
+                                  ...editValues,
+                                  frequency: e.target.value,
+                                })
+                              }
                             >
-                              Cancelar
-                            </button>
-                          </div>
-                        </td>
-                      </>
-                    ) : (
-                      <>
-                        <td className="px-6 py-4 font-semibold text-(--headings-color) whitespace-nowrap">
-                          {sub.name}
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-(--sidebar-link-hover-bg) text-(--primary-color)">
-                            {sub.Category?.name || "Sin categoría"}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 font-semibold text-(--danger-color) whitespace-nowrap">
-                          -{formatCurrency(sub.amount)}
-                        </td>
-                        <td className="px-6 py-4 text-(--text-color) whitespace-nowrap">
-                          {getFrequencyLabel(sub.frequency)}
-                        </td>
-                        <td className="px-6 py-4 text-(--text-color) whitespace-nowrap">
-                          {sub.last_payment_date
-                            ? new Date(
-                                sub.last_payment_date,
-                              ).toLocaleDateString(undefined, {
+                              {frequencies.map((freq) => (
+                                <option key={freq.value} value={freq.value}>
+                                  {freq.label}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="px-6 py-3 text-xs text-(--text-color)/50 font-medium">-</td>
+                          <td className="px-6 py-3">
+                            <input
+                              type="date"
+                              className="w-full px-2.5 py-1.5 bg-(--bg-light) border border-(--sidebar-border) rounded-lg text-xs font-semibold text-(--text-color) focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300 cursor-pointer"
+                              value={editValues.next_payment_date}
+                              onChange={(e) =>
+                                setEditValues({
+                                  ...editValues,
+                                  next_payment_date: e.target.value,
+                                })
+                              }
+                              min={today}
+                            />
+                          </td>
+                          <td className="px-6 py-3 text-center">
+                            <div className="flex items-center gap-1.5 justify-center">
+                              <button
+                                className="p-1.5 rounded-lg text-white bg-(--success-color) hover:opacity-90 active:scale-[0.98] transition-all duration-200 cursor-pointer inline-flex items-center justify-center shadow-[0_2px_8px_rgba(16,185,129,0.15)]"
+                                onClick={() => handleUpdate(sub)}
+                                title="Guardar cambios"
+                              >
+                                <IconCheck size={16} />
+                              </button>
+                              <button
+                                className="p-1.5 rounded-lg text-(--text-color) bg-(--bg-light) border border-(--sidebar-border) hover:bg-(--sidebar-link-hover-bg) hover:text-(--headings-color) active:scale-[0.98] transition-all duration-200 cursor-pointer inline-flex items-center justify-center"
+                                onClick={() => setEditingId(null)}
+                                title="Cancelar edición"
+                              >
+                                <IconX size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="px-6 py-4 font-semibold text-(--headings-color) whitespace-nowrap text-sm">
+                            {sub.name}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-(--sidebar-link-hover-bg) text-(--primary-color) border border-(--sidebar-border)/50">
+                              <CategoryIcon size={14} className="shrink-0" />
+                              {sub.Category?.name || "Sin categoría"}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 font-bold text-(--danger-color) whitespace-nowrap text-sm">
+                            -{formatCurrency(sub.amount)}
+                          </td>
+                          <td className="px-6 py-4 text-(--text-color) whitespace-nowrap text-xs font-semibold">
+                            <span className="px-2 py-0.5 rounded bg-(--sidebar-link-hover-bg) text-(--primary-color)">
+                              {getFrequencyLabel(sub.frequency)}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-(--text-color) whitespace-nowrap text-xs font-medium">
+                            {sub.last_payment_date
+                              ? new Date(sub.last_payment_date).toLocaleDateString(undefined, {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                })
+                              : "-"}
+                          </td>
+                          <td className="px-6 py-4 font-semibold text-(--headings-color) whitespace-nowrap text-xs">
+                            {new Date(sub.next_payment_date).toLocaleDateString(
+                              undefined,
+                              {
                                 year: "numeric",
                                 month: "short",
                                 day: "numeric",
-                              })
-                            : "-"}
-                        </td>
-                        <td className="px-6 py-4 font-medium text-(--headings-color) whitespace-nowrap">
-                          {new Date(sub.next_payment_date).toLocaleDateString(
-                            undefined,
-                            {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            },
-                          )}
-                        </td>
-                        <td className="px-6 py-4 text-right whitespace-nowrap">
-                          <div className="flex items-center gap-2 justify-center">
-                            <button
-                              onClick={() => startEdit(sub)}
-                              className="px-3 py-1.5 text-xs font-semibold text-(--primary-color) bg-(--sidebar-link-hover-bg) border border-(--sidebar-border) hover:bg-(--primary-color) hover:text-white rounded-lg transition-all duration-200 cursor-pointer"
-                            >
-                              Editar
-                            </button>
-                            <button
-                              onClick={() => handleDelete(sub.id)}
-                              className="px-3 py-1.5 text-xs font-semibold text-(--danger-color) bg-(--danger-color)/10 border border-(--danger-color)/20 hover:bg-(--danger-color) hover:text-white rounded-lg transition-all duration-200 cursor-pointer"
-                            >
-                              Eliminar
-                            </button>
-                          </div>
-                        </td>
-                      </>
-                    )}
-                  </tr>
-                ))}
+                              },
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-center whitespace-nowrap">
+                            <div className="flex items-center gap-1.5 justify-center">
+                              <button
+                                onClick={() => startEdit(sub)}
+                                className="p-1.5 rounded-lg text-(--text-color)/50 hover:text-(--primary-color) hover:bg-(--primary-color)/10 transition-all duration-200 cursor-pointer inline-flex items-center justify-center"
+                                title="Editar"
+                              >
+                                <IconPencil size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(sub.id)}
+                                className="p-1.5 rounded-lg text-(--text-color)/50 hover:text-(--danger-color) hover:bg-(--danger-color)/10 transition-all duration-200 cursor-pointer inline-flex items-center justify-center"
+                                title="Eliminar"
+                              >
+                                <IconTrash size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        </>
+                      )}
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
-        )}
+        </>
+      )}
 
         {/* Paginación */}
         <Pagination

@@ -53,7 +53,8 @@ export function useSubscriptions(user) {
           `
           *,
           Category (
-            name
+            name,
+            icon
           )
         `,
         )

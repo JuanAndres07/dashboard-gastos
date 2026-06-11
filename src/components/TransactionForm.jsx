@@ -70,9 +70,9 @@ export function TransactionForm({ onTransactionAdded, user }) {
         <button
           type="button"
           onClick={() => setType("expense")}
-          className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all duration-300 ease-in-out cursor-pointer ${
+          className={`flex-1 py-2.5 text-xs font-bold uppercase tracking-wider rounded-lg transition-all duration-300 ease-in-out cursor-pointer ${
             type === "expense"
-              ? "bg-white text-(--danger-color) shadow-[0_2px_8px_rgba(239,68,68,0.08)]"
+              ? "bg-(--danger-color) text-white shadow-md shadow-danger/10"
               : "text-(--text-color) hover:text-(--headings-color) hover:bg-(--sidebar-link-hover-bg)"
           }`}
         >
@@ -81,9 +81,9 @@ export function TransactionForm({ onTransactionAdded, user }) {
         <button
           type="button"
           onClick={() => setType("income")}
-          className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all duration-300 ease-in-out cursor-pointer ${
+          className={`flex-1 py-2.5 text-xs font-bold uppercase tracking-wider rounded-lg transition-all duration-300 ease-in-out cursor-pointer ${
             type === "income"
-              ? "bg-white text-(--success-color) shadow-[0_2px_8px_rgba(16,185,129,0.08)]"
+              ? "bg-(--success-color) text-white shadow-md shadow-success/10"
               : "text-(--text-color) hover:text-(--headings-color) hover:bg-(--sidebar-link-hover-bg)"
           }`}
         >
