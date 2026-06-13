@@ -2,6 +2,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { IconSun, IconMoon, IconCheck, IconUser, IconMail, IconLock, IconKey, IconX } from "@tabler/icons-react";
+import DangerZone from "../components/DangerZone";
 
 export default function Configuration() {
   const { theme, setTheme } = useTheme();
@@ -490,6 +491,8 @@ export default function Configuration() {
               </div>
             </div>
           </div>
+
+          <DangerZone />
         </div>
       </div>
   );

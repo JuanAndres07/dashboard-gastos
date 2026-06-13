@@ -118,8 +118,32 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const deleteAccount = async (currentPassword) => {
+    if (!user?.email) return { error: new Error("No hay usuario autenticado") };
+    try {
+      // 1. Re-autenticar al usuario con la contraseña actual
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword,
+      });
+      if (authError) return { error: authError };
+
+      // 2. Llamar a la función RPC para eliminar la cuenta de la base de datos
+      const { error: deleteError } = await supabase.rpc("delete_user_account");
+      if (deleteError) return { error: deleteError };
+
+      // 3. Cerrar la sesión en el cliente (solo sesión local)
+      await supabase.auth.signOut({ scope: "local" });
+
+      return { success: true };
+    } catch (err) {
+      console.error("Excepción al eliminar la cuenta:", err);
+      return { error: err };
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, profile, loading, loadingProfile, updateProfile, changeEmail, changePassword }}>
+    <AuthContext.Provider value={{ user, profile, loading, loadingProfile, updateProfile, changeEmail, changePassword, deleteAccount }}>
       {children}
     </AuthContext.Provider>
   );
