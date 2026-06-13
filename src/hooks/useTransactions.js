@@ -26,6 +26,7 @@ export function useTransactions({ user, limit, initialViewMode = "expense", trig
             amount,
             note,
             type,
+            transaction_date,
             created_at,
             category_id,
             Category (name, icon)
@@ -34,6 +35,7 @@ export function useTransactions({ user, limit, initialViewMode = "expense", trig
           )
           .eq("user_id", user.id)
           .eq("type", viewMode)
+          .order("transaction_date", { ascending: false })
           .order("created_at", { ascending: false })
           .abortSignal(signal);
 
@@ -42,11 +44,11 @@ export function useTransactions({ user, limit, initialViewMode = "expense", trig
         }
 
         if (startDate) {
-          query = query.gte("created_at", startDate);
+          query = query.gte("transaction_date", startDate);
         }
 
         if (endDate) {
-          query = query.lte("created_at", `${endDate}T23:59:59.999Z`);
+          query = query.lte("transaction_date", `${endDate}T23:59:59.999Z`);
         }
 
         if (search) {

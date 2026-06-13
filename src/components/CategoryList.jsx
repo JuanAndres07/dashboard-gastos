@@ -1,6 +1,7 @@
 import { useState } from "react";
 import iconDictionary from "../utilities/iconDictionary";
 import IconPicker from "./IconPicker";
+import { IconPencil, IconTrash, IconEyeOff, IconArrowBackUp } from "@tabler/icons-react";
 
 export default function CategoryList({
   title,
@@ -59,17 +60,18 @@ export default function CategoryList({
         {list.map((cat) => {
           const isEditing = editingId === cat.id;
           const IconComponent = iconDictionary[cat.icon] || iconDictionary.IconCoin;
+          const isPersonal = cat.user_id ? true : (cat.is_global === false);
           return (
             <div
               key={cat.id}
               className={`flex transition-all duration-300 hover:shadow-xs hover:translate-x-0.5 ${
                 isEditing
                   ? "flex-col md:flex-row gap-4 items-stretch md:items-center p-4 bg-(--settings-card-bg) rounded-xl"
-                  : "flex-row gap-3 items-center justify-between py-3 px-4 bg-(--settings-card-bg) rounded-xl"
+                  : "flex-row gap-3 items-center justify-between p-4 bg-(--settings-card-bg) rounded-xl"
               }`}
               style={{ border: "var(--card-border)" }}
             >
-              <div className={`flex items-center ${isEditing ? "grow" : "gap-3"}`}>
+              <div className={`flex items-center ${isEditing ? "grow" : "gap-3 min-w-0 flex-1"}`}>
                 {isEditing ? (
                   <div className="flex flex-col md:flex-row gap-2 w-full">
                     <input
@@ -86,24 +88,26 @@ export default function CategoryList({
                     />
                   </div>
                 ) : (
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div className="p-2 rounded-xl bg-(--sidebar-link-hover-bg) text-(--primary-color) flex items-center justify-center shrink-0">
                       {IconComponent && <IconComponent size={20} />}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-(--headings-color) text-sm">{cat.name}</span>
+                    <div className="flex flex-wrap items-center gap-2 min-w-0">
+                      <span className="font-semibold text-(--headings-color) text-sm break-all">
+                        {cat.name}
+                      </span>
                       <span
-                        className="px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wider uppercase bg-(--bg-light) border border-(--sidebar-border) text-(--text-color)"
-                        title={cat.user_id ? "Categoría de usuario" : "Categoría global"}
+                        className="px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wider uppercase bg-(--bg-light) border border-(--sidebar-border) text-(--text-color) shrink-0"
+                        title={isPersonal ? "Categoría de usuario" : "Categoría global"}
                       >
-                        {cat.user_id ? "Personal" : "Global"}
+                        {isPersonal ? "Personal" : "Global"}
                       </span>
                     </div>
                   </div>
                 )}
               </div>
 
-              <div className={`flex items-center gap-2 ${isEditing ? "justify-end mt-2 md:mt-0" : ""}`}>
+              <div className={`flex items-center gap-1 shrink-0 ${isEditing ? "justify-end mt-2 md:mt-0 w-full md:w-auto" : ""}`}>
                 {isEditing ? (
                   <>
                     <button 
@@ -121,25 +125,33 @@ export default function CategoryList({
                   </>
                 ) : (
                   <>
-                    {cat.user_id && onEdit && (
+                    {isPersonal && onEdit && (
                       <button 
-                        className="px-3 py-1.5 text-xs font-semibold text-(--primary-color) bg-(--sidebar-link-hover-bg) border border-(--sidebar-border) hover:bg-(--primary-color) hover:text-white rounded-lg transition-all duration-200 cursor-pointer" 
+                        className="p-1.5 rounded-lg text-(--text-color)/50 hover:text-(--primary-color) hover:bg-(--primary-color)/10 transition-all duration-200 cursor-pointer inline-flex items-center justify-center" 
                         onClick={() => handleStartEdit(cat)}
+                        title="Editar"
                       >
-                        Editar
+                        <IconPencil size={16} />
                       </button>
                     )}
                     <button
-                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 cursor-pointer border ${
+                      className={`p-1.5 rounded-lg transition-all duration-200 cursor-pointer inline-flex items-center justify-center ${
                         onLabel === "Recuperar"
-                          ? "text-(--success-color) bg-(--success-color)/10 border-(--success-color)/20 hover:bg-(--success-color) hover:text-white"
-                          : cat.user_id
-                          ? "text-(--danger-color) bg-(--danger-color)/10 border-(--danger-color)/20 hover:bg-(--danger-color) hover:text-white"
-                          : "text-[#d97706] bg-[#d97706]/10 border-[#d97706]/20 hover:bg-[#d97706] hover:text-white"
+                          ? "text-(--text-color)/50 hover:text-(--success-color) hover:bg-(--success-color)/10"
+                          : isPersonal
+                          ? "text-(--text-color)/50 hover:text-(--danger-color) hover:bg-(--danger-color)/10"
+                          : "text-(--text-color)/50 hover:text-[#d97706] hover:bg-[#d97706]/10"
                       }`}
                       onClick={() => onAction(cat)}
+                      title={onLabel ? onLabel : isPersonal ? "Eliminar" : "Ocultar"}
                     >
-                      {onLabel ? onLabel : cat.user_id ? "Eliminar" : "Ocultar"}
+                      {onLabel === "Recuperar" ? (
+                        <IconArrowBackUp size={16} />
+                      ) : isPersonal ? (
+                        <IconTrash size={16} />
+                      ) : (
+                        <IconEyeOff size={16} />
+                      )}
                     </button>
                   </>
                 )}

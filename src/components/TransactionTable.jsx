@@ -1,4 +1,4 @@
-import { formatCurrency } from "../utilities/formatters";
+import { formatCurrency, parseDate } from "../utilities/formatters";
 import { iconDictionary } from "../utilities/iconDictionary";
 import { IconTrash } from "@tabler/icons-react";
 import { supabase } from "../lib/supabase";
@@ -90,7 +90,7 @@ export function TransactionTable({ transactions, loading, viewMode, setViewMode,
                           {t.Category?.name || "General"}
                         </span>
                         <span className="text-[10px] font-medium text-(--text-color)/70">
-                          {new Date(t.created_at).toLocaleDateString(undefined, {
+                          {parseDate(t.transaction_date || t.created_at).toLocaleDateString(undefined, {
                             month: 'short',
                             day: 'numeric',
                             year: '2-digit'
@@ -147,7 +147,7 @@ export function TransactionTable({ transactions, loading, viewMode, setViewMode,
                       className="hover:bg-(--sidebar-link-hover-bg)/30 transition-all duration-200 ease-in-out"
                     >
                       <td className="px-6 py-4 text-(--text-color) whitespace-nowrap text-xs font-medium">
-                        {new Date(t.created_at).toLocaleDateString(undefined, {
+                        {parseDate(t.transaction_date || t.created_at).toLocaleDateString(undefined, {
                           year: 'numeric',
                           month: 'short',
                           day: 'numeric'

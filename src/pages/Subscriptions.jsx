@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useSubscriptions } from "../hooks/useSubscriptions";
 import { IconPlus, IconCreditCardOff, IconPencil, IconTrash, IconCheck, IconX, IconCreditCard } from "@tabler/icons-react";
-import { formatCurrency } from "../utilities/formatters";
+import { formatCurrency, parseDate } from "../utilities/formatters";
 import Modal from "../components/Modal";
 import { Pagination } from "../components/Pagination";
 import { iconDictionary } from "../utilities/iconDictionary";
@@ -275,7 +275,7 @@ export default function Subscriptions({ user }) {
                           {getFrequencyLabel(sub.frequency)}
                         </span>
                         <span className="text-[10px] font-medium text-(--text-color)/80">
-                          Próximo: {new Date(sub.next_payment_date).toLocaleDateString(undefined, {
+                          Próximo: {parseDate(sub.next_payment_date?.split("T")[0]).toLocaleDateString(undefined, {
                             month: 'short',
                             day: 'numeric',
                             year: '2-digit'
@@ -463,7 +463,7 @@ export default function Subscriptions({ user }) {
                           </td>
                           <td className="px-6 py-4 text-(--text-color) whitespace-nowrap text-xs font-medium">
                             {sub.last_payment_date
-                              ? new Date(sub.last_payment_date).toLocaleDateString(undefined, {
+                              ? parseDate(sub.last_payment_date.split("T")[0]).toLocaleDateString(undefined, {
                                   year: "numeric",
                                   month: "short",
                                   day: "numeric",
@@ -471,7 +471,7 @@ export default function Subscriptions({ user }) {
                               : "-"}
                           </td>
                           <td className="px-6 py-4 font-semibold text-(--headings-color) whitespace-nowrap text-xs">
-                            {new Date(sub.next_payment_date).toLocaleDateString(
+                            {parseDate(sub.next_payment_date?.split("T")[0]).toLocaleDateString(
                               undefined,
                               {
                                 year: "numeric",

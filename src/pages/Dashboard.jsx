@@ -1,6 +1,6 @@
 import { TransactionForm } from "../components/TransactionForm";
 import { useDashboard } from "../hooks/useDashboard";
-import { formatCurrency } from "../utilities/formatters";
+import { formatCurrency, parseDate } from "../utilities/formatters";
 import { Link } from "react-router-dom";
 import iconDictionary from "../utilities/iconDictionary";
 import { Line } from "react-chartjs-2";
@@ -336,7 +336,7 @@ export default function Dashboard({ user }) {
                           </span>
                           <span className="text-[10px] font-bold text-(--text-color)/70 block mt-0.5 uppercase tracking-wide">
                             {t.Category?.name || "General"} •{" "}
-                            {new Date(t.created_at).toLocaleDateString(
+                            {parseDate(t.transaction_date || t.created_at).toLocaleDateString(
                               "es-ES",
                               { month: "short", day: "numeric" },
                             )}
@@ -536,7 +536,7 @@ export default function Dashboard({ user }) {
                             className={`text-[10px] font-bold block mt-0.5 ${isDueSoon ? "text-(--danger-color)" : "text-(--text-color)/70"}`}
                           >
                             {relativeDays} (
-                            {new Date(sub.next_payment_date).toLocaleDateString(
+                            {parseDate(sub.next_payment_date?.split("T")[0]).toLocaleDateString(
                               "es-ES",
                               { month: "short", day: "numeric" },
                             )}

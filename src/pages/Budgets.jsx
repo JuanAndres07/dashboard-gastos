@@ -86,25 +86,27 @@ export default function Budgets({ user }) {
           </h2>
 
           {/* Filtros de Fecha */}
-          <div className="flex items-center gap-2 w-full md:w-auto">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 grow sm:grow-0 w-full sm:w-auto">
             <label className="text-xs font-semibold text-(--text-color) whitespace-nowrap uppercase tracking-wider">
               Periodo:
             </label>
-            <div className="flex items-center gap-1.5 w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 w-full sm:w-auto">
               <input
                 type="date"
                 name="p_start_date"
                 aria-label="Fecha de inicio"
-                className="w-full sm:w-auto px-3 py-2 bg-(--settings-card-bg) border border-(--sidebar-border) rounded-xl text-(--headings-color) text-xs font-medium focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300 cursor-pointer"
+                className="w-full min-w-0 sm:w-auto px-3 py-2 bg-(--settings-card-bg) border border-(--sidebar-border) rounded-xl text-(--headings-color) text-xs font-medium focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300 cursor-pointer"
                 value={dateFilters.p_start_date}
                 onChange={handleFilterChange}
               />
-              <span className="text-xs text-(--text-color)/50 font-medium">a</span>
+              <span className="text-xs text-(--text-color)/50 font-medium shrink-0 text-center sm:text-left">
+                a
+              </span>
               <input
                 type="date"
                 name="p_end_date"
                 aria-label="Fecha de fin"
-                className="w-full sm:w-auto px-3 py-2 bg-(--settings-card-bg) border border-(--sidebar-border) rounded-xl text-(--headings-color) text-xs font-medium focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300 cursor-pointer"
+                className="w-full min-w-0 sm:w-auto px-3 py-2 bg-(--settings-card-bg) border border-(--sidebar-border) rounded-xl text-(--headings-color) text-xs font-medium focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300 cursor-pointer"
                 value={dateFilters.p_end_date}
                 onChange={handleFilterChange}
               />

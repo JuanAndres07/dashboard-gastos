@@ -7,8 +7,17 @@ export function TransactionForm({ onTransactionAdded, user }) {
   const { categories, loading: loadingCategories } = useCategories(user);
   const [filteredCategories, setFilteredCategories] = useState([]);
 
+  const getTodayDateString = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
+  const [date, setDate] = useState(getTodayDateString);
   const [categoryId, setCategoryId] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -36,6 +45,7 @@ export function TransactionForm({ onTransactionAdded, user }) {
         category_id: categoryId,
         user_id: user.id,
         type: type,
+        transaction_date: date,
       },
     ]);
 
@@ -45,6 +55,7 @@ export function TransactionForm({ onTransactionAdded, user }) {
       setAmount("");
       setDescription("");
       setCategoryId("");
+      setDate(getTodayDateString());
 
       if (onTransactionAdded) {
         onTransactionAdded();
@@ -119,6 +130,20 @@ export function TransactionForm({ onTransactionAdded, user }) {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="w-full px-4 py-3 bg-(--bg-light) border border-(--sidebar-border) rounded-xl text-(--text-color) placeholder-(--text-color)/50 text-sm focus:outline-none focus:ring-2 focus:ring-(--primary-color) focus:border-transparent transition-all duration-300"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="transaction_date" className="text-xs font-semibold text-(--text-color) tracking-wide">
+            Fecha
+          </label>
+          <input
+            id="transaction_date"
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            required
+            className="w-full px-4 py-3 bg-(--bg-light) border border-(--sidebar-border) rounded-xl text-(--text-color) text-sm focus:outline-none focus:ring-2 focus:ring-(--primary-color) focus:border-transparent transition-all duration-300 cursor-pointer"
           />
         </div>
 
