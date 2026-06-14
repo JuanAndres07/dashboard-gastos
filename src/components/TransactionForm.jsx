@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { useCategories } from "../hooks/useCategories";
+import { toast } from "sonner";
 
 export function TransactionForm({ onTransactionAdded, user }) {
   const [type, setType] = useState("expense");
@@ -32,7 +33,7 @@ export function TransactionForm({ onTransactionAdded, user }) {
     setLoading(true);
 
     if (!amount || Number(amount) <= 0) {
-      alert("El monto debe ser mayor a 0");
+      toast.warning("El monto debe ser mayor a 0");
       setAmount("");
       setLoading(false);
       return;
@@ -50,7 +51,7 @@ export function TransactionForm({ onTransactionAdded, user }) {
     ]);
 
     if (error) {
-      alert("Error al agregar la transacción: " + error.message);
+      toast.error("Error al agregar la transacción: " + error.message);
     } else {
       setAmount("");
       setDescription("");
@@ -59,7 +60,7 @@ export function TransactionForm({ onTransactionAdded, user }) {
 
       if (onTransactionAdded) {
         onTransactionAdded();
-        alert("Transacción agregada correctamente");
+        toast.success("Transacción agregada correctamente");
       }
     }
     setLoading(false);

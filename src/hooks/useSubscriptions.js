@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { useCategories } from "./useCategories";
+import { toast } from "sonner";
 
 export function useSubscriptions(user) {
   const { categories, loading: loadingCategories } = useCategories(user);
@@ -76,14 +77,13 @@ export function useSubscriptions(user) {
   }, [user?.id]);
 
   const handleSubmit = async (e) => {
-    if (e) e.preventDefault();
     if (!name || !categoryId || !amount || !frequency || !nextPaymentDate) {
-      alert("Por favor completa todos los campos");
+      toast.warning("Por favor completa todos los campos");
       return;
     }
 
     if (nextPaymentDate < today) {
-      alert("La fecha del próximo pago no puede ser anterior a hoy");
+      toast.warning("La fecha del próximo pago no puede ser anterior a hoy");
       return;
     }
 
@@ -103,7 +103,7 @@ export function useSubscriptions(user) {
 
       if (error) throw error;
 
-      alert("Suscripción creada con éxito");
+      toast.success("Suscripción creada con éxito");
       // Limpiar formulario
       setName("");
       setCategoryId("");
@@ -114,9 +114,9 @@ export function useSubscriptions(user) {
     } catch (error) {
       console.error("Error al crear suscripción:", error.message);
       if (error.message.includes("unique_active_subscription_per_user")) {
-        alert("Ya tienes una suscripción activa con ese nombre.");
+        toast.error("Ya tienes una suscripción activa con ese nombre.");
       } else {
-        alert("Error al crear la suscripción: " + error.message);
+        toast.error("Error al crear la suscripción: " + error.message);
       }
     } finally {
       setLoading(false);
@@ -136,11 +136,11 @@ export function useSubscriptions(user) {
 
       if (error) throw error;
 
-      alert("Suscripción eliminada con éxito");
+      toast.success("Suscripción eliminada con éxito");
       setSubscriptions((prev) => prev.filter((sub) => sub.id !== id));
     } catch (error) {
       console.error("Error al eliminar suscripción:", error.message);
-      alert("Error al eliminar la suscripción: " + error.message);
+      toast.error("Error al eliminar la suscripción: " + error.message);
     }
   };
 
@@ -183,7 +183,7 @@ export function useSubscriptions(user) {
     }
 
     if (editValues.next_payment_date < today) {
-      alert("La fecha del próximo pago no puede ser anterior a hoy");
+      toast.warning("La fecha del próximo pago no puede ser anterior a hoy");
       return;
     }
 
@@ -201,15 +201,15 @@ export function useSubscriptions(user) {
 
       if (error) throw error;
 
-      alert("Suscripción actualizada con éxito");
+      toast.success("Suscripción actualizada con éxito");
       setEditingId(null);
       fetchSubscriptions();
     } catch (error) {
       console.error("Error al actualizar suscripción:", error.message);
       if (error.message.includes("unique_active_subscription_per_user")) {
-        alert("Ya tienes una suscripción activa con ese nombre.");
+        toast.error("Ya tienes una suscripción activa con ese nombre.");
       } else {
-        alert("Error al actualizar la suscripción: " + error.message);
+        toast.error("Error al actualizar la suscripción: " + error.message);
       }
     }
   };

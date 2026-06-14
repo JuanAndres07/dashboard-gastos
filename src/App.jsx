@@ -24,6 +24,7 @@ import Configuration from "./pages/Configuration";
 
 //Components
 import Layout from "./components/Layout";
+import CustomToaster from "./components/CustomToaster";
 
 function App() {
   const [session, setSession] = useState(null);
@@ -66,6 +67,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <CustomToaster />
       <Routes>
         {isRecovery ? (
           <Route path="*" element={<UpdatePassword />} />

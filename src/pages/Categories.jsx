@@ -9,6 +9,7 @@ import {
   IconChevronUp,
 } from "@tabler/icons-react";
 import Modal from "../components/Modal";
+import { toast } from "sonner";
 
 export default function Categories({ user }) {
   const {
@@ -43,17 +44,22 @@ export default function Categories({ user }) {
       if (result.code === "DUPLICATE_HIDDEN") {
         if (window.confirm(result.message)) {
           const restoreResult = await unhideCategory(result.categoryToRestore);
-          if (!restoreResult.success) alert(restoreResult.message);
+          if (!restoreResult.success) {
+            toast.error(restoreResult.message);
+          } else {
+            toast.success("Categoría restaurada con éxito");
+          }
           setNewName("");
           setSelectedIcon("IconCoin");
           setIsModalOpen(false);
         }
       } else {
-        alert(result.message);
+        toast.error(result.message);
       }
       return;
     }
 
+    toast.success("Categoría creada con éxito");
     setNewName("");
     setSelectedIcon("IconCoin");
     setIsModalOpen(false);
@@ -62,9 +68,10 @@ export default function Categories({ user }) {
   async function onEditCategory(category, name, icon) {
     const result = await editCategory(category, name, viewMode, icon);
     if (!result.success) {
-      alert(result.message);
+      toast.error(result.message);
       return false;
     }
+    toast.success("Categoría actualizada con éxito");
     return true;
   }
 
@@ -77,7 +84,9 @@ export default function Categories({ user }) {
 
     const result = await deleteCategory(category_id, is_global);
     if (!result.success) {
-      alert(result.message);
+      toast.error(result.message);
+    } else {
+      toast.success(is_global ? "Categoría oculta con éxito" : "Categoría eliminada con éxito");
     }
   }
 
@@ -87,7 +96,9 @@ export default function Categories({ user }) {
 
     const result = await unhideCategory(category);
     if (!result.success) {
-      alert(result.message);
+      toast.error(result.message);
+    } else {
+      toast.success("Categoría recuperada con éxito");
     }
   }
 

@@ -5,6 +5,7 @@ import { formatCurrency, parseDate } from "../utilities/formatters";
 import Modal from "../components/Modal";
 import { Pagination } from "../components/Pagination";
 import { iconDictionary } from "../utilities/iconDictionary";
+import { toast } from "sonner";
 
 export default function Subscriptions({ user }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -49,11 +50,11 @@ export default function Subscriptions({ user }) {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     if (!name || !categoryId || !amount || !frequency || !nextPaymentDate) {
-      alert("Por favor completa todos los campos");
+      toast.warning("Por favor completa todos los campos");
       return;
     }
     if (nextPaymentDate < today) {
-      alert("La fecha del próximo pago no puede ser anterior a hoy");
+      toast.warning("La fecha del próximo pago no puede ser anterior a hoy");
       return;
     }
     await handleSubmit(e);

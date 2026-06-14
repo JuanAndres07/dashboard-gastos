@@ -3,6 +3,7 @@ import { supabase } from "../../lib/supabase";
 import { Link } from "react-router-dom";
 import { IconMail, IconLockPassword } from "@tabler/icons-react";
 import AuthVisualSection from "../../components/AuthVisualSection";
+import { toast } from "sonner";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -23,8 +24,9 @@ export default function Login() {
       password,
     });
     if (error) {
-      alert("Error al iniciar sesión: " + error.message);
+      toast.error("Error al iniciar sesión: " + error.message);
     } else {
+      toast.success("¡Inicio de sesión exitoso!");
       console.log("Inicio de sesión exitoso");
     }
     setLoading(false);
@@ -53,7 +55,7 @@ export default function Login() {
       <div className="w-full lg:w-1/2 flex flex-col items-center justify-between p-6 sm:p-12 min-h-screen">
         <div className="hidden lg:block h-8"></div>
 
-        <div className="w-full max-w-[420px] my-auto flex flex-col justify-center py-8">
+        <div className="w-full max-w-105 my-auto flex flex-col justify-center py-8">
           <div className="mb-8 flex flex-col items-center lg:items-start text-center lg:text-left">
             <img
               src="/Icon.png"

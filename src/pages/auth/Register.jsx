@@ -3,6 +3,7 @@ import { supabase } from "../../lib/supabase";
 import { Link, useNavigate } from "react-router-dom";
 import { IconMail, IconLockPassword, IconUser } from "@tabler/icons-react";
 import AuthVisualSection from "../../components/AuthVisualSection";
+import { toast } from "sonner";
 
 export default function Register() {
   const [name, setName] = useState("");
@@ -16,12 +17,12 @@ export default function Register() {
     e.preventDefault();
 
     if (password.length < 6) {
-      alert("La contraseña debe tener al menos 6 caracteres");
+      toast.warning("La contraseña debe tener al menos 6 caracteres");
       return;
     }
 
     if (password !== confirmPassword) {
-      alert("Las contraseñas no coinciden");
+      toast.warning("Las contraseñas no coinciden");
       return;
     }
 
@@ -43,18 +44,21 @@ export default function Register() {
         error.status === 400 ||
         error.message.includes("already registered")
       ) {
-        alert(
+        toast.error(
           "Este correo electrónico ya está registrado. Por favor, intenta iniciar sesión.",
         );
       } else {
-        alert("Error al registrar: " + error.message);
+        toast.error("Error al registrar: " + error.message);
       }
     } else {
       if (data?.user?.identities?.length === 0) {
-        alert(
+        toast.error(
           "Este correo ya está registrado. Por favor, intenta iniciar sesión.",
         );
       } else {
+        toast.success(
+          "¡Registro exitoso! Por favor verifica tu correo electrónico.",
+        );
         navigate("/confirm-email");
       }
     }
@@ -84,7 +88,7 @@ export default function Register() {
       <div className="w-full lg:w-1/2 flex flex-col items-center justify-between p-6 sm:p-12 min-h-screen">
         <div className="hidden lg:block h-8"></div>
 
-        <div className="w-full max-w-[420px] my-auto flex flex-col justify-center py-8">
+        <div className="w-full max-w-105 my-auto flex flex-col justify-center py-8">
           <div className="mb-8 flex flex-col items-center lg:items-start text-center lg:text-left">
             <img
               src="/Icon.png"

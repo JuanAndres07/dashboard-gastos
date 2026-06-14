@@ -3,6 +3,7 @@ import { supabase } from "../../lib/supabase";
 import { useNavigate, Link } from "react-router-dom";
 import { IconLockPassword, IconArrowLeft } from "@tabler/icons-react";
 import AuthVisualSection from "../../components/AuthVisualSection";
+import { toast } from "sonner";
 
 export default function UpdatePassword() {
   const [newPassword, setNewPassword] = useState("");
@@ -14,7 +15,7 @@ export default function UpdatePassword() {
     e.preventDefault();
 
     if (newPassword !== confirmPassword) {
-      alert("Las contraseñas no coinciden");
+      toast.warning("Las contraseñas no coinciden");
       return;
     }
 
@@ -25,10 +26,10 @@ export default function UpdatePassword() {
     });
 
     if (error) {
-      alert("Error al actualizar la contraseña: " + error.message);
+      toast.error("Error al actualizar la contraseña: " + error.message);
     } else {
       await supabase.auth.signOut();
-      alert(
+      toast.success(
         "Contraseña actualizada correctamente. Por favor, inicia sesión con tu nueva contraseña.",
       );
       navigate("/login");
@@ -59,7 +60,7 @@ export default function UpdatePassword() {
       <div className="w-full lg:w-1/2 flex flex-col items-center justify-between p-6 sm:p-12 min-h-screen">
         <div className="hidden lg:block h-8"></div>
 
-        <div className="w-full max-w-[420px] my-auto flex flex-col justify-center py-8">
+        <div className="w-full max-w-105 my-auto flex flex-col justify-center py-8">
           <div className="mb-8 flex flex-col items-center lg:items-start text-center lg:text-left">
             <img
               src="/Icon.png"

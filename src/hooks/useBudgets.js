@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "../lib/supabase";
 import { useCategories } from "./useCategories";
 import { formatLocalDate } from "../utilities/formatters";
+import { toast } from "sonner";
 
 export function useBudgets(user) {
   const { categories, loading: loadingCategories } = useCategories(user);
@@ -12,7 +13,6 @@ export function useBudgets(user) {
   });
 
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState({ type: "", text: "" });
 
   // Estados para presupuestos consumidos desde la RPC
   const [budgets, setBudgets] = useState([]);
@@ -21,7 +21,6 @@ export function useBudgets(user) {
   // Estados para la edición de presupuesto
   const [editingBudget, setEditingBudget] = useState(null);
   const [loadingEdit, setLoadingEdit] = useState(false);
-  const [editError, setEditError] = useState("");
 
   // Filtros de fecha (mes actual por defecto)
   const now = new Date();
@@ -68,7 +67,6 @@ export function useBudgets(user) {
   async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);
-    setMessage({ type: "", text: "" });
 
     const { category_id, amount } = formData;
 
@@ -83,12 +81,9 @@ export function useBudgets(user) {
     ]);
 
     if (error) {
-      setMessage({
-        type: "danger",
-        text: "Error al crear presupuesto: " + error.message,
-      });
+      toast.error("Error al crear presupuesto: " + error.message);
     } else {
-      setMessage({ type: "success", text: "Presupuesto creado con éxito" });
+      toast.success("Presupuesto creado con éxito");
       setFormData({
         category_id: "",
         amount: "",
@@ -101,7 +96,6 @@ export function useBudgets(user) {
   async function handleEditSubmit(e) {
     e.preventDefault();
     setLoadingEdit(true);
-    setEditError("");
 
     const { error } = await supabase.rpc("update_budget_amount", {
       p_category_id: editingBudget.category_id,
@@ -109,12 +103,9 @@ export function useBudgets(user) {
     });
 
     if (error) {
-      setEditError("Error al actualizar presupuesto: " + error.message);
+      toast.error("Error al actualizar presupuesto: " + error.message);
     } else {
-      setMessage({
-        type: "success",
-        text: `Presupuesto de ${editingBudget.category_name} actualizado con éxito`,
-      });
+      toast.success(`Presupuesto de ${editingBudget.category_name} actualizado con éxito`);
       setEditingBudget(null);
       fetchBudgets();
     }
@@ -134,14 +125,11 @@ export function useBudgets(user) {
   return {
     formData,
     loading,
-    message,
-    setMessage,
     budgets,
     loadingBudgets,
     editingBudget,
     setEditingBudget,
     loadingEdit,
-    editError,
     dateFilters,
     expenseCategories,
     loadingCategories,

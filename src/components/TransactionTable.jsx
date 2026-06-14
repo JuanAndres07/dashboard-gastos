@@ -3,6 +3,7 @@ import { iconDictionary } from "../utilities/iconDictionary";
 import { IconTrash } from "@tabler/icons-react";
 import { supabase } from "../lib/supabase";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export function TransactionTable({ transactions, loading, viewMode, setViewMode, onTransactionDeleted }) {
   const [deletingId, setDeletingId] = useState(null);
@@ -13,11 +14,12 @@ export function TransactionTable({ transactions, loading, viewMode, setViewMode,
       try {
         const { error } = await supabase.from("Transaction").delete().eq("id", id);
         if (error) {
-          alert("Error al eliminar el movimiento: " + error.message);
+          toast.error("Error al eliminar el movimiento: " + error.message);
         } else {
           if (onTransactionDeleted) {
             onTransactionDeleted();
           }
+          toast.success("Movimiento eliminado con éxito");
         }
       } catch (err) {
         console.error("Error al eliminar transacción:", err);

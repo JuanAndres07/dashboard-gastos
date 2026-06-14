@@ -3,6 +3,7 @@ import { supabase } from "../../lib/supabase";
 import { Link } from "react-router-dom";
 import { IconMail, IconArrowLeft } from "@tabler/icons-react";
 import AuthVisualSection from "../../components/AuthVisualSection";
+import { toast } from "sonner";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -19,11 +20,12 @@ export default function ForgotPassword() {
     });
 
     if (error) {
-      alert("Error: " + error.message);
+      toast.error("Error: " + error.message);
     } else {
-      setMessage(
-        "Se ha enviado un correo electrónico para restablecer la contraseña.",
-      );
+      const msg =
+        "Se ha enviado un correo electrónico para restablecer la contraseña.";
+      setMessage(msg);
+      toast.success(msg);
     }
     setLoading(false);
   };
@@ -51,7 +53,7 @@ export default function ForgotPassword() {
       <div className="w-full lg:w-1/2 flex flex-col items-center justify-between p-6 sm:p-12 min-h-screen">
         <div className="hidden lg:block h-8"></div>
 
-        <div className="w-full max-w-[420px] my-auto flex flex-col justify-center py-8">
+        <div className="w-full max-w-105 my-auto flex flex-col justify-center py-8">
           <div className="mb-8 flex flex-col items-center lg:items-start text-center lg:text-left">
             <img
               src="/Icon.png"

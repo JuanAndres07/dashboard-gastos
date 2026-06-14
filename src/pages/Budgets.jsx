@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useBudgets } from "../hooks/useBudgets";
 import { formatCurrency } from "../utilities/formatters";
 import Modal from "../components/Modal";
-import { IconPlus, IconPencil, IconX, IconWallet } from "@tabler/icons-react";
+import { IconPlus, IconPencil, IconWallet } from "@tabler/icons-react";
 
 export default function Budgets({ user }) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -10,14 +10,11 @@ export default function Budgets({ user }) {
   const {
     formData,
     loading,
-    message,
-    setMessage,
     budgets,
     loadingBudgets,
     editingBudget,
     setEditingBudget,
     loadingEdit,
-    editError,
     dateFilters,
     expenseCategories,
     loadingCategories,
@@ -54,26 +51,6 @@ export default function Budgets({ user }) {
         </button>
       </header>
 
-      {/* Alerta/Mensaje de éxito o error */}
-      {message.text && (
-        <div
-          className={`p-4 rounded-xl border flex justify-between items-center transition-all duration-300 ${
-            message.type === "danger"
-              ? "bg-(--danger-color)/10 border-(--danger-color)/20 text-(--danger-color)"
-              : "bg-(--success-color)/10 border-(--success-color)/20 text-(--success-color)"
-          }`}
-        >
-          <span className="text-sm font-semibold">{message.text}</span>
-          <button
-            type="button"
-            className="p-1 rounded-lg hover:bg-black/5 text-current transition-all duration-200 cursor-pointer"
-            onClick={() => setMessage({ type: "", text: "" })}
-            aria-label="Cerrar mensaje"
-          >
-            <IconX size={16} />
-          </button>
-        </div>
-      )}
 
       {/* Listado de Presupuestos */}
       <div
@@ -307,11 +284,6 @@ export default function Budgets({ user }) {
       >
         {editingBudget && (
           <form onSubmit={handleEditSubmit} className="space-y-4">
-            {editError && (
-              <div className="p-3 bg-(--danger-color)/10 border border-(--danger-color)/20 text-(--danger-color) text-xs font-semibold rounded-lg">
-                {editError}
-              </div>
-            )}
 
             {/* Categoría (Solo lectura) */}
             <div className="flex flex-col gap-1.5">
