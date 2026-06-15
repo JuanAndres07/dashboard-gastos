@@ -4,12 +4,22 @@ import { IconTrash } from "@tabler/icons-react";
 import { supabase } from "../lib/supabase";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useConfirm } from "../contexts/ConfirmContext";
 
 export function TransactionTable({ transactions, loading, viewMode, setViewMode, onTransactionDeleted }) {
   const [deletingId, setDeletingId] = useState(null);
+  const confirm = useConfirm();
 
   const handleDelete = async (id) => {
-    if (window.confirm("¿Estás seguro de que quieres eliminar este movimiento?")) {
+    const isConfirmed = await confirm({
+      title: "Eliminar movimiento",
+      message: "¿Estás seguro de que quieres eliminar este movimiento? Esta acción no se puede deshacer.",
+      confirmText: "Eliminar",
+      cancelText: "Cancelar",
+      type: "danger",
+    });
+
+    if (isConfirmed) {
       setDeletingId(id);
       try {
         const { error } = await supabase.from("Transaction").delete().eq("id", id);

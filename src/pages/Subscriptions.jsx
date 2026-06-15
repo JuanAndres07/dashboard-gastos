@@ -6,6 +6,9 @@ import Modal from "../components/Modal";
 import { Pagination } from "../components/Pagination";
 import { iconDictionary } from "../utilities/iconDictionary";
 import { toast } from "sonner";
+import { useConfirm } from "../contexts/ConfirmContext";
+import Select from "../components/Select";
+import DateInput from "../components/DateInput";
 
 export default function Subscriptions({ user }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -33,13 +36,29 @@ export default function Subscriptions({ user }) {
     editValues,
     setEditValues,
     handleSubmit,
-    handleDelete,
+    handleDelete: performDelete,
     startEdit,
     handleUpdate,
     getFrequencyLabel,
     frequencies,
     today,
   } = useSubscriptions(user);
+
+  const confirm = useConfirm();
+
+  const handleDelete = async (id) => {
+    const isConfirmed = await confirm({
+      title: "Eliminar Suscripción",
+      message: "¿Estás seguro de que deseas eliminar esta suscripción?",
+      confirmText: "Eliminar",
+      cancelText: "Cancelar",
+      type: "danger",
+    });
+
+    if (isConfirmed) {
+      await performDelete(id);
+    }
+  };
 
   // Sliced subscriptions for pagination
   const paginatedSubscriptions = subscriptions.slice(
@@ -154,22 +173,20 @@ export default function Subscriptions({ user }) {
                       {/* Categoría */}
                       <div className="flex flex-col gap-1">
                         <label className="text-[10px] font-bold text-(--text-color) uppercase tracking-wide">Categoría</label>
-                        <select
-                          className="w-full px-3 py-2 bg-(--bg-light) border border-(--sidebar-border) rounded-xl text-xs font-semibold text-(--text-color) focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300 cursor-pointer"
+                        <Select
                           value={editValues.category_id}
-                          onChange={(e) =>
+                          onChange={(val) =>
                             setEditValues({
                               ...editValues,
-                              category_id: e.target.value,
+                              category_id: val,
                             })
                           }
-                        >
-                          {expenseCategories.map((cat) => (
-                            <option key={cat.id} value={cat.id}>
-                              {cat.name}
-                            </option>
-                          ))}
-                        </select>
+                          options={expenseCategories.map((cat) => ({
+                            value: cat.id,
+                            label: cat.name,
+                          }))}
+                          btnClassName="!py-2 !text-xs"
+                        />
                       </div>
 
                       {/* Monto */}
@@ -197,30 +214,23 @@ export default function Subscriptions({ user }) {
                       {/* Frecuencia */}
                       <div className="flex flex-col gap-1">
                         <label className="text-[10px] font-bold text-(--text-color) uppercase tracking-wide">Frecuencia</label>
-                        <select
-                          className="w-full px-3 py-2 bg-(--bg-light) border border-(--sidebar-border) rounded-xl text-xs font-semibold text-(--text-color) focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300 cursor-pointer"
+                        <Select
                           value={editValues.frequency}
-                          onChange={(e) =>
+                          onChange={(val) =>
                             setEditValues({
                               ...editValues,
-                              frequency: e.target.value,
+                              frequency: val,
                             })
                           }
-                        >
-                          {frequencies.map((freq) => (
-                            <option key={freq.value} value={freq.value}>
-                              {freq.label}
-                            </option>
-                          ))}
-                        </select>
+                          options={frequencies}
+                          btnClassName="!py-2 !text-xs"
+                        />
                       </div>
 
                       {/* Próximo Pago */}
                       <div className="flex flex-col gap-1">
                         <label className="text-[10px] font-bold text-(--text-color) uppercase tracking-wide">Próximo Pago</label>
-                        <input
-                          type="date"
-                          className="w-full px-3 py-2 bg-(--bg-light) border border-(--sidebar-border) rounded-xl text-xs font-semibold text-(--text-color) focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300 cursor-pointer"
+                        <DateInput
                           value={editValues.next_payment_date}
                           onChange={(e) =>
                             setEditValues({
@@ -229,6 +239,7 @@ export default function Subscriptions({ user }) {
                             })
                           }
                           min={today}
+                          inputClassName="!py-2 !text-xs"
                         />
                       </div>
                     </div>
@@ -355,22 +366,20 @@ export default function Subscriptions({ user }) {
                             />
                           </td>
                           <td className="px-6 py-3">
-                            <select
-                              className="w-full px-2.5 py-1.5 bg-(--bg-light) border border-(--sidebar-border) rounded-lg text-xs font-semibold text-(--text-color) focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300 cursor-pointer"
+                            <Select
                               value={editValues.category_id}
-                              onChange={(e) =>
+                              onChange={(val) =>
                                 setEditValues({
                                   ...editValues,
-                                  category_id: e.target.value,
+                                  category_id: val,
                                 })
                               }
-                            >
-                              {expenseCategories.map((cat) => (
-                                <option key={cat.id} value={cat.id}>
-                                  {cat.name}
-                                </option>
-                              ))}
-                            </select>
+                              options={expenseCategories.map((cat) => ({
+                                value: cat.id,
+                                label: cat.name,
+                              }))}
+                              btnClassName="!py-1.5 !text-xs !rounded-lg"
+                            />
                           </td>
                           <td className="px-6 py-3">
                             <div className="relative">
@@ -392,28 +401,21 @@ export default function Subscriptions({ user }) {
                             </div>
                           </td>
                           <td className="px-6 py-3">
-                            <select
-                              className="w-full px-2.5 py-1.5 bg-(--bg-light) border border-(--sidebar-border) rounded-lg text-xs font-semibold text-(--text-color) focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300 cursor-pointer"
+                            <Select
                               value={editValues.frequency}
-                              onChange={(e) =>
+                              onChange={(val) =>
                                 setEditValues({
                                   ...editValues,
-                                  frequency: e.target.value,
+                                  frequency: val,
                                 })
                               }
-                            >
-                              {frequencies.map((freq) => (
-                                <option key={freq.value} value={freq.value}>
-                                  {freq.label}
-                                </option>
-                              ))}
-                            </select>
+                              options={frequencies}
+                              btnClassName="!py-1.5 !text-xs !rounded-lg"
+                            />
                           </td>
                           <td className="px-6 py-3 text-xs text-(--text-color)/50 font-medium">-</td>
                           <td className="px-6 py-3">
-                            <input
-                              type="date"
-                              className="w-full px-2.5 py-1.5 bg-(--bg-light) border border-(--sidebar-border) rounded-lg text-xs font-semibold text-(--text-color) focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300 cursor-pointer"
+                            <DateInput
                               value={editValues.next_payment_date}
                               onChange={(e) =>
                                 setEditValues({
@@ -422,6 +424,7 @@ export default function Subscriptions({ user }) {
                                 })
                               }
                               min={today}
+                              inputClassName="!py-1.5 !text-xs !rounded-lg"
                             />
                           </td>
                           <td className="px-6 py-3 text-center">
@@ -555,23 +558,17 @@ export default function Subscriptions({ user }) {
             >
               Categoría
             </label>
-            <select
-              id="category"
-              value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
-              required
-              disabled={loadingCategories}
-              className="w-full px-4 py-3 bg-(--bg-light) border border-(--sidebar-border) rounded-xl text-(--text-color) text-sm focus:outline-none focus:ring-2 focus:ring-(--primary-color) focus:border-transparent transition-all duration-300 cursor-pointer"
-            >
-              <option value="" disabled>
-                Selecciona una categoría
-              </option>
-              {expenseCategories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
+            <Select
+               id="category"
+               value={categoryId}
+               onChange={setCategoryId}
+               options={expenseCategories.map((cat) => ({
+                 value: cat.id,
+                 label: cat.name,
+               }))}
+               placeholder="Selecciona una categoría"
+               disabled={loadingCategories}
+             />
           </div>
 
           {/* Monto */}
@@ -607,19 +604,12 @@ export default function Subscriptions({ user }) {
             >
               Frecuencia
             </label>
-            <select
+            <Select
               id="frequency"
               value={frequency}
-              onChange={(e) => setFrequency(e.target.value)}
-              required
-              className="w-full px-4 py-3 bg-(--bg-light) border border-(--sidebar-border) rounded-xl text-(--text-color) text-sm focus:outline-none focus:ring-2 focus:ring-(--primary-color) focus:border-transparent transition-all duration-300 cursor-pointer"
-            >
-              {frequencies.map((freq) => (
-                <option key={freq.value} value={freq.value}>
-                  {freq.label}
-                </option>
-              ))}
-            </select>
+              onChange={setFrequency}
+              options={frequencies}
+            />
           </div>
 
           {/* Próximo Pago */}
@@ -630,15 +620,13 @@ export default function Subscriptions({ user }) {
             >
               Próximo Pago
             </label>
-            <input
-              id="next_payment_date"
-              type="date"
-              value={nextPaymentDate}
-              onChange={(e) => setNextPaymentDate(e.target.value)}
-              min={today}
-              required
-              className="w-full px-4 py-3 bg-(--bg-light) border border-(--sidebar-border) rounded-xl text-(--text-color) text-sm focus:outline-none focus:ring-2 focus:ring-(--primary-color) focus:border-transparent transition-all duration-300 cursor-pointer"
-            />
+             <DateInput
+               id="next_payment_date"
+               value={nextPaymentDate}
+               onChange={(e) => setNextPaymentDate(e.target.value)}
+               min={today}
+               required
+             />
           </div>
 
           {/* Botones de acción */}

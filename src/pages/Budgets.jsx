@@ -3,6 +3,8 @@ import { useBudgets } from "../hooks/useBudgets";
 import { formatCurrency } from "../utilities/formatters";
 import Modal from "../components/Modal";
 import { IconPlus, IconPencil, IconWallet } from "@tabler/icons-react";
+import Select from "../components/Select";
+import DateInput from "../components/DateInput";
 
 export default function Budgets({ user }) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -68,24 +70,24 @@ export default function Budgets({ user }) {
               Periodo:
             </label>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 w-full sm:w-auto">
-              <input
-                type="date"
+              <DateInput
                 name="p_start_date"
                 aria-label="Fecha de inicio"
-                className="w-full min-w-0 sm:w-auto px-3 py-2 bg-(--settings-card-bg) border border-(--sidebar-border) rounded-xl text-(--headings-color) text-xs font-medium focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300 cursor-pointer"
                 value={dateFilters.p_start_date}
                 onChange={handleFilterChange}
+                inputClassName="!py-2 !text-xs w-full"
+                className="w-full sm:w-36"
               />
               <span className="text-xs text-(--text-color)/50 font-medium shrink-0 text-center sm:text-left">
                 a
               </span>
-              <input
-                type="date"
+              <DateInput
                 name="p_end_date"
                 aria-label="Fecha de fin"
-                className="w-full min-w-0 sm:w-auto px-3 py-2 bg-(--settings-card-bg) border border-(--sidebar-border) rounded-xl text-(--headings-color) text-xs font-medium focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300 cursor-pointer"
                 value={dateFilters.p_end_date}
                 onChange={handleFilterChange}
+                inputClassName="!py-2 !text-xs w-full"
+                className="w-full sm:w-36"
               />
             </div>
           </div>
@@ -205,28 +207,21 @@ export default function Budgets({ user }) {
             >
               Categoría
             </label>
-            <select
+            <Select
               id="category_id"
-              name="category_id"
               value={formData.category_id}
-              onChange={handleChange}
-              required
-              disabled={loadingCategories || loadingBudgets}
-              className="w-full px-4 py-3 bg-(--bg-light) border border-(--sidebar-border) rounded-xl text-(--headings-color) text-sm focus:outline-none focus:ring-2 focus:ring-(--primary-color) focus:border-transparent transition-all duration-300 cursor-pointer"
-            >
-              <option value="" disabled>
-                {loadingCategories || loadingBudgets
+              onChange={(val) => handleChange({ target: { name: "category_id", value: val } })}
+              options={expenseCategories.map((cat) => ({
+                value: cat.id,
+                label: cat.name,
+              }))}
+              placeholder={
+                loadingCategories || loadingBudgets
                   ? "Cargando categorías..."
-                  : "Selecciona una categoría"}
-              </option>
-              {!loadingCategories &&
-                !loadingBudgets &&
-                expenseCategories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-            </select>
+                  : "Selecciona una categoría"
+              }
+              disabled={loadingCategories || loadingBudgets}
+            />
           </div>
 
           {/* Monto Mensual */}

@@ -10,6 +10,7 @@ import {
 } from "@tabler/icons-react";
 import Modal from "../components/Modal";
 import { toast } from "sonner";
+import { useConfirm } from "../contexts/ConfirmContext";
 
 export default function Categories({ user }) {
   const {
@@ -26,6 +27,7 @@ export default function Categories({ user }) {
   const [viewMode, setViewMode] = useState("expense");
   const [newName, setNewName] = useState("");
   const [selectedIcon, setSelectedIcon] = useState("IconCoin");
+  const confirm = useConfirm();
 
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -42,7 +44,15 @@ export default function Categories({ user }) {
 
     if (!result.success) {
       if (result.code === "DUPLICATE_HIDDEN") {
-        if (window.confirm(result.message)) {
+        const isConfirmed = await confirm({
+          title: "Restaurar Categoría",
+          message: result.message,
+          confirmText: "Restaurar",
+          cancelText: "Cancelar",
+          type: "info",
+        });
+
+        if (isConfirmed) {
           const restoreResult = await unhideCategory(result.categoryToRestore);
           if (!restoreResult.success) {
             toast.error(restoreResult.message);
@@ -77,10 +87,15 @@ export default function Categories({ user }) {
 
   async function onDeleteCategory(category_id, is_global) {
     const actionLabel = is_global ? "ocultar" : "eliminar";
-    if (
-      !window.confirm(`¿Estás seguro que deseas ${actionLabel} esta categoría?`)
-    )
-      return;
+    const isConfirmed = await confirm({
+      title: is_global ? "Ocultar Categoría" : "Eliminar Categoría",
+      message: `¿Estás seguro que deseas ${actionLabel} esta categoría?`,
+      confirmText: is_global ? "Ocultar" : "Eliminar",
+      cancelText: "Cancelar",
+      type: "danger",
+    });
+
+    if (!isConfirmed) return;
 
     const result = await deleteCategory(category_id, is_global);
     if (!result.success) {
@@ -91,8 +106,15 @@ export default function Categories({ user }) {
   }
 
   async function onUnhideCategory(category) {
-    if (!window.confirm("¿Estás seguro que deseas mostrar esta categoría?"))
-      return;
+    const isConfirmed = await confirm({
+      title: "Mostrar Categoría",
+      message: "¿Estás seguro que deseas mostrar esta categoría?",
+      confirmText: "Mostrar",
+      cancelText: "Cancelar",
+      type: "info",
+    });
+
+    if (!isConfirmed) return;
 
     const result = await unhideCategory(category);
     if (!result.success) {

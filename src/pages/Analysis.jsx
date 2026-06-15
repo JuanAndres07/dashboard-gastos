@@ -2,6 +2,8 @@ import { formatCurrency, formatLocalDate } from "../utilities/formatters";
 import iconDictionary from "../utilities/iconDictionary";
 import { Line, Doughnut } from "react-chartjs-2";
 import { useAnalysisPage, CATEGORY_COLORS } from "../hooks/useAnalysisPage";
+import Select from "../components/Select";
+import DateInput from "../components/DateInput";
 import {
   IconRefresh,
   IconTrendingUp,
@@ -77,38 +79,40 @@ export default function Analysis({ user }) {
         {/* Filtros */}
         <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
           <div className="flex items-center gap-2 grow sm:grow-0">
-            <select
-              className="w-full sm:w-[160px] px-3 py-2 bg-(--settings-card-bg) border border-(--sidebar-border) rounded-xl text-sm font-semibold text-(--headings-color) focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300 cursor-pointer"
+            <Select
               value={rangePreset}
-              onChange={(e) => handlePresetChange(e.target.value)}
-            >
-              <option value="este-mes">Este Mes</option>
-              <option value="mes-anterior">Mes Anterior</option>
-              <option value="ultimos-3-meses">Últimos 3 Meses</option>
-              <option value="ultimos-6-meses">Últimos 6 Meses</option>
-              <option value="este-ano">Este Año</option>
-              <option value="personalizado">Personalizado</option>
-            </select>
+              onChange={handlePresetChange}
+              options={[
+                { value: "este-mes", label: "Este Mes" },
+                { value: "mes-anterior", label: "Mes Anterior" },
+                { value: "ultimos-3-meses", label: "Últimos 3 Meses" },
+                { value: "ultimos-6-meses", label: "Últimos 6 Meses" },
+                { value: "este-ano", label: "Este Año" },
+                { value: "personalizado", label: "Personalizado" },
+              ]}
+              btnClassName="!py-2 !text-xs min-w-36"
+              className="w-full sm:w-auto"
+            />
           </div>
           <div className="flex items-center gap-2 grow sm:grow-0">
-            <input
-              type="date"
+            <DateInput
               name="p_start_date"
-              className="flex-1 sm:w-[130px] px-3 py-2 bg-(--settings-card-bg) border border-(--sidebar-border) rounded-xl text-xs font-semibold text-(--headings-color) focus:outline-none focus:ring-2 focus:ring-(--primary-color) disabled:opacity-50 transition-all duration-300"
               value={dateFilters.p_start_date}
               onChange={onDateInputChange}
               disabled={rangePreset !== "personalizado"}
+              inputClassName="!py-2 !text-xs w-full"
+              className="flex-1 sm:w-32.5"
             />
             <span className="text-(--text-color)/70 text-xs font-semibold px-0.5">
               a
             </span>
-            <input
-              type="date"
+            <DateInput
               name="p_end_date"
-              className="flex-1 sm:w-[130px] px-3 py-2 bg-(--settings-card-bg) border border-(--sidebar-border) rounded-xl text-xs font-semibold text-(--headings-color) focus:outline-none focus:ring-2 focus:ring-(--primary-color) disabled:opacity-50 transition-all duration-300"
               value={dateFilters.p_end_date}
               onChange={onDateInputChange}
               disabled={rangePreset !== "personalizado"}
+              inputClassName="!py-2 !text-xs w-full"
+              className="flex-1 sm:w-32.5"
             />
             <button
               className="p-2 rounded-xl border border-(--sidebar-border) bg-(--settings-card-bg) text-(--text-color) hover:text-(--sidebar-text-hover) hover:bg-(--sidebar-link-hover-bg) cursor-pointer transition-all duration-300 ease-in-out shrink-0"
@@ -125,7 +129,7 @@ export default function Analysis({ user }) {
       <div className="flex flex-col md:flex-row gap-6 mb-6">
         {/* KPI 1: Gastos del Periodo */}
         <div
-          className="flex-1 min-w-0 bg-(--settings-card-bg) rounded-2xl p-6 transition-all duration-300 ease-in-out hover:translate-y-[-2px] hover:shadow-[0_10px_20px_rgba(0,0,0,0.03)] dark:hover:shadow-[0_10px_20px_rgba(0,0,0,0.15)]"
+          className="flex-1 min-w-0 bg-(--settings-card-bg) rounded-2xl p-6 transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(0,0,0,0.03)] dark:hover:shadow-[0_10px_20px_rgba(0,0,0,0.15)]"
           style={{ border: "var(--card-border)" }}
         >
           <div className="flex justify-between items-start mb-3">
@@ -164,7 +168,7 @@ export default function Analysis({ user }) {
 
         {/* KPI 2: Ahorro Neto Promedio (6m) */}
         <div
-          className="flex-1 min-w-0 bg-(--settings-card-bg) rounded-2xl p-6 transition-all duration-300 ease-in-out hover:translate-y-[-2px] hover:shadow-[0_10px_20px_rgba(0,0,0,0.03)] dark:hover:shadow-[0_10px_20px_rgba(0,0,0,0.15)]"
+          className="flex-1 min-w-0 bg-(--settings-card-bg) rounded-2xl p-6 transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(0,0,0,0.03)] dark:hover:shadow-[0_10px_20px_rgba(0,0,0,0.15)]"
           style={{ border: "var(--card-border)" }}
         >
           <div className="flex justify-between items-start mb-3">
@@ -202,7 +206,7 @@ export default function Analysis({ user }) {
 
         {/* KPI 3: Tasa de Ahorro Promedio (6m) */}
         <div
-          className="flex-1 min-w-0 bg-(--settings-card-bg) rounded-2xl p-6 transition-all duration-300 ease-in-out hover:translate-y-[-2px] hover:shadow-[0_10px_20px_rgba(0,0,0,0.03)] dark:hover:shadow-[0_10px_20px_rgba(0,0,0,0.15)]"
+          className="flex-1 min-w-0 bg-(--settings-card-bg) rounded-2xl p-6 transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(0,0,0,0.03)] dark:hover:shadow-[0_10px_20px_rgba(0,0,0,0.15)]"
           style={{ border: "var(--card-border)" }}
         >
           <div className="flex justify-between items-start mb-3">
@@ -243,7 +247,7 @@ export default function Analysis({ user }) {
           <h3 className="text-lg font-bold text-(--headings-color) mb-6">
             Evolución de Ingresos y Gastos
           </h3>
-          <div className="h-[350px] relative">
+          <div className="h-87.5 relative">
             {loadingSixMonths ? (
               <div className="flex flex-col items-center justify-center h-full gap-3">
                 <div className="w-8 h-8 rounded-full border-2 border-(--primary-color) border-t-transparent animate-spin"></div>
@@ -276,7 +280,7 @@ export default function Analysis({ user }) {
           <h3 className="text-lg font-bold text-(--headings-color) mb-6">
             Top 3 Gastos del Periodo
           </h3>
-          <div className="h-[350px] flex flex-col justify-center gap-6">
+          <div className="h-87.5 flex flex-col justify-center gap-6">
             {loadingExpenses ? (
               <div className="flex flex-col items-center justify-center h-full gap-3">
                 <div className="w-8 h-8 rounded-full border-2 border-(--primary-color) border-t-transparent animate-spin"></div>
@@ -298,7 +302,8 @@ export default function Analysis({ user }) {
                   const IconComponent =
                     iconDictionary[cat.category_icon] ||
                     iconDictionary.IconCoin;
-                  const catColor = categoryColorMap[cat.category_name] || "#64748b";
+                  const catColor =
+                    categoryColorMap[cat.category_name] || "#64748b";
 
                   return (
                     <div
@@ -382,7 +387,7 @@ export default function Analysis({ user }) {
         ) : expensesByCategory.length > 0 ? (
           <div className="flex flex-col md:flex-row items-center gap-8">
             {/* Gráfico de dona con indicador centrado */}
-            <div className="w-full md:w-1/2 h-[300px] relative flex items-center justify-center">
+            <div className="w-full md:w-1/2 h-75 relative flex items-center justify-center">
               <Doughnut
                 data={categoryChartData}
                 options={categoryChartOptions}
@@ -399,7 +404,7 @@ export default function Analysis({ user }) {
 
             {/* Leyenda Premium */}
             <div className="w-full md:w-1/2">
-              <div className="flex flex-col gap-2 overflow-y-auto max-h-[300px] pr-2 scrollbar-thin">
+              <div className="flex flex-col gap-2 overflow-y-auto max-h-75 pr-2 scrollbar-thin">
                 {expensesByCategory.map((cat, idx) => {
                   const percentage =
                     totalExpensesPeriod > 0

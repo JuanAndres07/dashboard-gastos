@@ -124,10 +124,6 @@ export function useSubscriptions(user) {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("¿Estás seguro de que deseas eliminar esta suscripción?")) {
-      return;
-    }
-
     try {
       const { error } = await supabase
         .from("Subscription")

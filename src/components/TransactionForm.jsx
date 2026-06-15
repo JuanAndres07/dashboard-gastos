@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { useCategories } from "../hooks/useCategories";
 import { toast } from "sonner";
+import Select from "./Select";
+import DateInput from "./DateInput";
 
 export function TransactionForm({ onTransactionAdded, user }) {
   const [type, setType] = useState("expense");
@@ -138,13 +140,11 @@ export function TransactionForm({ onTransactionAdded, user }) {
           <label htmlFor="transaction_date" className="text-xs font-semibold text-(--text-color) tracking-wide">
             Fecha
           </label>
-          <input
+          <DateInput
             id="transaction_date"
-            type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
             required
-            className="w-full px-4 py-3 bg-(--bg-light) border border-(--sidebar-border) rounded-xl text-(--text-color) text-sm focus:outline-none focus:ring-2 focus:ring-(--primary-color) focus:border-transparent transition-all duration-300 cursor-pointer"
           />
         </div>
 
@@ -152,24 +152,17 @@ export function TransactionForm({ onTransactionAdded, user }) {
           <label htmlFor="category_id" className="text-xs font-semibold text-(--text-color) tracking-wide">
             Categoría
           </label>
-          <select
-            name="category"
+          <Select
             id="category_id"
             value={categoryId}
-            onChange={(e) => setCategoryId(e.target.value)}
-            required
-            className="w-full px-4 py-3 bg-(--bg-light) border border-(--sidebar-border) rounded-xl text-(--text-color) text-sm focus:outline-none focus:ring-2 focus:ring-(--primary-color) focus:border-transparent transition-all duration-300 cursor-pointer"
-          >
-            <option value="" disabled>
-              Selecciona una categoría
-            </option>
-
-            {filteredCategories.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
+            onChange={setCategoryId}
+            options={filteredCategories.map((cat) => ({
+              value: cat.id,
+              label: cat.name,
+            }))}
+            placeholder="Selecciona una categoría"
+            disabled={loadingCategories}
+          />
         </div>
 
         <button

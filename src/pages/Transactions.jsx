@@ -6,6 +6,8 @@ import { useCategories } from "../hooks/useCategories";
 import { IconPlus, IconSearch } from "@tabler/icons-react";
 import { Pagination } from "../components/Pagination";
 import Modal from "../components/Modal";
+import Select from "../components/Select";
+import DateInput from "../components/DateInput";
 
 export default function Transactions({ user }) {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -123,19 +125,20 @@ export default function Transactions({ user }) {
               >
                 Categoría:
               </label>
-              <select
+              <Select
                 id="catFilter"
-                className="w-full min-w-0 sm:w-auto px-3 py-2 bg-(--settings-card-bg) border border-(--sidebar-border) rounded-xl text-(--headings-color) text-xs font-medium focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300 cursor-pointer"
                 value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-              >
-                <option value="">Todas</option>
-                {filteredCategories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
+                onChange={setSelectedCategory}
+                options={[
+                  { value: "", label: "Todas" },
+                  ...filteredCategories.map((cat) => ({
+                    value: cat.id,
+                    label: cat.name,
+                  })),
+                ]}
+                btnClassName="!py-2 !text-xs min-w-36"
+                className="w-full sm:w-auto"
+              />
             </div>
 
             {/* Filtro de Fechas */}
@@ -144,23 +147,23 @@ export default function Transactions({ user }) {
                 Rango:
               </label>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 w-full sm:w-auto">
-                <input
-                  type="date"
-                  aria-label="Fecha de inicio"
-                  className="w-full min-w-0 sm:w-auto px-3 py-2 bg-(--settings-card-bg) border border-(--sidebar-border) rounded-xl text-(--headings-color) text-xs font-medium focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300 cursor-pointer"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                />
-                <span className="text-xs text-(--text-color)/50 font-medium shrink-0 text-center sm:text-left">
-                  a
-                </span>
-                <input
-                  type="date"
-                  aria-label="Fecha de fin"
-                  className="w-full min-w-0 sm:w-auto px-3 py-2 bg-(--settings-card-bg) border border-(--sidebar-border) rounded-xl text-(--headings-color) text-xs font-medium focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300 cursor-pointer"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                />
+                  <DateInput
+                    aria-label="Fecha de inicio"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    inputClassName="!py-2 !text-xs w-full"
+                    className="w-full sm:w-36"
+                  />
+                  <span className="text-xs text-(--text-color)/50 font-medium shrink-0 text-center sm:text-left">
+                    a
+                  </span>
+                  <DateInput
+                    aria-label="Fecha de fin"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    inputClassName="!py-2 !text-xs w-full"
+                    className="w-full sm:w-36"
+                  />
               </div>
             </div>
 
