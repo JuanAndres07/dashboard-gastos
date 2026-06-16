@@ -1,6 +1,7 @@
 import { formatCurrency, formatLocalDate } from "../utilities/formatters";
 import iconDictionary from "../utilities/iconDictionary";
 import { Line, Doughnut } from "react-chartjs-2";
+import "../lib/chartConfig";
 import { useAnalysisPage, CATEGORY_COLORS } from "../hooks/useAnalysisPage";
 import Select from "../components/Select";
 import DateInput from "../components/DateInput";
@@ -12,33 +13,6 @@ import {
   IconChartPie,
   IconActivity,
 } from "@tabler/icons-react";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  PointElement,
-  LineElement,
-  Filler,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement,
-} from "chart.js";
-
-// Registrar componentes de Chart.js
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  PointElement,
-  LineElement,
-  Filler,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement,
-);
 
 export default function Analysis({ user }) {
   const {

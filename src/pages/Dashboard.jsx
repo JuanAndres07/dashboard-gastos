@@ -4,6 +4,7 @@ import { formatCurrency, parseDate } from "../utilities/formatters";
 import { Link } from "react-router-dom";
 import iconDictionary from "../utilities/iconDictionary";
 import { Line } from "react-chartjs-2";
+import "../lib/chartConfig";
 import {
   IconWallet,
   IconTrendingUp,
