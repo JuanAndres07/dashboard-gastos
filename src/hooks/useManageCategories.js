@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabase";
+import { translateSupabaseError } from "../utilities/supabaseErrors";
 
 export default function useManageCategories(user) {
   const [categories, setCategories] = useState([]);
@@ -24,7 +25,7 @@ export default function useManageCategories(user) {
       setLoading(false);
       return {
         success: false,
-        message: "Error al obtener las categorías: " + (errCat?.message || errHidden?.message),
+        message: "Error al obtener las categorías: " + translateSupabaseError(errCat || errHidden),
       };
     }
 
@@ -85,7 +86,7 @@ export default function useManageCategories(user) {
     });
 
     if (insertError) {
-      return { success: false, message: "Error al agregar la categoría: " + insertError.message };
+      return { success: false, message: "Error al agregar la categoría: " + translateSupabaseError(insertError) };
     }
 
     await fetchCategories();
@@ -142,7 +143,7 @@ export default function useManageCategories(user) {
       .eq("id", category.id);
 
     if (error) {
-      return { success: false, message: "Error al editar la categoría: " + error.message };
+      return { success: false, message: "Error al editar la categoría: " + translateSupabaseError(error) };
     }
 
     await fetchCategories();
@@ -164,7 +165,7 @@ export default function useManageCategories(user) {
     if (error) {
       return {
         success: false,
-        message: `Error al ${is_global ? "ocultar" : "eliminar"} la categoría: ${error.message}`,
+        message: `Error al ${is_global ? "ocultar" : "eliminar"} la categoría: ${translateSupabaseError(error)}`,
       };
     }
 
@@ -187,7 +188,7 @@ export default function useManageCategories(user) {
     const { error } = await query;
 
     if (error) {
-      return { success: false, message: "No se pudo mostrar la categoría: " + error.message };
+      return { success: false, message: "No se pudo mostrar la categoría: " + translateSupabaseError(error) };
     }
 
     await fetchCategories();

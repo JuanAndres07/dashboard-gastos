@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { useCategories } from "./useCategories";
 import { toast } from "sonner";
+import { translateSupabaseError } from "../utilities/supabaseErrors";
 
 export function useSubscriptions(user) {
   const { categories, loading: loadingCategories } = useCategories(user);
@@ -113,11 +114,7 @@ export function useSubscriptions(user) {
       fetchSubscriptions(); // Recargar lista
     } catch (error) {
       console.error("Error al crear suscripción:", error.message);
-      if (error.message.includes("unique_active_subscription_per_user")) {
-        toast.error("Ya tienes una suscripción activa con ese nombre.");
-      } else {
-        toast.error("Error al crear la suscripción: " + error.message);
-      }
+      toast.error("Error al crear la suscripción: " + translateSupabaseError(error));
     } finally {
       setLoading(false);
     }
@@ -136,7 +133,7 @@ export function useSubscriptions(user) {
       setSubscriptions((prev) => prev.filter((sub) => sub.id !== id));
     } catch (error) {
       console.error("Error al eliminar suscripción:", error.message);
-      toast.error("Error al eliminar la suscripción: " + error.message);
+      toast.error("Error al eliminar la suscripción: " + translateSupabaseError(error));
     }
   };
 
@@ -202,11 +199,7 @@ export function useSubscriptions(user) {
       fetchSubscriptions();
     } catch (error) {
       console.error("Error al actualizar suscripción:", error.message);
-      if (error.message.includes("unique_active_subscription_per_user")) {
-        toast.error("Ya tienes una suscripción activa con ese nombre.");
-      } else {
-        toast.error("Error al actualizar la suscripción: " + error.message);
-      }
+      toast.error("Error al actualizar la suscripción: " + translateSupabaseError(error));
     }
   };
 

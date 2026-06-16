@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useNavigate, Link } from "react-router-dom";
-import { IconLockPassword, IconArrowLeft } from "@tabler/icons-react";
+import { IconArrowLeft } from "@tabler/icons-react";
 import AuthVisualSection from "../../components/AuthVisualSection";
+import PasswordInput from "../../components/PasswordInput";
 import { toast } from "sonner";
+import { translateSupabaseError } from "../../utilities/supabaseErrors";
 
 export default function UpdatePassword() {
   const [newPassword, setNewPassword] = useState("");
@@ -26,7 +28,7 @@ export default function UpdatePassword() {
     });
 
     if (error) {
-      toast.error("Error al actualizar la contraseña: " + error.message);
+      toast.error("Error al actualizar la contraseña: " + translateSupabaseError(error));
     } else {
       await supabase.auth.signOut();
       toast.success(
@@ -77,45 +79,21 @@ export default function UpdatePassword() {
           </div>
 
           <form onSubmit={handleUpdate} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-(--headings-color) mb-2">
-                Nueva Contraseña
-              </label>
-              <div className="relative flex items-center">
-                <div className="absolute left-4 text-(--text-color) pointer-events-none">
-                  <IconLockPassword size={20} stroke={1.5} />
-                </div>
-                <input
-                  type="password"
-                  className="w-full bg-light border border-(--sidebar-border) rounded-xl py-3 pl-12 pr-4 text-(--headings-color) placeholder:text-(--text-color)/40 focus:outline-none focus:border-primary focus:bg-(--settings-card-bg) transition-all duration-300 ease-in-out"
-                  placeholder="••••••••"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  required
-                  minLength={6}
-                />
-              </div>
-            </div>
+            <PasswordInput
+              label="Nueva Contraseña"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              required
+              minLength={6}
+            />
 
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-(--headings-color) mb-2">
-                Confirmar Contraseña
-              </label>
-              <div className="relative flex items-center">
-                <div className="absolute left-4 text-(--text-color) pointer-events-none">
-                  <IconLockPassword size={20} stroke={1.5} />
-                </div>
-                <input
-                  type="password"
-                  className="w-full bg-light border border-(--sidebar-border) rounded-xl py-3 pl-12 pr-4 text-(--headings-color) placeholder:text-(--text-color)/40 focus:outline-none focus:border-primary focus:bg-(--settings-card-bg) transition-all duration-300 ease-in-out"
-                  placeholder="••••••••"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  minLength={6}
-                />
-              </div>
-            </div>
+            <PasswordInput
+              label="Confirmar Contraseña"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              minLength={6}
+            />
 
             <button
               type="submit"

@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { Link } from "react-router-dom";
-import { IconMail, IconLockPassword } from "@tabler/icons-react";
+import { IconMail } from "@tabler/icons-react";
 import AuthVisualSection from "../../components/AuthVisualSection";
+import PasswordInput from "../../components/PasswordInput";
 import { toast } from "sonner";
+import { translateSupabaseError } from "../../utilities/supabaseErrors";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -24,7 +26,7 @@ export default function Login() {
       password,
     });
     if (error) {
-      toast.error("Error al iniciar sesión: " + error.message);
+      toast.error("Error al iniciar sesión: " + translateSupabaseError(error));
     } else {
       toast.success("¡Inicio de sesión exitoso!");
       console.log("Inicio de sesión exitoso");
@@ -91,24 +93,12 @@ export default function Login() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-(--headings-color) mb-2">
-                Contraseña
-              </label>
-              <div className="relative flex items-center">
-                <div className="absolute left-4 text-(--text-color) pointer-events-none">
-                  <IconLockPassword size={20} stroke={1.5} />
-                </div>
-                <input
-                  type="password"
-                  className="w-full bg-light border border-(--sidebar-border) rounded-xl py-3 pl-12 pr-4 text-(--headings-color) placeholder:text-(--text-color)/40 focus:outline-none focus:border-primary focus:bg-(--settings-card-bg) transition-all duration-300 ease-in-out"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
+            <PasswordInput
+              label="Contraseña"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
 
             <div className="flex items-center justify-between pt-1">
               <label className="flex items-center gap-2 cursor-pointer select-none">

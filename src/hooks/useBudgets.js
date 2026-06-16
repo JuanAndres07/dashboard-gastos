@@ -3,6 +3,7 @@ import { supabase } from "../lib/supabase";
 import { useCategories } from "./useCategories";
 import { formatLocalDate } from "../utilities/formatters";
 import { toast } from "sonner";
+import { translateSupabaseError } from "../utilities/supabaseErrors";
 
 export function useBudgets(user) {
   const { categories, loading: loadingCategories } = useCategories(user);
@@ -81,7 +82,7 @@ export function useBudgets(user) {
     ]);
 
     if (error) {
-      toast.error("Error al crear presupuesto: " + error.message);
+      toast.error("Error al crear presupuesto: " + translateSupabaseError(error));
     } else {
       toast.success("Presupuesto creado con éxito");
       setFormData({
@@ -103,7 +104,7 @@ export function useBudgets(user) {
     });
 
     if (error) {
-      toast.error("Error al actualizar presupuesto: " + error.message);
+      toast.error("Error al actualizar presupuesto: " + translateSupabaseError(error));
     } else {
       toast.success(`Presupuesto de ${editingBudget.category_name} actualizado con éxito`);
       setEditingBudget(null);

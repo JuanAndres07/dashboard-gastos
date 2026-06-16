@@ -3,6 +3,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { IconSun, IconMoon, IconCheck, IconUser, IconMail, IconLock, IconKey, IconX } from "@tabler/icons-react";
 import DangerZone from "../components/DangerZone";
+import { translateSupabaseError } from "../utilities/supabaseErrors";
 
 export default function Configuration() {
   const { theme, setTheme } = useTheme();
@@ -39,7 +40,7 @@ export default function Configuration() {
     const { error } = await updateProfile({ fullname });
 
     if (error) {
-      setMessage({ type: "danger", text: "Error al actualizar el perfil: " + error.message });
+      setMessage({ type: "danger", text: "Error al actualizar el perfil: " + translateSupabaseError(error) });
     } else {
       setMessage({ type: "success", text: "¡Perfil actualizado con éxito!" });
       setTimeout(() => setMessage({ type: "", text: "" }), 3000);
@@ -55,7 +56,7 @@ export default function Configuration() {
     const { error } = await changeEmail(emailCurrentPassword, newEmail);
 
     if (error) {
-      setEmailMessage({ type: "danger", text: "Error al actualizar el correo: " + error.message });
+      setEmailMessage({ type: "danger", text: "Error al actualizar el correo: " + translateSupabaseError(error) });
     } else {
       setEmailMessage({ type: "success", text: "¡Se ha enviado un correo de confirmación a ambas direcciones!" });
       setNewEmail("");
@@ -85,7 +86,7 @@ export default function Configuration() {
     const { error } = await changePassword(passwordCurrentPassword, newPassword);
 
     if (error) {
-      setPasswordMessage({ type: "danger", text: "Error al actualizar la contraseña: " + error.message });
+      setPasswordMessage({ type: "danger", text: "Error al actualizar la contraseña: " + translateSupabaseError(error) });
     } else {
       setPasswordMessage({ type: "success", text: "¡Contraseña actualizada con éxito!" });
       setPasswordCurrentPassword("");

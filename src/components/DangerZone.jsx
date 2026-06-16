@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { IconTrash, IconAlertTriangle, IconLock, IconX } from "@tabler/icons-react";
 import Modal from "./Modal";
+import { translateSupabaseError } from "../utilities/supabaseErrors";
 
 export default function DangerZone() {
   const { deleteAccount } = useAuth();
@@ -24,7 +25,7 @@ export default function DangerZone() {
     const { error } = await deleteAccount(deleteConfirmPassword);
 
     if (error) {
-      setDeleteAccountMessage({ type: "danger", text: "Error al eliminar la cuenta: " + error.message });
+      setDeleteAccountMessage({ type: "danger", text: "Error al eliminar la cuenta: " + translateSupabaseError(error) });
     } else {
       handleCloseDeleteModal();
     }

@@ -5,6 +5,7 @@ import { supabase } from "../lib/supabase";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useConfirm } from "../contexts/ConfirmContext";
+import { translateSupabaseError } from "../utilities/supabaseErrors";
 
 export function TransactionTable({ transactions, loading, viewMode, setViewMode, onTransactionDeleted }) {
   const [deletingId, setDeletingId] = useState(null);
@@ -24,7 +25,7 @@ export function TransactionTable({ transactions, loading, viewMode, setViewMode,
       try {
         const { error } = await supabase.from("Transaction").delete().eq("id", id);
         if (error) {
-          toast.error("Error al eliminar el movimiento: " + error.message);
+          toast.error("Error al eliminar el movimiento: " + translateSupabaseError(error));
         } else {
           if (onTransactionDeleted) {
             onTransactionDeleted();

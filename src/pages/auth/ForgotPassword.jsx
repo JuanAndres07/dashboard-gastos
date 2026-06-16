@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { IconMail, IconArrowLeft } from "@tabler/icons-react";
 import AuthVisualSection from "../../components/AuthVisualSection";
 import { toast } from "sonner";
+import { translateSupabaseError } from "../../utilities/supabaseErrors";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -20,7 +21,7 @@ export default function ForgotPassword() {
     });
 
     if (error) {
-      toast.error("Error: " + error.message);
+      toast.error("Error: " + translateSupabaseError(error));
     } else {
       const msg =
         "Se ha enviado un correo electrónico para restablecer la contraseña.";

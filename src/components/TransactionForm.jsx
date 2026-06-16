@@ -4,6 +4,7 @@ import { useCategories } from "../hooks/useCategories";
 import { toast } from "sonner";
 import Select from "./Select";
 import DateInput from "./DateInput";
+import { translateSupabaseError } from "../utilities/supabaseErrors";
 
 export function TransactionForm({ onTransactionAdded, user }) {
   const [type, setType] = useState("expense");
@@ -53,7 +54,7 @@ export function TransactionForm({ onTransactionAdded, user }) {
     ]);
 
     if (error) {
-      toast.error("Error al agregar la transacción: " + error.message);
+      toast.error("Error al agregar la transacción: " + translateSupabaseError(error));
     } else {
       setAmount("");
       setDescription("");

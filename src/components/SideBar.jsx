@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import {
@@ -10,49 +10,90 @@ import {
   IconClockDollar,
   IconActivity,
   IconSettings,
+  IconLoader2,
 } from "@tabler/icons-react";
 import "../styles/components/SideBar.css";
 
+const menuItems = [
+  { to: "/", label: "Inicio", icon: IconLayoutDashboard, end: true },
+  { to: "/transactions", label: "Transacciones", icon: IconReceipt },
+  { to: "/categories", label: "Categorías", icon: IconCategory },
+  { to: "/subscriptions", label: "Suscripciones", icon: IconRefresh },
+  { to: "/budgets", label: "Presupuestos", icon: IconClockDollar },
+  { to: "/analysis", label: "Análisis y Reportes", icon: IconActivity },
+  { to: "/configuration", label: "Configuración", icon: IconSettings },
+];
+
 export default function SideBar({ isMobileOpen, setIsMobileOpen }) {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(() => {
+    const saved = localStorage.getItem("sidebar-expanded");
+    return saved !== null ? saved === "true" : true;
+  });
+  const [isMobile, setIsMobile] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 768px)");
+    setIsMobile(mediaQuery.matches);
+
+    const handler = (e) => setIsMobile(e.matches);
+    mediaQuery.addEventListener("change", handler);
+    return () => mediaQuery.removeEventListener("change", handler);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("sidebar-expanded", isExpanded);
+  }, [isExpanded]);
 
   const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error("Error al cerrar sesión:", error.message);
-    } else {
-      console.log("Cierre de sesión exitoso");
+    setIsLoggingOut(true);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("Error al cerrar sesión:", error.message);
+        setIsLoggingOut(false);
+      }
+    } catch (err) {
+      console.error("Error inesperado al cerrar sesión:", err);
+      setIsLoggingOut(false);
     }
   };
 
   const toggleSidebar = () => {
+    if (isMobile) return;
     setIsExpanded(!isExpanded);
   };
+
+  const showExpandedContent = isExpanded || isMobile;
 
   const getNavLinkClass = (isActive) => {
     const baseClasses =
       "nav-link-custom flex items-center px-4 py-3 rounded-xl text-(--sidebar-text) no-underline transition-all duration-300 ease-in-out whitespace-nowrap hover:bg-(--sidebar-link-hover-bg) hover:text-(--sidebar-text-hover)";
     const activeClasses =
       "active bg-primary text-white shadow-[0_4px_12px_rgba(0,82,204,0.2)]";
-    const collapsedClasses = isExpanded ? "" : "justify-center px-0";
+    const collapsedClasses = showExpandedContent ? "" : "justify-center px-0";
     return `${baseClasses} ${isActive ? activeClasses : ""} ${collapsedClasses}`;
   };
 
   return (
     <aside
-      className={`sidebar ${!isExpanded ? "collapsed" : ""} ${
+      className={`sidebar ${!showExpandedContent ? "collapsed" : ""} ${
         isMobileOpen ? "mobile-open" : ""
       }`}
     >
       {/* Encabezado interactivo para colapsar */}
       <div
-        className={`sidebar-header flex items-center cursor-pointer transition-all duration-300 ease-in-out hover:opacity-80 ${
-          isExpanded ? "h-20 px-5" : "h-20 justify-center p-0"
+        className={`sidebar-header flex items-center transition-all duration-300 ease-in-out ${
+          isMobile
+            ? "h-20 px-5"
+            : (isExpanded
+              ? "h-20 px-5 cursor-pointer hover:opacity-80"
+              : "h-20 justify-center p-0 cursor-pointer hover:opacity-80")
         }`}
-        onClick={toggleSidebar}
-        title={isExpanded ? "Contraer" : "Expandir"}
+        onClick={isMobile ? undefined : toggleSidebar}
+        title={isMobile ? undefined : (isExpanded ? "Contraer" : "Expandir")}
       >
-        {isExpanded ? (
+        {showExpandedContent ? (
           <div className="flex items-center gap-3 w-full">
             <img
               src="/Menu.png"
@@ -82,118 +123,50 @@ export default function SideBar({ isMobileOpen, setIsMobileOpen }) {
         className="nav-list list-none px-3 m-0 grow flex flex-col gap-2"
         onClick={() => setIsMobileOpen?.(false)}
       >
-        <li className="nav-item m-0">
-          <NavLink
-            to="/"
-            className={({ isActive }) => getNavLinkClass(isActive)}
-            end
-          >
-            <IconLayoutDashboard size={22} className="shrink-0" />
-            {isExpanded && (
-              <span className="link-text ml-3 font-medium transition-opacity duration-200">
-                Inicio
-              </span>
-            )}
-          </NavLink>
-        </li>
-        <li className="nav-item m-0">
-          <NavLink
-            to="/transactions"
-            className={({ isActive }) => getNavLinkClass(isActive)}
-          >
-            <IconReceipt size={22} className="shrink-0" />
-            {isExpanded && (
-              <span className="link-text ml-3 font-medium transition-opacity duration-200">
-                Transacciones
-              </span>
-            )}
-          </NavLink>
-        </li>
-        <li className="nav-item m-0">
-          <NavLink
-            to="/categories"
-            className={({ isActive }) => getNavLinkClass(isActive)}
-          >
-            <IconCategory size={22} className="shrink-0" />
-            {isExpanded && (
-              <span className="link-text ml-3 font-medium transition-opacity duration-200">
-                Categorías
-              </span>
-            )}
-          </NavLink>
-        </li>
-        <li className="nav-item m-0">
-          <NavLink
-            to="/subscriptions"
-            className={({ isActive }) => getNavLinkClass(isActive)}
-          >
-            <IconRefresh size={22} className="shrink-0" />
-            {isExpanded && (
-              <span className="link-text ml-3 font-medium transition-opacity duration-200">
-                Suscripciones
-              </span>
-            )}
-          </NavLink>
-        </li>
-        <li className="nav-item m-0">
-          <NavLink
-            to="/budgets"
-            className={({ isActive }) => getNavLinkClass(isActive)}
-          >
-            <IconClockDollar size={22} className="shrink-0" />
-            {isExpanded && (
-              <span className="link-text ml-3 font-medium transition-opacity duration-200">
-                Presupuestos
-              </span>
-            )}
-          </NavLink>
-        </li>
-        <li className="nav-item m-0">
-          <NavLink
-            to="/analysis"
-            className={({ isActive }) => getNavLinkClass(isActive)}
-          >
-            <IconActivity size={22} className="shrink-0" />
-            {isExpanded && (
-              <span className="link-text ml-3 font-medium transition-opacity duration-200">
-                Análisis y Reportes
-              </span>
-            )}
-          </NavLink>
-        </li>
-        <li className="nav-item m-0">
-          <NavLink
-            to="/configuration"
-            className={({ isActive }) => getNavLinkClass(isActive)}
-          >
-            <IconSettings size={22} className="shrink-0" />
-            {isExpanded && (
-              <span className="link-text ml-3 font-medium transition-opacity duration-200">
-                Configuración
-              </span>
-            )}
-          </NavLink>
-        </li>
+        {menuItems.map(({ to, label, icon: Icon, end }) => (
+          <li key={to} className="nav-item m-0">
+            <NavLink
+              to={to}
+              className={({ isActive }) => getNavLinkClass(isActive)}
+              end={end}
+            >
+              <Icon size={22} className="shrink-0" />
+              {showExpandedContent && (
+                <span className="link-text ml-3 font-medium transition-opacity duration-200">
+                  {label}
+                </span>
+              )}
+            </NavLink>
+          </li>
+        ))}
       </ul>
 
       {/* Sección del Footer */}
       <div
         className={`footer-section p-4 border-t border-(--sidebar-border) ${
-          isExpanded ? "" : "flex justify-center"
+          showExpandedContent ? "" : "flex justify-center"
         }`}
       >
         <button
           onClick={handleLogout}
-          className={`logout-btn w-full flex items-center justify-center gap-2 p-3 rounded-xl border-none bg-[#fff1f2] text-[#e11d48] font-semibold transition-all duration-300 ease-in-out hover:bg-[#ffe4e6] hover:text-[#be123c] cursor-pointer ${
-            isExpanded ? "" : "px-0"
+          disabled={isLoggingOut}
+          className={`logout-btn w-full flex items-center justify-center gap-2 p-3 rounded-xl border-none bg-[#fff1f2] text-[#e11d48] font-semibold transition-all duration-300 ease-in-out hover:bg-[#ffe4e6] hover:text-[#be123c] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+            showExpandedContent ? "" : "px-0"
           }`}
         >
-          <IconLogout size={20} className="shrink-0" />
-          {isExpanded && (
-            <span className="logout-text text-sm">Cerrar sesión</span>
+          {isLoggingOut ? (
+            <IconLoader2 size={20} className="shrink-0 animate-spin" />
+          ) : (
+            <IconLogout size={20} className="shrink-0" />
+          )}
+          {showExpandedContent && (
+            <span className="logout-text text-sm">
+              {isLoggingOut ? "Cerrando..." : "Cerrar sesión"}
+            </span>
           )}
         </button>
       </div>
     </aside>
   );
 }
+

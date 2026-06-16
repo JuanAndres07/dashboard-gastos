@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { Link, useNavigate } from "react-router-dom";
-import { IconMail, IconLockPassword, IconUser } from "@tabler/icons-react";
+import { IconMail, IconUser } from "@tabler/icons-react";
 import AuthVisualSection from "../../components/AuthVisualSection";
+import PasswordInput from "../../components/PasswordInput";
 import { toast } from "sonner";
+import { translateSupabaseError } from "../../utilities/supabaseErrors";
 
 export default function Register() {
   const [name, setName] = useState("");
@@ -40,16 +42,7 @@ export default function Register() {
 
     if (error) {
       console.error("Error al registrar:", error.message);
-      if (
-        error.status === 400 ||
-        error.message.includes("already registered")
-      ) {
-        toast.error(
-          "Este correo electrónico ya está registrado. Por favor, intenta iniciar sesión.",
-        );
-      } else {
-        toast.error("Error al registrar: " + error.message);
-      }
+      toast.error("Error al registrar: " + translateSupabaseError(error));
     } else {
       if (data?.user?.identities?.length === 0) {
         toast.error(
@@ -116,7 +109,7 @@ export default function Register() {
                 <input
                   type="text"
                   className="w-full bg-light border border-(--sidebar-border) rounded-xl py-3 pl-12 pr-4 text-(--headings-color) placeholder:text-(--text-color)/40 focus:outline-none focus:border-primary focus:bg-(--settings-card-bg) transition-all duration-300 ease-in-out"
-                  placeholder="Juan Pérez"
+                  placeholder="Introduce tu nombre"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
@@ -143,43 +136,19 @@ export default function Register() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-(--headings-color) mb-2">
-                Contraseña
-              </label>
-              <div className="relative flex items-center">
-                <div className="absolute left-4 text-(--text-color) pointer-events-none">
-                  <IconLockPassword size={20} stroke={1.5} />
-                </div>
-                <input
-                  type="password"
-                  className="w-full bg-light border border-(--sidebar-border) rounded-xl py-3 pl-12 pr-4 text-(--headings-color) placeholder:text-(--text-color)/40 focus:outline-none focus:border-primary focus:bg-(--settings-card-bg) transition-all duration-300 ease-in-out"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
+            <PasswordInput
+              label="Contraseña"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
 
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-(--headings-color) mb-2">
-                Confirmar Contraseña
-              </label>
-              <div className="relative flex items-center">
-                <div className="absolute left-4 text-(--text-color) pointer-events-none">
-                  <IconLockPassword size={20} stroke={1.5} />
-                </div>
-                <input
-                  type="password"
-                  className="w-full bg-light border border-(--sidebar-border) rounded-xl py-3 pl-12 pr-4 text-(--headings-color) placeholder:text-(--text-color)/40 focus:outline-none focus:border-primary focus:bg-(--settings-card-bg) transition-all duration-300 ease-in-out"
-                  placeholder="••••••••"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
+            <PasswordInput
+              label="Confirmar Contraseña"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+            />
 
             <button
               type="submit"
