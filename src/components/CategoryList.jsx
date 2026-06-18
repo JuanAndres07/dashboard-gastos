@@ -56,7 +56,7 @@ export default function CategoryList({
         </span>
       </div>
       
-      <div className="flex flex-col gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {list.map((cat) => {
           const isEditing = editingId === cat.id;
           const IconComponent = iconDictionary[cat.icon] || iconDictionary.IconCoin;
@@ -66,7 +66,7 @@ export default function CategoryList({
               key={cat.id}
               className={`flex transition-all duration-300 hover:shadow-xs hover:translate-x-0.5 ${
                 isEditing
-                  ? "flex-col md:flex-row gap-4 items-stretch md:items-center p-4 bg-(--settings-card-bg) rounded-xl"
+                  ? "col-span-full flex-col md:flex-row gap-4 items-stretch md:items-center p-4 bg-(--settings-card-bg) rounded-xl"
                   : "flex-row gap-3 items-center justify-between p-4 bg-(--settings-card-bg) rounded-xl"
               }`}
               style={{ border: "var(--card-border)" }}

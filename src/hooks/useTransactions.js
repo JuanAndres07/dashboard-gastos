@@ -93,6 +93,25 @@ export function useTransactions({ user, limit, initialViewMode = "expense", trig
     };
   }, [user?.id, limit, viewMode, trigger, categoryId, page, pageSize, startDate, endDate, search]);
 
+  const updateTransaction = async (id, updatedFields) => {
+    try {
+      const { data, error: updateError } = await supabase
+        .from("Transaction")
+        .update(updatedFields)
+        .eq("id", id)
+        .eq("user_id", user?.id)
+        .select();
+
+      if (updateError) {
+        return { success: false, error: updateError };
+      }
+      return { success: true, data };
+    } catch (err) {
+      console.error("Error inesperado en updateTransaction:", err);
+      return { success: false, error: err };
+    }
+  };
+
   return {
     transactions,
     loading,
@@ -100,5 +119,6 @@ export function useTransactions({ user, limit, initialViewMode = "expense", trig
     viewMode,
     setViewMode,
     totalCount,
+    updateTransaction,
   };
 }

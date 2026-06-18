@@ -34,7 +34,8 @@
   }
   .sidebar .link-text,
   .sidebar .logout-text,
-  .sidebar .expanded {
+  .sidebar .expanded,
+  .sidebar .theme-switch-slider {
     display: none !important;
   }
   .sidebar .collapsed {
@@ -49,7 +50,8 @@
     justify-content: center !important;
     gap: 0 !important;
   }
-  .sidebar .nav-link-custom {
+  .sidebar .nav-link-custom,
+  .sidebar .theme-toggle-btn {
     justify-content: center !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
@@ -83,11 +85,18 @@
   .sidebar .expanded {
     display: inline-block !important;
   }
+  .sidebar .theme-switch-slider {
+    display: inline-flex !important;
+  }
   .sidebar .collapsed {
     display: none !important;
   }
   .sidebar .nav-link-custom {
     justify-content: flex-start !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+  .sidebar .theme-toggle-btn {
     padding-left: 1rem !important;
     padding-right: 1rem !important;
   }

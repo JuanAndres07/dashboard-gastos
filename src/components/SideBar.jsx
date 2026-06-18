@@ -11,7 +11,10 @@ import {
   IconActivity,
   IconSettings,
   IconLoader2,
+  IconSun,
+  IconMoon,
 } from "@tabler/icons-react";
+import { useTheme } from "../contexts/ThemeContext";
 import "../styles/components/SideBar.css";
 
 const menuItems = [
@@ -25,6 +28,7 @@ const menuItems = [
 ];
 
 export default function SideBar({ isMobileOpen, setIsMobileOpen }) {
+  const { theme, setTheme } = useTheme();
   const [isExpanded, setIsExpanded] = useState(() => {
     const saved = localStorage.getItem("sidebar-expanded");
     return saved !== null ? saved === "true" : true;
@@ -65,6 +69,13 @@ export default function SideBar({ isMobileOpen, setIsMobileOpen }) {
   };
 
   const showExpandedContent = isExpanded || isMobile;
+
+  const getThemeBtnClass = () => {
+    const baseClasses =
+      "theme-toggle-btn flex items-center w-full px-4 py-3 rounded-xl text-(--sidebar-text) transition-all duration-300 ease-in-out whitespace-nowrap hover:bg-(--sidebar-link-hover-bg) hover:text-(--sidebar-text-hover) cursor-pointer border-none bg-transparent";
+    const collapsedClasses = showExpandedContent ? "justify-between" : "justify-center px-0";
+    return `${baseClasses} ${collapsedClasses}`;
+  };
 
   const getNavLinkClass = (isActive) => {
     const baseClasses =
@@ -143,10 +154,42 @@ export default function SideBar({ isMobileOpen, setIsMobileOpen }) {
 
       {/* Sección del Footer */}
       <div
-        className={`footer-section p-4 border-t border-(--sidebar-border) ${
-          showExpandedContent ? "" : "flex justify-center"
+        className={`footer-section p-4 border-t border-(--sidebar-border) flex flex-col gap-3 ${
+          showExpandedContent ? "" : "items-center"
         }`}
       >
+        <button
+          onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+          className={getThemeBtnClass()}
+          title={theme === "light" ? "Cambiar a modo oscuro" : "Cambiar a modo claro"}
+        >
+          <div className="flex items-center">
+            {theme === "light" ? (
+              <IconSun size={20} className="shrink-0" />
+            ) : (
+              <IconMoon size={20} className="shrink-0" />
+            )}
+            {showExpandedContent && (
+              <span className="link-text ml-3 font-medium text-sm transition-opacity duration-200">
+                {theme === "light" ? "Modo Claro" : "Modo Oscuro"}
+              </span>
+            )}
+          </div>
+          {showExpandedContent && (
+            <div
+              className={`theme-switch-slider relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-300 ${
+                theme === "dark" ? "bg-(--primary-color)" : "bg-(--text-color)/20"
+              }`}
+            >
+              <span
+                className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform duration-300 ${
+                  theme === "dark" ? "translate-x-4.5" : "translate-x-1"
+                }`}
+              />
+            </div>
+          )}
+        </button>
+
         <button
           onClick={handleLogout}
           disabled={isLoggingOut}

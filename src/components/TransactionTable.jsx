@@ -1,13 +1,13 @@
 import { formatCurrency, parseDate } from "../utilities/formatters";
 import { iconDictionary } from "../utilities/iconDictionary";
-import { IconTrash } from "@tabler/icons-react";
+import { IconTrash, IconEdit } from "@tabler/icons-react";
 import { supabase } from "../lib/supabase";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useConfirm } from "../contexts/ConfirmContext";
 import { translateSupabaseError } from "../utilities/supabaseErrors";
 
-export function TransactionTable({ transactions, loading, viewMode, setViewMode, onTransactionDeleted }) {
+export function TransactionTable({ transactions, loading, viewMode, setViewMode, onTransactionDeleted, onEditTransaction }) {
   const [deletingId, setDeletingId] = useState(null);
   const confirm = useConfirm();
 
@@ -120,6 +120,13 @@ export function TransactionTable({ transactions, loading, viewMode, setViewMode,
                       {t.type === "expense" ? "-" : "+"}
                       {formatCurrency(t.amount)}
                     </span>
+                    <button
+                      onClick={() => onEditTransaction && onEditTransaction(t)}
+                      className="p-2 rounded-xl text-(--text-color)/40 hover:text-(--primary-color) hover:bg-(--primary-color)/10 transition-all duration-200 cursor-pointer"
+                      title="Editar movimiento"
+                    >
+                      <IconEdit size={16} />
+                    </button>
                     
                     <button
                       onClick={() => handleDelete(t.id)}
@@ -181,15 +188,24 @@ export function TransactionTable({ transactions, loading, viewMode, setViewMode,
                         {t.type === "expense" ? "-" : "+"}
                         {formatCurrency(t.amount)}
                       </td>
-                      <td className="px-6 py-4 text-center">
-                        <button
-                          onClick={() => handleDelete(t.id)}
-                          disabled={isDeleting}
-                          className="p-1.5 rounded-lg text-(--text-color)/50 hover:text-(--danger-color) hover:bg-(--danger-color)/10 transition-all duration-200 cursor-pointer inline-flex items-center justify-center disabled:opacity-50"
-                          title="Eliminar movimiento"
-                        >
-                          <IconTrash size={16} />
-                        </button>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            onClick={() => onEditTransaction && onEditTransaction(t)}
+                            className="p-1.5 rounded-lg text-(--text-color)/50 hover:text-(--primary-color) hover:bg-(--primary-color)/10 transition-all duration-200 cursor-pointer inline-flex items-center justify-center"
+                            title="Editar movimiento"
+                          >
+                            <IconEdit size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(t.id)}
+                            disabled={isDeleting}
+                            className="p-1.5 rounded-lg text-(--text-color)/50 hover:text-(--danger-color) hover:bg-(--danger-color)/10 transition-all duration-200 cursor-pointer inline-flex items-center justify-center disabled:opacity-50"
+                            title="Eliminar movimiento"
+                          >
+                            <IconTrash size={16} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

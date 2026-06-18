@@ -40,7 +40,7 @@ export default function Select({
           <ListboxOptions
             transition
             anchor={{ to: "bottom start", gap: 4 }}
-            className="z-50 max-h-60 min-w-(--button-width) w-max max-w-70 overflow-y-auto overflow-x-hidden rounded-xl bg-(--settings-card-bg) py-1.5 text-sm shadow-xl border border-(--sidebar-border) focus:outline-none transition duration-150 ease-in-out data-closed:scale-95 data-closed:opacity-0"
+            className="z-1300 max-h-60 min-w-(--button-width) w-max max-w-70 overflow-y-auto overflow-x-hidden rounded-xl bg-(--settings-card-bg) py-1.5 text-sm shadow-xl border border-(--sidebar-border) focus:outline-none transition duration-150 ease-in-out data-closed:scale-95 data-closed:opacity-0"
             style={{ border: "var(--card-border)" }}
           >
             {options.length === 0 ? (

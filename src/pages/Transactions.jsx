@@ -18,6 +18,7 @@ export default function Transactions({ user }) {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState(null);
   const pageSize = 20;
 
   const refreshData = () => {
@@ -192,6 +193,10 @@ export default function Transactions({ user }) {
             viewMode={viewMode}
             setViewMode={handleSetViewMode}
             onTransactionDeleted={refreshData}
+            onEditTransaction={(t) => {
+              setEditingTransaction(t);
+              setIsModalOpen(true);
+            }}
           />
         </div>
 
@@ -206,16 +211,25 @@ export default function Transactions({ user }) {
         />
       </div>
 
-      {/* Modal para Agregar Movimiento */}
+      {/* Modal para Agregar/Editar Movimiento */}
       <Modal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Registrar Movimiento"
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingTransaction(null);
+        }}
+        title={editingTransaction ? "Editar Movimiento" : "Registrar Movimiento"}
       >
         <TransactionForm
+          transactionToEdit={editingTransaction}
           onTransactionAdded={() => {
             refreshData();
             setIsModalOpen(false);
+          }}
+          onTransactionUpdated={() => {
+            refreshData();
+            setIsModalOpen(false);
+            setEditingTransaction(null);
           }}
           user={user}
         />

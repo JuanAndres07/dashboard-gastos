@@ -6,7 +6,7 @@ import Select from "./Select";
 import DateInput from "./DateInput";
 import { translateSupabaseError } from "../utilities/supabaseErrors";
 
-export function TransactionForm({ onTransactionAdded, user }) {
+export function TransactionForm({ onTransactionAdded, onTransactionUpdated, transactionToEdit, user }) {
   const [type, setType] = useState("expense");
   const { categories, loading: loadingCategories } = useCategories(user);
   const [filteredCategories, setFilteredCategories] = useState([]);
@@ -26,10 +26,33 @@ export function TransactionForm({ onTransactionAdded, user }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (transactionToEdit) {
+      setType(transactionToEdit.type || "expense");
+      setAmount(transactionToEdit.amount ? String(transactionToEdit.amount) : "");
+      setDescription(transactionToEdit.note || "");
+      setDate(transactionToEdit.transaction_date ? transactionToEdit.transaction_date.split("T")[0] : getTodayDateString());
+      setCategoryId(transactionToEdit.category_id || "");
+    } else {
+      setType("expense");
+      setAmount("");
+      setDescription("");
+      setDate(getTodayDateString());
+      setCategoryId("");
+    }
+  }, [transactionToEdit]);
+
+  useEffect(() => {
     const filtered = categories.filter((cat) => cat.type === type);
     setFilteredCategories(filtered);
-    setCategoryId("");
-  }, [categories, type]);
+    
+    setCategoryId((prev) => {
+      if (transactionToEdit && transactionToEdit.type === type && transactionToEdit.category_id === prev) {
+        return prev;
+      }
+      const exists = filtered.some((cat) => cat.id === prev);
+      return exists ? prev : "";
+    });
+  }, [categories, type, transactionToEdit]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -42,27 +65,53 @@ export function TransactionForm({ onTransactionAdded, user }) {
       return;
     }
 
-    const { error } = await supabase.from("Transaction").insert([
-      {
-        amount: amount,
-        note: description,
-        category_id: categoryId,
-        user_id: user.id,
-        type: type,
-        transaction_date: date,
-      },
-    ]);
+    let result;
+    if (transactionToEdit) {
+      result = await supabase
+        .from("Transaction")
+        .update({
+          amount: amount,
+          note: description,
+          category_id: categoryId,
+          type: type,
+          transaction_date: date,
+        })
+        .eq("id", transactionToEdit.id)
+        .eq("user_id", user.id);
+    } else {
+      result = await supabase.from("Transaction").insert([
+        {
+          amount: amount,
+          note: description,
+          category_id: categoryId,
+          user_id: user.id,
+          type: type,
+          transaction_date: date,
+        },
+      ]);
+    }
+
+    const { error } = result;
 
     if (error) {
-      toast.error("Error al agregar la transacción: " + translateSupabaseError(error));
+      toast.error(`Error al ${transactionToEdit ? "actualizar" : "agregar"} la transacción: ` + translateSupabaseError(error));
     } else {
-      setAmount("");
-      setDescription("");
-      setCategoryId("");
-      setDate(getTodayDateString());
+      if (!transactionToEdit) {
+        setAmount("");
+        setDescription("");
+        setCategoryId("");
+        setDate(getTodayDateString());
+      }
 
-      if (onTransactionAdded) {
-        onTransactionAdded();
+      if (transactionToEdit) {
+        if (onTransactionUpdated) {
+          onTransactionUpdated();
+        }
+        toast.success("Transacción actualizada correctamente");
+      } else {
+        if (onTransactionAdded) {
+          onTransactionAdded();
+        }
         toast.success("Transacción agregada correctamente");
       }
     }
@@ -171,8 +220,9 @@ export function TransactionForm({ onTransactionAdded, user }) {
           disabled={loading}
           className="w-full bg-(--primary-color) text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 ease-in-out hover:opacity-90 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_4px_12px_rgba(0,82,204,0.15)] hover:shadow-[0_6px_20px_rgba(0,82,204,0.25)] cursor-pointer mt-2"
         >
-          {loading ? "Agregando..." : "Agregar "}
-          {type === "expense" ? "Egreso" : "Ingreso"}
+          {loading 
+            ? (transactionToEdit ? "Guardando..." : "Agregando...") 
+            : (transactionToEdit ? "Guardar Cambios" : `Agregar ${type === "expense" ? "Egreso" : "Ingreso"}`)}
         </button>
       </form>
     </div>
