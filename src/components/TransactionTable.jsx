@@ -83,59 +83,71 @@ export function TransactionTable({ transactions, loading, viewMode, setViewMode,
               return (
                 <div 
                   key={t.id}
-                  className="flex items-center justify-between p-4 bg-(--settings-card-bg) rounded-2xl border border-(--sidebar-border) transition-all duration-300 gap-3"
+                  className="flex flex-col p-4 bg-(--settings-card-bg) rounded-2xl border border-(--sidebar-border) transition-all duration-300 hover:translate-y-[-2px] hover:shadow-md dark:hover:shadow-black/20 gap-3"
                   style={{ border: "var(--card-border)" }}
                 >
-                  <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                    <div className={`p-3 rounded-xl shrink-0 ${
-                      t.type === "expense" 
-                        ? "bg-(--danger-color)/10 text-(--danger-color)" 
-                        : "bg-(--success-color)/10 text-(--success-color)"
-                    } flex items-center justify-center w-11 h-11`}>
-                      <CategoryIcon size={22} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h4 className="font-semibold text-(--headings-color) text-sm break-words whitespace-normal leading-snug">
-                        {t.note || <span className="italic text-(--text-color)/40 font-normal">Sin descripción</span>}
-                      </h4>
-                      <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        <span className="text-[10px] font-bold tracking-wider uppercase text-(--text-color) bg-(--bg-light) dark:bg-(--bg-light)/20 px-2 py-0.5 rounded-md">
-                          {t.Category?.name || "General"}
-                        </span>
-                        <span className="text-[10px] font-medium text-(--text-color)/70">
-                          {parseDate(t.transaction_date || t.created_at).toLocaleDateString(undefined, {
-                            month: 'short',
-                            day: 'numeric',
-                            year: '2-digit'
-                          })}
-                        </span>
+                  {/* Fila superior: Icono, Descripción y Monto */}
+                  <div className="flex items-center justify-between gap-3.5 min-w-0">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className={`p-2.5 rounded-xl shrink-0 ${
+                        t.type === "expense" 
+                          ? "bg-(--danger-color)/10 text-(--danger-color)" 
+                          : "bg-(--success-color)/10 text-(--success-color)"
+                      } flex items-center justify-center w-10 h-10`}>
+                        <CategoryIcon size={20} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-semibold text-(--headings-color) text-sm break-words whitespace-normal leading-snug">
+                          {t.note || <span className="italic text-(--text-color)/40 font-normal">Sin descripción</span>}
+                        </h4>
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className={`font-bold text-sm leading-none ${
-                      t.type === "expense" ? "text-(--danger-color)" : "text-(--success-color)"
-                    }`}>
-                      {t.type === "expense" ? "-" : "+"}
-                      {formatCurrency(t.amount)}
-                    </span>
-                    <button
-                      onClick={() => onEditTransaction && onEditTransaction(t)}
-                      className="p-2 rounded-xl text-(--text-color)/40 hover:text-(--primary-color) hover:bg-(--primary-color)/10 transition-all duration-200 cursor-pointer"
-                      title="Editar movimiento"
-                    >
-                      <IconEdit size={16} />
-                    </button>
                     
-                    <button
-                      onClick={() => handleDelete(t.id)}
-                      disabled={isDeleting}
-                      className="p-2 rounded-xl text-(--text-color)/40 hover:text-(--danger-color) hover:bg-(--danger-color)/10 transition-all duration-200 cursor-pointer disabled:opacity-50"
-                      title="Eliminar movimiento"
-                    >
-                      <IconTrash size={16} />
-                    </button>
+                    <div className="shrink-0 text-right max-w-[50%] min-w-0">
+                      <span className={`font-bold text-sm tracking-tight break-all block leading-tight ${
+                        t.type === "expense" ? "text-(--danger-color)" : "text-(--success-color)"
+                      }`}>
+                        {t.type === "expense" ? "-" : "+"}
+                        {formatCurrency(t.amount)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Línea divisoria sutil */}
+                  <hr className="border-(--sidebar-border)/30 my-0.5" />
+
+                  {/* Fila inferior: Badge de categoría, Fecha y Acciones */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[10px] font-bold tracking-wider uppercase text-(--primary-color) bg-(--sidebar-link-hover-bg) border border-(--sidebar-border)/30 px-2 py-0.5 rounded-md">
+                        {t.Category?.name || "General"}
+                      </span>
+                      <span className="text-[10px] font-medium text-(--text-color)/70">
+                        {parseDate(t.transaction_date || t.created_at).toLocaleDateString(undefined, {
+                          month: 'short',
+                          day: 'numeric',
+                          year: '2-digit'
+                        })}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        onClick={() => onEditTransaction && onEditTransaction(t)}
+                        className="p-1.5 rounded-lg text-(--text-color)/50 hover:text-(--primary-color) hover:bg-(--primary-color)/10 transition-all duration-200 cursor-pointer inline-flex items-center justify-center"
+                        title="Editar movimiento"
+                      >
+                        <IconEdit size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(t.id)}
+                        disabled={isDeleting}
+                        className="p-1.5 rounded-lg text-(--text-color)/50 hover:text-(--danger-color) hover:bg-(--danger-color)/10 transition-all duration-200 cursor-pointer inline-flex items-center justify-center disabled:opacity-50"
+                        title="Eliminar movimiento"
+                      >
+                        <IconTrash size={16} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
