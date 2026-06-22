@@ -1,46 +1,74 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { translateSupabaseError } from "../utilities/supabaseErrors";
 
 export default function useManageCategories(user) {
   const [categories, setCategories] = useState([]);
   const [hiddenCategories, setHiddenCategories] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
+  const lastSuccessfullyFetchedRef = useRef(null);
+  const loading = isFetching && lastSuccessfullyFetchedRef.current === null;
 
-  const fetchCategories = useCallback(async () => {
+  const fetchCategories = useCallback(async (signal) => {
     if (!user?.id) return;
     
-    setLoading(true);
-    const { data: allCategories, error: errCat } = await supabase
-      .from("Category")
-      .select("*")
-      .eq("is_deleted", false)
-      .order("name", { ascending: true });
+    setIsFetching(true);
+    try {
+      let queryAll = supabase
+        .from("Category")
+        .select("*")
+        .eq("is_deleted", false)
+        .order("name", { ascending: true });
 
-    const { data: hidden, error: errHidden } = await supabase
-      .from("TrashView")
-      .select("*");
+      let queryHidden = supabase
+        .from("TrashView")
+        .select("*");
 
-    if (errCat || errHidden) {
-      setLoading(false);
-      return {
-        success: false,
-        message: "Error al obtener las categorías: " + translateSupabaseError(errCat || errHidden),
-      };
+      if (signal) {
+        queryAll = queryAll.abortSignal(signal);
+        queryHidden = queryHidden.abortSignal(signal);
+      }
+
+      const [allResponse, hiddenResponse] = await Promise.all([
+        queryAll,
+        queryHidden
+      ]);
+
+      const { data: allCategories, error: errCat } = allResponse;
+      const { data: hidden, error: errHidden } = hiddenResponse;
+
+      if (errCat || errHidden) {
+        throw errCat || errHidden;
+      }
+
+      const visibleCategories = allCategories.filter(
+        (cat) => !hidden.some((h) => h.id === cat.id),
+      );
+
+      setCategories(visibleCategories);
+      setHiddenCategories(hidden);
+      lastSuccessfullyFetchedRef.current = true;
+      return { success: true };
+    } catch (error) {
+      const isAbortError = error.name === "AbortError" || error.message?.includes("AbortError");
+      if (!isAbortError) {
+        console.error("Error al obtener las categorías:", error);
+        return {
+          success: false,
+          message: "Error al obtener las categorías: " + translateSupabaseError(error),
+        };
+      }
+    } finally {
+      if (!signal || !signal.aborted) {
+        setIsFetching(false);
+      }
     }
-
-    const visibleCategories = allCategories.filter(
-      (cat) => !hidden.some((h) => h.id === cat.id),
-    );
-
-    setCategories(visibleCategories);
-    setHiddenCategories(hidden);
-    setLoading(false);
-    return { success: true };
   }, [user?.id]);
 
   useEffect(() => {
-    fetchCategories();
+    const controller = new AbortController();
+    fetchCategories(controller.signal);
+    return () => controller.abort();
   }, [fetchCategories]);
 
   async function addCategory(name, type, icon = "IconCoin") {

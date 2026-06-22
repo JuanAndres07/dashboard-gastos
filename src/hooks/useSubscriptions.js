@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 import { useCategories } from "./useCategories";
 import { toast } from "sonner";
@@ -20,7 +20,9 @@ export function useSubscriptions(user) {
   // List state
   const [subscriptions, setSubscriptions] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [loadingSubscriptions, setLoadingSubscriptions] = useState(true);
+  const [isFetchingSubscriptions, setIsFetchingSubscriptions] = useState(true);
+  const lastSuccessfullyFetchedSubscriptionsRef = useRef(null);
+  const loadingSubscriptions = isFetchingSubscriptions && lastSuccessfullyFetchedSubscriptionsRef.current === null;
   
   // Edit state
   const [editingId, setEditingId] = useState(null);
@@ -45,11 +47,11 @@ export function useSubscriptions(user) {
     return frequencies.find((f) => f.value === normalizedValue)?.label || value;
   };
 
-  const fetchSubscriptions = async () => {
+  const fetchSubscriptions = useCallback(async (signal) => {
     if (!user?.id) return;
-    setLoadingSubscriptions(true);
+    setIsFetchingSubscriptions(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("Subscription")
         .select(
           `
@@ -64,20 +66,35 @@ export function useSubscriptions(user) {
         .eq("is_active", true)
         .order("next_payment_date", { ascending: true });
 
+      if (signal) {
+        query = query.abortSignal(signal);
+      }
+
+      const { data, error } = await query;
+
       if (error) throw error;
       setSubscriptions(data || []);
+      lastSuccessfullyFetchedSubscriptionsRef.current = true;
     } catch (error) {
-      console.error("Error al cargar suscripciones:", error.message);
+      const isAbortError = error.name === "AbortError" || error.message?.includes("AbortError");
+      if (!isAbortError) {
+        console.error("Error al cargar suscripciones:", error.message);
+      }
     } finally {
-      setLoadingSubscriptions(false);
+      if (!signal || !signal.aborted) {
+        setIsFetchingSubscriptions(false);
+      }
     }
-  };
-
-  useEffect(() => {
-    fetchSubscriptions();
   }, [user?.id]);
 
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchSubscriptions(controller.signal);
+    return () => controller.abort();
+  }, [fetchSubscriptions]);
+
   const handleSubmit = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
     if (!name || !categoryId || !amount || !frequency || !nextPaymentDate) {
       toast.warning("Por favor completa todos los campos");
       return;

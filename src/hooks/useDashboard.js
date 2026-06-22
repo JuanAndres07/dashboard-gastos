@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { useTransactions } from "./useTransactions";
 import { useAuth } from "../contexts/AuthContext";
@@ -24,7 +24,9 @@ export function useDashboard(user) {
     total_expense: 0,
     balance: 0,
   });
-  const [loadingSummary, setLoadingSummary] = useState(true);
+  const [isFetchingSummary, setIsFetchingSummary] = useState(true);
+  const lastSuccessfullyFetchedSummaryRef = useRef(null);
+  const loadingSummary = isFetchingSummary && lastSuccessfullyFetchedSummaryRef.current === null;
 
   // 1. Hook de Transacciones Recientes (límitado a 5)
   const {
@@ -88,7 +90,7 @@ export function useDashboard(user) {
   // Obtener resumen financiero (RPC)
   const fetchSummaryData = useCallback(
     async (signal) => {
-      setLoadingSummary(true);
+      setIsFetchingSummary(true);
       try {
         const now = new Date();
         const year = now.getFullYear();
@@ -136,6 +138,7 @@ export function useDashboard(user) {
             balance: (data.total_income || 0) - (data.total_expense || 0),
           });
         }
+        lastSuccessfullyFetchedSummaryRef.current = true;
       } catch (error) {
         if (
           error.name !== "AbortError" &&
@@ -144,7 +147,9 @@ export function useDashboard(user) {
           console.error("Error al obtener el resumen financiero:", error);
         }
       } finally {
-        setLoadingSummary(false);
+        if (!signal.aborted) {
+          setIsFetchingSummary(false);
+        }
       }
     },
     [user?.id],

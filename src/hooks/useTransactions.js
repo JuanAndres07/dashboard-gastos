@@ -1,12 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 
 export function useTransactions({ user, limit, initialViewMode = "expense", trigger, categoryId, page = 1, pageSize = 20, startDate, endDate, search }) {
   const [transactions, setTransactions] = useState([]);
   const [viewMode, setViewMode] = useState(initialViewMode);
-  const [loading, setLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(true);
   const [error, setError] = useState(null);
   const [totalCount, setTotalCount] = useState(0);
+  const lastSuccessfullyFetchedFiltersRef = useRef(null);
+  const currentFilterKey = JSON.stringify({ viewMode, categoryId, page, startDate, endDate, search });
+  const loading = isFetching && lastSuccessfullyFetchedFiltersRef.current !== currentFilterKey;
 
   useEffect(() => {
     if (!user?.id) return;
@@ -14,7 +17,7 @@ export function useTransactions({ user, limit, initialViewMode = "expense", trig
     const controller = new AbortController();
     
     async function fetchTransactions(signal) {
-      setLoading(true);
+      setIsFetching(true);
       setError(null);
 
       try {
@@ -76,13 +79,16 @@ export function useTransactions({ user, limit, initialViewMode = "expense", trig
 
         setTransactions(data || []);
         setTotalCount(count || 0);
+        lastSuccessfullyFetchedFiltersRef.current = currentFilterKey;
       } catch (err) {
         if (err.name !== 'AbortError') {
           setError(err);
           console.error("Error inesperado:", err);
         }
       } finally {
-        setLoading(false);
+        if (!signal.aborted) {
+          setIsFetching(false);
+        }
       }
     }
 
@@ -91,7 +97,7 @@ export function useTransactions({ user, limit, initialViewMode = "expense", trig
     return () => {
       controller.abort();
     };
-  }, [user?.id, limit, viewMode, trigger, categoryId, page, pageSize, startDate, endDate, search]);
+  }, [user?.id, limit, viewMode, trigger, categoryId, page, pageSize, startDate, endDate, search, currentFilterKey]);
 
   const updateTransaction = async (id, updatedFields) => {
     try {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { useCategories } from "./useCategories";
 import { formatLocalDate } from "../utilities/formatters";
@@ -14,10 +14,6 @@ export function useBudgets(user) {
   });
 
   const [loading, setLoading] = useState(false);
-
-  // Estados para presupuestos consumidos desde la RPC
-  const [budgets, setBudgets] = useState([]);
-  const [loadingBudgets, setLoadingBudgets] = useState(true);
 
   // Estados para la edición de presupuesto
   const [editingBudget, setEditingBudget] = useState(null);
@@ -37,6 +33,13 @@ export function useBudgets(user) {
     p_end_date: lastDay,
   });
 
+  // Estados para presupuestos consumidos desde la RPC
+  const [budgets, setBudgets] = useState([]);
+  const [isFetchingBudgets, setIsFetchingBudgets] = useState(true);
+  const lastSuccessfullyFetchedBudgetsRef = useRef(null);
+  const currentBudgetsFilterKey = JSON.stringify(dateFilters);
+  const loadingBudgets = isFetchingBudgets && lastSuccessfullyFetchedBudgetsRef.current !== currentBudgetsFilterKey;
+
   const expenseCategories = useMemo(() => {
     const activeBudgetCategoryIds = new Set(budgets.map((b) => b.category_id));
     return categories.filter(
@@ -45,24 +48,44 @@ export function useBudgets(user) {
   }, [budgets, categories]);
 
 
-  const fetchBudgets = useCallback(async () => {
+  const fetchBudgets = useCallback(async (signal) => {
     if (!user?.id) return;
-    setLoadingBudgets(true);
-    const { data, error } = await supabase.rpc("get_user_budgets", {
-      p_start_date: dateFilters.p_start_date,
-      p_end_date: dateFilters.p_end_date,
-    });
+    setIsFetchingBudgets(true);
+    
+    try {
+      let query = supabase.rpc("get_user_budgets", {
+        p_start_date: dateFilters.p_start_date,
+        p_end_date: dateFilters.p_end_date,
+      });
 
-    if (error) {
-      console.error("Error fetching budgets:", error.message);
-    } else {
+      if (signal) {
+        query = query.abortSignal(signal);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        throw error;
+      }
+
       setBudgets(data || []);
+      lastSuccessfullyFetchedBudgetsRef.current = currentBudgetsFilterKey;
+    } catch (error) {
+      const isAbortError = error.name === "AbortError" || error.message?.includes("AbortError");
+      if (!isAbortError) {
+        console.error("Error fetching budgets:", error.message);
+      }
+    } finally {
+      if (!signal || !signal.aborted) {
+        setIsFetchingBudgets(false);
+      }
     }
-    setLoadingBudgets(false);
-  }, [user?.id, dateFilters.p_start_date, dateFilters.p_end_date]);
+  }, [user?.id, dateFilters.p_start_date, dateFilters.p_end_date, currentBudgetsFilterKey]);
 
   useEffect(() => {
-    fetchBudgets();
+    const controller = new AbortController();
+    fetchBudgets(controller.signal);
+    return () => controller.abort();
   }, [fetchBudgets]);
 
   async function handleSubmit(e) {

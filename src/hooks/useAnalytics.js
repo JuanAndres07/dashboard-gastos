@@ -1,14 +1,16 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { formatLocalDate } from "../utilities/formatters";
 
 export function useAnalytics(user) {
   const [sixMonthsData, setSixMonthsData] = useState([]);
-  const [loadingSixMonths, setLoadingSixMonths] = useState(true);
+  const [isFetchingSixMonths, setIsFetchingSixMonths] = useState(true);
   const [errorSixMonths, setErrorSixMonths] = useState(null);
+  const lastSuccessfullyFetchedSixMonthsRef = useRef(null);
+  const loadingSixMonths = isFetchingSixMonths && lastSuccessfullyFetchedSixMonthsRef.current === null;
 
   const [expensesByCategory, setExpensesByCategory] = useState([]);
-  const [loadingExpenses, setLoadingExpenses] = useState(true);
+  const [isFetchingExpenses, setIsFetchingExpenses] = useState(true);
   const [errorExpenses, setErrorExpenses] = useState(null);
 
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -27,11 +29,15 @@ export function useAnalytics(user) {
     p_end_date: lastDay,
   });
 
+  const lastSuccessfullyFetchedExpensesRef = useRef(null);
+  const currentExpenseFilterKey = JSON.stringify({ p_start_date: dateFilters.p_start_date, p_end_date: dateFilters.p_end_date });
+  const loadingExpenses = isFetchingExpenses && lastSuccessfullyFetchedExpensesRef.current !== currentExpenseFilterKey;
+
   // 1. Obtener la evolución mensual de los últimos 6 meses (ingresos vs gastos)
   const fetchSixMonthsEvolution = useCallback(
     async (signal) => {
       if (!user?.id) return;
-      setLoadingSixMonths(true);
+      setIsFetchingSixMonths(true);
       setErrorSixMonths(null);
 
       try {
@@ -43,6 +49,7 @@ export function useAnalytics(user) {
           throw error;
         }
         setSixMonthsData(data || []);
+        lastSuccessfullyFetchedSixMonthsRef.current = true;
       } catch (err) {
         const isAbortError =
           err.name === "AbortError" || err.message?.includes("AbortError");
@@ -53,7 +60,9 @@ export function useAnalytics(user) {
           console.error("Error fetching six months evolution:", err);
         }
       } finally {
-        setLoadingSixMonths(false);
+        if (!signal.aborted) {
+          setIsFetchingSixMonths(false);
+        }
       }
     },
     [user?.id],
@@ -63,7 +72,7 @@ export function useAnalytics(user) {
   const fetchExpensesByCategory = useCallback(
     async (signal) => {
       if (!user?.id) return;
-      setLoadingExpenses(true);
+      setIsFetchingExpenses(true);
       setErrorExpenses(null);
 
       try {
@@ -78,6 +87,7 @@ export function useAnalytics(user) {
           throw error;
         }
         setExpensesByCategory(data || []);
+        lastSuccessfullyFetchedExpensesRef.current = currentExpenseFilterKey;
       } catch (err) {
         const isAbortError =
           err.name === "AbortError" || err.message?.includes("AbortError");
@@ -88,10 +98,12 @@ export function useAnalytics(user) {
           console.error("Error fetching expenses by category:", err);
         }
       } finally {
-        setLoadingExpenses(false);
+        if (!signal.aborted) {
+          setIsFetchingExpenses(false);
+        }
       }
     },
-    [user?.id, dateFilters.p_start_date, dateFilters.p_end_date],
+    [user?.id, dateFilters.p_start_date, dateFilters.p_end_date, currentExpenseFilterKey],
   );
 
   // Efecto para la evolución mensual
