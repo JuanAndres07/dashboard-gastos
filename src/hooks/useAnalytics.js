@@ -13,6 +13,10 @@ export function useAnalytics(user) {
   const [isFetchingExpenses, setIsFetchingExpenses] = useState(true);
   const [errorExpenses, setErrorExpenses] = useState(null);
 
+  const [budgets, setBudgets] = useState([]);
+  const [isFetchingBudgets, setIsFetchingBudgets] = useState(true);
+  const [errorBudgets, setErrorBudgets] = useState(null);
+
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Filtros de fecha (mes actual por defecto)
@@ -130,6 +134,55 @@ export function useAnalytics(user) {
     };
   }, [user?.id, fetchExpensesByCategory, refreshTrigger]);
 
+  // 3. Obtener presupuestos de usuario en un rango de fechas
+  const fetchBudgets = useCallback(
+    async (signal) => {
+      if (!user?.id) return;
+      setIsFetchingBudgets(true);
+      setErrorBudgets(null);
+
+      try {
+        const { data, error } = await supabase
+          .rpc("get_user_budgets", {
+            p_start_date: dateFilters.p_start_date,
+            p_end_date: dateFilters.p_end_date,
+          })
+          .abortSignal(signal);
+
+        if (error) {
+          throw error;
+        }
+        setBudgets(data || []);
+      } catch (err) {
+        const isAbortError =
+          err.name === "AbortError" || err.message?.includes("AbortError");
+        if (!isAbortError) {
+          setErrorBudgets(
+            err.message || "Error al cargar los presupuestos",
+          );
+          console.error("Error fetching budgets:", err);
+        }
+      } finally {
+        if (!signal.aborted) {
+          setIsFetchingBudgets(false);
+        }
+      }
+    },
+    [user?.id, dateFilters.p_start_date, dateFilters.p_end_date],
+  );
+
+  // Efecto para los presupuestos del periodo
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const controller = new AbortController();
+    fetchBudgets(controller.signal);
+
+    return () => {
+      controller.abort();
+    };
+  }, [user?.id, fetchBudgets, refreshTrigger]);
+
   // Manejador genérico para inputs de tipo fecha
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -156,6 +209,9 @@ export function useAnalytics(user) {
     expensesByCategory,
     loadingExpenses,
     errorExpenses,
+    budgets,
+    loadingBudgets: isFetchingBudgets,
+    errorBudgets,
     dateFilters,
     setDateFilters,
     handleFilterChange,

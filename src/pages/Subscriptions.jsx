@@ -267,52 +267,61 @@ export default function Subscriptions({ user }) {
               return (
                 <div 
                   key={sub.id} 
-                  className="flex items-center justify-between p-4 bg-(--settings-card-bg) rounded-2xl border border-(--sidebar-border) transition-all duration-300 gap-3"
+                  className="flex flex-col p-4 bg-(--settings-card-bg) rounded-2xl border border-(--sidebar-border) transition-all duration-300 ease-in-out hover:translate-y-[-2px] hover:shadow-md dark:hover:shadow-black/20 gap-3"
                   style={{ border: "var(--card-border)" }}
                 >
-                  <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                    <div className="p-3 rounded-xl shrink-0 bg-(--sidebar-link-hover-bg) text-(--primary-color) flex items-center justify-center w-11 h-11">
-                      <CategoryIcon size={22} />
+                  {/* Fila superior: Icono, Nombre y Monto */}
+                  <div className="flex items-center justify-between gap-3.5 min-w-0">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="p-2.5 rounded-xl shrink-0 bg-(--sidebar-link-hover-bg) text-(--primary-color) flex items-center justify-center w-10 h-10">
+                        <CategoryIcon size={20} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-semibold text-(--headings-color) text-sm break-words whitespace-normal leading-snug">
+                          {sub.name}
+                        </h4>
+                      </div>
                     </div>
                     
-                    <div className="min-w-0 flex-1">
-                      <h4 className="font-semibold text-(--headings-color) text-sm truncate leading-snug">
-                        {sub.name}
-                      </h4>
-                      <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        <span className="text-[10px] font-bold tracking-wider uppercase text-(--text-color) bg-(--bg-light) dark:bg-(--bg-light)/20 px-2 py-0.5 rounded-md">
-                          {sub.Category?.name || "Sin categoría"}
-                        </span>
-                        <span className="text-[10px] font-semibold text-(--primary-color) bg-(--sidebar-link-hover-bg) px-2 py-0.5 rounded-md">
-                          {getFrequencyLabel(sub.frequency)}
-                        </span>
-                        <span className="text-[10px] font-medium text-(--text-color)/80">
-                          Próximo: {parseDate(sub.next_payment_date?.split("T")[0]).toLocaleDateString(undefined, {
-                            month: 'short',
-                            day: 'numeric',
-                            year: '2-digit'
-                          })}
-                        </span>
-                      </div>
+                    <div className="shrink-0 text-right max-w-[50%] min-w-0">
+                      <span className="font-bold text-sm text-(--danger-color) tracking-tight break-all block leading-tight">
+                        -{formatCurrency(sub.amount)}
+                      </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="font-bold text-sm text-(--danger-color) whitespace-nowrap mr-1">
-                      -{formatCurrency(sub.amount)}
-                    </span>
-                    
-                    <div className="flex items-center gap-1">
+                  {/* Línea divisoria sutil */}
+                  <hr className="border-(--sidebar-border)/30 my-0.5" />
+
+                  {/* Fila inferior: Badges de info y Acciones */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[10px] font-bold tracking-wider uppercase text-(--primary-color) bg-(--sidebar-link-hover-bg) border border-(--sidebar-border)/30 px-2 py-0.5 rounded-md">
+                        {sub.Category?.name || "Sin categoría"}
+                      </span>
+                      <span className="text-[10px] font-semibold text-(--primary-color) bg-(--sidebar-link-hover-bg) border border-(--sidebar-border)/30 px-2 py-0.5 rounded-md">
+                        {getFrequencyLabel(sub.frequency)}
+                      </span>
+                      <span className="text-[10px] font-medium text-(--text-color)/80">
+                        Próx: {parseDate(sub.next_payment_date?.split("T")[0]).toLocaleDateString(undefined, {
+                          month: 'short',
+                          day: 'numeric',
+                          year: '2-digit'
+                        })}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
                       <button
                         onClick={() => startEdit(sub)}
-                        className="p-1.5 rounded-lg text-(--text-color)/50 hover:text-(--primary-color) hover:bg-(--primary-color)/10 transition-all duration-200 cursor-pointer"
+                        className="p-1.5 rounded-lg text-(--text-color)/50 hover:text-(--primary-color) hover:bg-(--primary-color)/10 transition-all duration-200 cursor-pointer inline-flex items-center justify-center"
                         title="Editar suscripción"
                       >
                         <IconPencil size={16} />
                       </button>
                       <button
                         onClick={() => handleDelete(sub.id)}
-                        className="p-1.5 rounded-lg text-(--text-color)/50 hover:text-(--danger-color) hover:bg-(--danger-color)/10 transition-all duration-200 cursor-pointer"
+                        className="p-1.5 rounded-lg text-(--text-color)/50 hover:text-(--danger-color) hover:bg-(--danger-color)/10 transition-all duration-200 cursor-pointer inline-flex items-center justify-center"
                         title="Eliminar suscripción"
                       >
                         <IconTrash size={16} />

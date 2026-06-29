@@ -161,5 +161,6 @@ export function useBudgets(user) {
     handleEditSubmit,
     handleChange,
     handleFilterChange,
+    fetchBudgets,
   };
 }

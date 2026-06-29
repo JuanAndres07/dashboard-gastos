@@ -25,6 +25,8 @@ export function useAnalysisPage(user) {
     expensesByCategory,
     loadingExpenses,
     errorExpenses,
+    budgets,
+    loadingBudgets,
     dateFilters,
     setManualFilters,
     handleFilterChange,
@@ -325,5 +327,7 @@ export function useAnalysisPage(user) {
     handlePresetChange,
     onDateInputChange,
     refetchAll,
+    budgets,
+    loadingBudgets,
   };
 }

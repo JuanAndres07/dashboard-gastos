@@ -245,6 +245,7 @@ export function useSubscriptions(user) {
     startEdit,
     handleUpdate,
     getFrequencyLabel,
+    fetchSubscriptions,
     
     // Constants
     frequencies,

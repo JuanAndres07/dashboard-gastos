@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import { formatCurrency, formatLocalDate } from "../utilities/formatters";
 import iconDictionary from "../utilities/iconDictionary";
 import { Line, Doughnut } from "react-chartjs-2";
@@ -12,9 +14,12 @@ import {
   IconArrowDownLeft,
   IconChartPie,
   IconActivity,
+  IconInfoCircle,
+  IconX,
 } from "@tabler/icons-react";
 
 export default function Analysis({ user }) {
+  const [showHelp, setShowHelp] = useState(false);
   const {
     loadingExpenses,
     errorExpenses,
@@ -35,6 +40,8 @@ export default function Analysis({ user }) {
     handlePresetChange,
     onDateInputChange,
     refetchAll,
+    budgets,
+    loadingBudgets,
   } = useAnalysisPage(user);
 
   return (
@@ -51,8 +58,8 @@ export default function Analysis({ user }) {
         </div>
 
         {/* Filtros */}
-        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-          <div className="flex items-center gap-2 grow sm:grow-0">
+        <div className="flex flex-col sm:flex-row sm:items-center flex-wrap gap-3 w-full lg:w-auto">
+          <div className="w-full sm:w-auto">
             <Select
               value={rangePreset}
               onChange={handlePresetChange}
@@ -65,35 +72,38 @@ export default function Analysis({ user }) {
                 { value: "personalizado", label: "Personalizado" },
               ]}
               btnClassName="!py-2 !text-xs min-w-36"
-              className="w-full sm:w-auto"
+              className="w-full"
             />
           </div>
-          <div className="flex items-center gap-2 grow sm:grow-0">
-            <DateInput
-              name="p_start_date"
-              value={dateFilters.p_start_date}
-              onChange={onDateInputChange}
-              disabled={rangePreset !== "personalizado"}
-              inputClassName="!py-2 !text-xs w-full"
-              className="flex-1 sm:w-32.5"
-            />
-            <span className="text-(--text-color)/70 text-xs font-semibold px-0.5">
-              a
-            </span>
-            <DateInput
-              name="p_end_date"
-              value={dateFilters.p_end_date}
-              onChange={onDateInputChange}
-              disabled={rangePreset !== "personalizado"}
-              inputClassName="!py-2 !text-xs w-full"
-              className="flex-1 sm:w-32.5"
-            />
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto grow">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 grow">
+              <DateInput
+                name="p_start_date"
+                value={dateFilters.p_start_date}
+                onChange={onDateInputChange}
+                disabled={rangePreset !== "personalizado"}
+                inputClassName="!py-2 !text-xs w-full"
+                className="w-full sm:w-36"
+              />
+              <span className="text-xs text-(--text-color)/50 font-medium shrink-0 text-center sm:text-left">
+                a
+              </span>
+              <DateInput
+                name="p_end_date"
+                value={dateFilters.p_end_date}
+                onChange={onDateInputChange}
+                disabled={rangePreset !== "personalizado"}
+                inputClassName="!py-2 !text-xs w-full"
+                className="w-full sm:w-36"
+              />
+            </div>
             <button
-              className="p-2 rounded-xl border border-(--sidebar-border) bg-(--settings-card-bg) text-(--text-color) hover:text-(--sidebar-text-hover) hover:bg-(--sidebar-link-hover-bg) cursor-pointer transition-all duration-300 ease-in-out shrink-0"
+              className="p-2 rounded-xl border border-(--sidebar-border) bg-(--settings-card-bg) text-(--text-color) hover:text-(--sidebar-text-hover) hover:bg-(--sidebar-link-hover-bg) cursor-pointer transition-all duration-300 ease-in-out shrink-0 w-full sm:w-auto text-center flex justify-center items-center gap-2 mt-1 sm:mt-0"
               onClick={refetchAll}
               title="Actualizar datos"
             >
               <IconRefresh size={18} />
+              <span className="sm:hidden text-xs font-semibold">Actualizar datos</span>
             </button>
           </div>
         </div>
@@ -251,19 +261,50 @@ export default function Analysis({ user }) {
           className="flex-1 min-w-0 bg-(--settings-card-bg) rounded-2xl p-6 transition-all duration-300 ease-in-out"
           style={{ border: "var(--card-border)" }}
         >
-          <h3 className="text-lg font-bold text-(--headings-color) mb-6">
-            Top 3 Gastos del Periodo
-          </h3>
-          <div className="h-87.5 flex flex-col justify-center gap-6">
-            {loadingExpenses ? (
-              <div className="flex flex-col items-center justify-center h-full gap-3">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-lg font-bold text-(--headings-color)">
+              Top 3 Gastos del Periodo
+            </h3>
+            <button
+              onClick={() => setShowHelp(!showHelp)}
+              className="flex items-center justify-center p-1.5 rounded-xl text-(--text-color)/50 hover:text-(--headings-color) hover:bg-(--bg-light) transition-all duration-300 cursor-pointer focus:outline-none"
+              title="Información de la sección"
+            >
+              <IconInfoCircle size={18} />
+            </button>
+          </div>
+
+          {/* Ayuda colapsable interactiva responsiva */}
+          {showHelp && (
+            <div className="relative mb-6 p-4 bg-(--bg-light) border border-(--sidebar-border) rounded-2xl text-xs text-(--text-color)/85 flex gap-3 items-start animate-fadeIn">
+              <div className="flex-1 space-y-1.5">
+                <p className="font-bold text-(--headings-color)">¿Cómo se calculan estos porcentajes?</p>
+                <p className="leading-relaxed">
+                  La barra de color principal indica la proporción del gasto de la categoría sobre el <strong>total de gastos del período</strong>.
+                </p>
+                <p className="leading-relaxed">
+                  Si la categoría tiene un <strong>presupuesto establecido</strong> para este mes, debajo se mostrará una barra de progreso e indicador de consumo de ese presupuesto.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowHelp(false)}
+                className="text-(--text-color)/40 hover:text-(--headings-color) p-1 rounded-lg hover:bg-(--sidebar-border)/40 transition-colors cursor-pointer"
+              >
+                <IconX size={14} />
+              </button>
+            </div>
+          )}
+
+          <div className="min-h-87.5 flex flex-col justify-center gap-6">
+            {loadingExpenses || loadingBudgets ? (
+              <div className="flex flex-col items-center justify-center h-full gap-3 py-10">
                 <div className="w-8 h-8 rounded-full border-2 border-(--primary-color) border-t-transparent animate-spin"></div>
                 <span className="text-sm font-medium text-(--text-color)">
-                  Cargando top gastos...
+                  Cargando top gastos y presupuestos...
                 </span>
               </div>
             ) : errorExpenses ? (
-              <div className="flex items-center justify-center h-full text-(--danger-color) text-sm font-semibold">
+              <div className="flex items-center justify-center h-full text-(--danger-color) text-sm font-semibold py-10">
                 {errorExpenses}
               </div>
             ) : top3Categories.length > 0 ? (
@@ -279,10 +320,19 @@ export default function Analysis({ user }) {
                   const catColor =
                     categoryColorMap[cat.category_name] || "#64748b";
 
+                  // Buscar presupuesto correspondiente
+                  const budget = budgets?.find(
+                    (b) => b.category_name === cat.category_name
+                  );
+                  const budgetPercentage = budget
+                    ? (budget.spent / budget.total_budget) * 100
+                    : 0;
+                  const isOverBudget = budget ? budget.remaining < 0 : false;
+
                   return (
                     <div
                       key={cat.category_name}
-                      className="group flex flex-col gap-2 w-full p-1 transition-all duration-300 hover:translate-x-1"
+                      className="group flex flex-col gap-3 w-full p-1 transition-all duration-300 hover:translate-x-1"
                     >
                       <div className="flex justify-between items-center w-full">
                         <div className="flex items-center gap-3">
@@ -309,25 +359,67 @@ export default function Analysis({ user }) {
                             {formatCurrency(cat.total_amount)}
                           </span>
                           <span className="text-xs font-semibold text-(--text-color)/60 block">
-                            {percentage.toFixed(1)}%
+                            {percentage.toFixed(1)}% del total
                           </span>
                         </div>
                       </div>
-                      <div className="w-full h-2 bg-(--bg-light) rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full transition-all duration-1000 ease-out"
-                          style={{
-                            width: `${percentage}%`,
-                            backgroundColor: catColor,
-                          }}
-                        ></div>
+
+                      {/* Contenedor de las barras */}
+                      <div className="flex flex-col gap-2.5 w-full">
+                        {/* Barra 1: Porcentaje del periodo */}
+                        <div className="w-full h-2 bg-(--bg-light) rounded-full overflow-hidden" title="Peso sobre el total de egresos del periodo">
+                          <div
+                            className="h-full rounded-full transition-all duration-1000 ease-out"
+                            style={{
+                              width: `${percentage}%`,
+                              backgroundColor: catColor,
+                            }}
+                          ></div>
+                        </div>
+
+                        {/* Barra 2: Progreso de presupuesto si existe */}
+                        {budget ? (
+                          <div className="flex flex-col gap-1.5 mt-0.5 p-2 bg-(--bg-light)/20 rounded-xl border border-(--sidebar-border)/40">
+                            <div className="flex justify-between items-center text-[11px] font-medium leading-none">
+                              <span className="text-(--text-color)/60">
+                                Presupuesto: {formatCurrency(budget.total_budget)}
+                              </span>
+                              <span className={isOverBudget ? "text-(--danger-color) font-bold" : "text-(--success-color) font-bold"}>
+                                {isOverBudget
+                                  ? `Excedido por ${formatCurrency(Math.abs(budget.remaining))}`
+                                  : `${budgetPercentage.toFixed(0)}% consumido`}
+                              </span>
+                            </div>
+                            <div className="w-full h-1.5 bg-(--bg-light) rounded-full overflow-hidden">
+                              <div
+                                className="h-full rounded-full transition-all duration-1000 ease-out"
+                                style={{
+                                  width: `${Math.min(budgetPercentage, 100)}%`,
+                                  backgroundColor: isOverBudget
+                                    ? "var(--danger-color)"
+                                    : "var(--success-color)",
+                                }}
+                              ></div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex justify-between items-center text-[10px] mt-0.5 text-(--text-color)/50 font-medium px-1">
+                            <span>Sin presupuesto establecido</span>
+                            <Link
+                              to="/budgets"
+                              className="text-(--primary-color) hover:text-(--primary-color)/85 font-bold transition-colors flex items-center gap-0.5"
+                            >
+                              + Crear presupuesto
+                            </Link>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
                 })}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center h-full text-(--text-color)/70 gap-2">
+              <div className="flex flex-col items-center justify-center h-full text-(--text-color)/70 gap-2 py-10">
                 <IconChartPie size={40} className="stroke-[1.5]" />
                 <span className="text-sm font-medium">
                   Sin gastos en este periodo.

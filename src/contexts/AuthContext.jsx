@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
+import { toast } from "sonner";
 
 const AuthContext = createContext();
 
@@ -8,6 +9,7 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadingProfile, setLoadingProfile] = useState(false);
+  const pollingStartTimeRef = useRef(null);
 
   const fetchProfile = async (userId) => {
     setLoadingProfile(true);
@@ -63,6 +65,97 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
+  // Smart Polling con caducidad para detectar confirmación de correo (Global en el Contexto)
+  useEffect(() => {
+    if (!user?.new_email) {
+      pollingStartTimeRef.current = null;
+      return;
+    }
+
+    if (!pollingStartTimeRef.current) {
+      pollingStartTimeRef.current = Date.now();
+    }
+
+    // Límites de tiempo
+    const EXPIRATION_TIME_MS = 24 * 60 * 60 * 1000; // 24 horas (límite del enlace de Supabase)
+    const MAX_POLLING_DURATION_MS = 15 * 60 * 1000; // 15 minutos de sesión activa
+    
+    let timeoutId = null;
+    let isCancelled = false; // Evita fugas de memoria y llamadas de retorno si el componente se desmonta
+
+    const checkEmailChange = async () => {
+      // 1. Evitar consultar la API si la pestaña está oculta
+      if (document.visibilityState !== "visible") return true; 
+
+      // 2. Detener si la solicitud original expiró en Supabase (24h)
+      if (user.email_change_sent_at) {
+        const sentTime = new Date(user.email_change_sent_at).getTime();
+        if (Date.now() - sentTime > EXPIRATION_TIME_MS) {
+          console.log("La solicitud de cambio de correo expiró en Supabase. Deteniendo smart polling.");
+          return false; // Detiene el bucle recursivo
+        }
+      }
+
+      // 3. Detener si el usuario lleva más de 15 minutos en esta pantalla con la pestaña abierta
+      if (Date.now() - pollingStartTimeRef.current > MAX_POLLING_DURATION_MS) {
+        console.log("Se alcanzó el límite de 15 minutos para esta sesión de polling. Deteniendo.");
+        return false; // Detiene el bucle recursivo
+      }
+
+      try {
+        const { data, error } = await supabase.auth.getUser();
+        if (isCancelled) return false;
+
+        if (!error && data?.user) {
+          // Condición de victoria: El correo principal cambió en el servidor
+          if (data.user.email !== user.email) {
+            // Refrescar sesión para persistir el nuevo token y correo en localStorage
+            const { data: refreshData } = await supabase.auth.refreshSession();
+            const updatedUser = refreshData?.user || data.user;
+            setUser(updatedUser);
+            
+            toast.success("¡Tu correo electrónico ha sido actualizado con éxito!");
+            pollingStartTimeRef.current = null; // Limpiar ref
+            return false; // Detiene el bucle recursivo inmediatamente (CONDICIÓN DE VICTORIA)
+          }
+        }
+      } catch (err) {
+        console.error("Excepción en smart polling:", err);
+      }
+
+      return true; // Continúa con el bucle recursivo
+    };
+
+    // Función recursiva con setTimeout para evitar solapamientos de red
+    const runPolling = async () => {
+      const shouldContinue = await checkEmailChange();
+      if (shouldContinue && !isCancelled) {
+        timeoutId = setTimeout(runPolling, 7000);
+      }
+    };
+
+    // Iniciar polling
+    timeoutId = setTimeout(runPolling, 7000);
+
+    // Consulta manual inmediata al volver a estar activa la pestaña
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === "visible" && !isCancelled) {
+        const shouldContinue = await checkEmailChange();
+        if (!shouldContinue) {
+          clearTimeout(timeoutId);
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      isCancelled = true;
+      clearTimeout(timeoutId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [user?.new_email, user?.email, user?.email_change_sent_at]);
+
   const updateProfile = async (updates) => {
     if (!user) return { error: new Error("No hay usuario autenticado") };
 
@@ -94,11 +187,52 @@ export function AuthProvider({ children }) {
       if (authError) return { error: authError };
 
       const { data, error: updateError } = await supabase.auth.updateUser({ email: newEmail });
+      if (!updateError && data?.user) {
+        setUser(data.user);
+      }
       return { data, error: updateError };
     } catch (err) {
       console.error("Excepción al cambiar el correo:", err);
       return { error: err };
     }
+  };
+
+  const cancelEmailChange = async () => {
+    if (!user?.email) return { error: new Error("No hay usuario autenticado") };
+    try {
+      // 1. Llamar a la función RPC para cancelar el cambio en la base de datos
+      const { error: rpcError } = await supabase.rpc("cancel_email_change");
+      if (rpcError) return { error: rpcError };
+
+      // 2. Refrescar sesión para actualizar la persistencia de localStorage en el SDK
+      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+      if (refreshError) return { error: refreshError };
+      
+      // 3. Forzar que new_email sea nulo en el estado local para asegurar que la UI cambie inmediatamente
+      const updatedUser = {
+        ...(refreshData?.user || user),
+        new_email: null
+      };
+      setUser(updatedUser);
+
+      return { success: true };
+    } catch (err) {
+      console.error("Excepción al cancelar el cambio de correo:", err);
+      return { error: err };
+    }
+  };
+
+  const refreshUser = async () => {
+    try {
+      const { data, error } = await supabase.auth.getUser();
+      if (!error && data?.user) {
+        setUser(data.user);
+        return data.user;
+      }
+    } catch (err) {
+      console.error("Excepción al refrescar el usuario:", err);
+    }
+    return null;
   };
 
   const changePassword = async (currentPassword, newPassword) => {
@@ -143,7 +277,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, loadingProfile, updateProfile, changeEmail, changePassword, deleteAccount }}>
+    <AuthContext.Provider value={{ user, profile, loading, loadingProfile, updateProfile, changeEmail, cancelEmailChange, changePassword, deleteAccount, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

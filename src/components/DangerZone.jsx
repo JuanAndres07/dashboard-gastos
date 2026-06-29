@@ -25,7 +25,10 @@ export default function DangerZone() {
     const { error } = await deleteAccount(deleteConfirmPassword);
 
     if (error) {
-      setDeleteAccountMessage({ type: "danger", text: "Error al eliminar la cuenta: " + translateSupabaseError(error) });
+      const errorMsg = error.code === "invalid_credentials" || error.message?.toLowerCase().includes("invalid credentials")
+        ? "La contraseña es incorrecta."
+        : translateSupabaseError(error);
+      setDeleteAccountMessage({ type: "danger", text: "Error al eliminar la cuenta: " + errorMsg });
     } else {
       handleCloseDeleteModal();
     }

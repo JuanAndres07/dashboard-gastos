@@ -84,6 +84,7 @@ export default function CategoryList({
                     <IconPicker
                       value={editIcon}
                       onChange={setEditIcon}
+                      className="w-full md:w-auto"
                       btnClassName="w-full md:w-auto px-3 py-1.5 bg-(--settings-card-bg) border border-(--sidebar-border) rounded-lg text-xs font-semibold hover:bg-(--sidebar-link-hover-bg) transition-all duration-300 cursor-pointer text-left"
                     />
                   </div>

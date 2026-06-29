@@ -1,13 +1,13 @@
 import { useAuth } from "../contexts/AuthContext";
 import { useState, useEffect } from "react";
-import { IconUser, IconMail, IconLock, IconKey, IconX, IconCheck } from "@tabler/icons-react";
+import { IconUser, IconMail, IconLock, IconKey, IconX, IconCheck, IconAlertTriangle } from "@tabler/icons-react";
 import DangerZone from "../components/DangerZone";
 import Modal from "../components/Modal";
 import { toast } from "sonner";
 import { translateSupabaseError } from "../utilities/supabaseErrors";
 
 export default function Configuration() {
-  const { user, profile, updateProfile, changeEmail, changePassword } = useAuth();
+  const { user, profile, updateProfile, changeEmail, cancelEmailChange, changePassword } = useAuth();
   
   const [fullname, setFullname] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -17,6 +17,7 @@ export default function Configuration() {
   const [newEmail, setNewEmail] = useState("");
   const [emailCurrentPassword, setEmailCurrentPassword] = useState("");
   const [isSavingEmail, setIsSavingEmail] = useState(false);
+  const [isCancellingEmail, setIsCancellingEmail] = useState(false);
 
   // Estados para Cambiar Contraseña
   const [passwordCurrentPassword, setPasswordCurrentPassword] = useState("");
@@ -33,6 +34,8 @@ export default function Configuration() {
       setFullname(profile.fullname);
     }
   }, [profile]);
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -58,13 +61,27 @@ export default function Configuration() {
     const { error } = await changeEmail(emailCurrentPassword, newEmail);
 
     if (error) {
-      toast.error("Error al actualizar el correo: " + translateSupabaseError(error));
+      const errorMsg = error.code === "invalid_credentials" || error.message?.toLowerCase().includes("invalid credentials")
+        ? "La contraseña actual es incorrecta."
+        : translateSupabaseError(error);
+      toast.error("Error al actualizar el correo: " + errorMsg);
     } else {
       toast.success("¡Se ha enviado un correo de confirmación a ambas direcciones!");
       setNewEmail("");
       setEmailCurrentPassword("");
     }
     setIsSavingEmail(false);
+  };
+
+  const handleCancelEmailChange = async () => {
+    setIsCancellingEmail(true);
+    const { error } = await cancelEmailChange();
+    if (error) {
+      toast.error("Error al cancelar la solicitud: " + translateSupabaseError(error));
+    } else {
+      toast.success("Solicitud de cambio de correo cancelada.");
+    }
+    setIsCancellingEmail(false);
   };
 
   const handleUpdatePassword = async (e) => {
@@ -86,7 +103,10 @@ export default function Configuration() {
     const { error } = await changePassword(passwordCurrentPassword, newPassword);
 
     if (error) {
-      toast.error("Error al actualizar la contraseña: " + translateSupabaseError(error));
+      const errorMsg = error.code === "invalid_credentials" || error.message?.toLowerCase().includes("invalid credentials")
+        ? "La contraseña actual es incorrecta."
+        : translateSupabaseError(error);
+      toast.error("Error al actualizar la contraseña: " + errorMsg);
     } else {
       toast.success("¡Contraseña actualizada con éxito!");
       setPasswordCurrentPassword("");
@@ -144,9 +164,17 @@ export default function Configuration() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="block text-xs font-semibold text-(--text-color) uppercase tracking-wider mb-1.5">
-                  Correo Electrónico
-                </label>
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className="block text-xs font-semibold text-(--text-color) uppercase tracking-wider">
+                    Correo Electrónico
+                  </label>
+                  {user?.new_email && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                      Cambio pendiente
+                    </span>
+                  )}
+                </div>
                 <div className="relative">
                   <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-(--text-color)/50">
                     <IconMail size={20} stroke={1.5} />
@@ -159,6 +187,64 @@ export default function Configuration() {
                     readOnly
                   />
                 </div>
+                {user?.new_email && (
+                  <div className="p-4 mt-2 bg-amber-500/5 border border-amber-500/20 rounded-xl space-y-3">
+                    <div className="flex items-start gap-2.5">
+                      <div className="p-1 bg-amber-500/10 rounded-lg text-amber-600 dark:text-amber-400 shrink-0">
+                        <IconAlertTriangle size={18} />
+                      </div>
+                      <div className="space-y-1">
+                        <h4 className="text-sm font-bold text-(--headings-color)">
+                          Confirmación de cambio de correo requerida
+                        </h4>
+                        <p className="text-xs text-(--text-color)/90">
+                          Has solicitado cambiar tu correo a <strong className="text-amber-600 dark:text-amber-400 font-semibold">{user.new_email}</strong>.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="pl-8 text-xs text-(--text-color)/85 space-y-2">
+                      <p>
+                        Para completar el cambio, por favor haz clic en los enlaces de confirmación que hemos enviado a:
+                      </p>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                        <div className="p-2.5 bg-(--bg-light) border border-(--sidebar-border) rounded-lg flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+                          <div className="min-w-0">
+                            <span className="block text-[10px] uppercase font-bold text-(--text-color)/70">Correo actual</span>
+                            <span className="block font-semibold text-(--headings-color) truncate text-xs">{user.email}</span>
+                          </div>
+                        </div>
+                        <div className="p-2.5 bg-(--bg-light) border border-(--sidebar-border) rounded-lg flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+                          <div className="min-w-0">
+                            <span className="block text-[10px] uppercase font-bold text-(--text-color)/70">Nuevo correo</span>
+                            <span className="block font-semibold text-(--headings-color) truncate text-xs">{user.new_email}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pt-1.5">
+                        <button
+                          type="button"
+                          onClick={handleCancelEmailChange}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold rounded-xl text-xs transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
+                          disabled={isCancellingEmail}
+                        >
+                          {isCancellingEmail ? (
+                            <>
+                              <div className="w-3.5 h-3.5 rounded-full border-2 border-current border-t-transparent animate-spin"></div>
+                              <span>Cancelando...</span>
+                            </>
+                          ) : (
+                            <span>Cancelar solicitud</span>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

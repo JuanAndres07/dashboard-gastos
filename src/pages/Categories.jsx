@@ -308,6 +308,7 @@ export default function Categories({ user }) {
             <IconPicker
               value={selectedIcon}
               onChange={setSelectedIcon}
+              className="w-full"
               btnClassName="w-full px-4 py-2.5 bg-(--settings-card-bg) border border-(--sidebar-border) rounded-xl text-(--headings-color) hover:bg-(--sidebar-link-hover-bg) text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-(--primary-color) transition-all duration-300 cursor-pointer"
             />
           </div>
