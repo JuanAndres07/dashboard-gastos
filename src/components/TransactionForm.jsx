@@ -6,7 +6,13 @@ import Select from "./Select";
 import DateInput from "./DateInput";
 import { translateSupabaseError } from "../utilities/supabaseErrors";
 
-export function TransactionForm({ onTransactionAdded, onTransactionUpdated, transactionToEdit, user }) {
+export function TransactionForm({
+  onTransactionAdded,
+  onTransactionUpdated,
+  transactionToEdit,
+  initialData,
+  user,
+}) {
   const [type, setType] = useState("expense");
   const { categories, loading: loadingCategories } = useCategories(user);
   const [filteredCategories, setFilteredCategories] = useState([]);
@@ -30,8 +36,18 @@ export function TransactionForm({ onTransactionAdded, onTransactionUpdated, tran
       setType(transactionToEdit.type || "expense");
       setAmount(transactionToEdit.amount ? String(transactionToEdit.amount) : "");
       setDescription(transactionToEdit.note || "");
-      setDate(transactionToEdit.transaction_date ? transactionToEdit.transaction_date.split("T")[0] : getTodayDateString());
+      setDate(
+        transactionToEdit.transaction_date
+          ? transactionToEdit.transaction_date.split("T")[0]
+          : getTodayDateString()
+      );
       setCategoryId(transactionToEdit.category_id || "");
+    } else if (initialData) {
+      setType(initialData.type || "expense");
+      setAmount(initialData.amount ? String(initialData.amount) : "");
+      setDescription(initialData.description || initialData.note || "");
+      setDate(initialData.date ? initialData.date.split("T")[0] : getTodayDateString());
+      setCategoryId(initialData.categoryId || initialData.category_id || "");
     } else {
       setType("expense");
       setAmount("");
@@ -39,7 +55,7 @@ export function TransactionForm({ onTransactionAdded, onTransactionUpdated, tran
       setDate(getTodayDateString());
       setCategoryId("");
     }
-  }, [transactionToEdit]);
+  }, [transactionToEdit, initialData]);
 
   useEffect(() => {
     const filtered = categories.filter((cat) => cat.type === type);

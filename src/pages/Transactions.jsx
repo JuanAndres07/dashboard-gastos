@@ -1,9 +1,10 @@
 import { TransactionTable } from "../components/TransactionTable";
 import { TransactionForm } from "../components/TransactionForm";
+import ReceiptScanner from "../components/ReceiptScanner";
 import { useState, useEffect } from "react";
 import { useTransactions } from "../hooks/useTransactions";
 import { useCategories } from "../hooks/useCategories";
-import { IconPlus, IconSearch } from "@tabler/icons-react";
+import { IconPlus, IconSearch, IconScan } from "@tabler/icons-react";
 import { Pagination } from "../components/Pagination";
 import Modal from "../components/Modal";
 import Select from "../components/Select";
@@ -19,10 +20,22 @@ export default function Transactions({ user }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [scannedData, setScannedData] = useState(null);
   const pageSize = 20;
 
   const refreshData = () => {
     setRefreshTrigger((prev) => prev + 1);
+  };
+
+  const handleScanComplete = (data) => {
+    setEditingTransaction(null);
+    setScannedData({
+      amount: data.amount,
+      description: data.description,
+      date: data.date,
+    });
+    setIsModalOpen(true);
   };
 
   // Debounce para el buscador por texto
@@ -82,13 +95,27 @@ export default function Transactions({ user }) {
             Registra y administra todos tus ingresos y egresos de forma segura.
           </p>
         </div>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 bg-(--primary-color) text-white font-semibold py-2.5 px-5 rounded-xl transition-all duration-300 ease-in-out hover:opacity-90 active:scale-[0.99] shadow-[0_4px_12px_rgba(0,82,204,0.15)] hover:shadow-[0_6px_20px_rgba(0,82,204,0.25)] cursor-pointer shrink-0"
-        >
-          <IconPlus size={18} className="shrink-0" />
-          <span>Nuevo Movimiento</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsScannerOpen(true)}
+            className="flex items-center gap-2 bg-(--sidebar-link-hover-bg) hover:bg-(--primary-color)/10 text-(--primary-color) font-semibold py-2.5 px-4 rounded-xl transition-all duration-300 ease-in-out cursor-pointer shrink-0 border border-(--primary-color)/20"
+          >
+            <IconScan size={18} className="shrink-0" />
+            <span>Escanear Factura</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setEditingTransaction(null);
+              setScannedData(null);
+              setIsModalOpen(true);
+            }}
+            className="flex items-center gap-2 bg-(--primary-color) text-white font-semibold py-2.5 px-5 rounded-xl transition-all duration-300 ease-in-out hover:opacity-90 active:scale-[0.99] shadow-[0_4px_12px_rgba(0,82,204,0.15)] hover:shadow-[0_6px_20px_rgba(0,82,204,0.25)] cursor-pointer shrink-0"
+          >
+            <IconPlus size={18} className="shrink-0" />
+            <span>Nuevo Movimiento</span>
+          </button>
+        </div>
       </header>
 
       <div
@@ -217,23 +244,34 @@ export default function Transactions({ user }) {
         onClose={() => {
           setIsModalOpen(false);
           setEditingTransaction(null);
+          setScannedData(null);
         }}
         title={editingTransaction ? "Editar Movimiento" : "Registrar Movimiento"}
       >
         <TransactionForm
           transactionToEdit={editingTransaction}
+          initialData={scannedData}
           onTransactionAdded={() => {
             refreshData();
             setIsModalOpen(false);
+            setScannedData(null);
           }}
           onTransactionUpdated={() => {
             refreshData();
             setIsModalOpen(false);
             setEditingTransaction(null);
+            setScannedData(null);
           }}
           user={user}
         />
       </Modal>
+
+      {/* Modal para Escaneo de Facturas */}
+      <ReceiptScanner
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onScanComplete={handleScanComplete}
+      />
     </div>
   );
 }

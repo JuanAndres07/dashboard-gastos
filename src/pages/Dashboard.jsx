@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { TransactionForm } from "../components/TransactionForm";
+import ReceiptScanner from "../components/ReceiptScanner";
 import { useDashboard } from "../hooks/useDashboard";
 import { formatCurrency, parseDate } from "../utilities/formatters";
 import { Link } from "react-router-dom";
@@ -17,6 +19,7 @@ import {
   IconChevronRight,
   IconCreditCard,
   IconPlus,
+  IconScan,
 } from "@tabler/icons-react";
 
 export default function Dashboard({ user }) {
@@ -44,6 +47,17 @@ export default function Dashboard({ user }) {
     evolutionChartData,
     evolutionChartOptions,
   } = useDashboard(user);
+
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [scannedData, setScannedData] = useState(null);
+
+  const handleScanComplete = (data) => {
+    setScannedData({
+      amount: data.amount,
+      description: data.description,
+      date: data.date,
+    });
+  };
 
   return (
     <div className="w-full space-y-8 text-left transition-all duration-300">
@@ -378,10 +392,25 @@ export default function Dashboard({ user }) {
             className="w-full bg-(--settings-card-bg) rounded-2xl p-6 transition-all duration-300"
             style={{ border: "var(--card-border)" }}
           >
-            <h3 className="text-lg font-bold text-(--headings-color) mb-4">
-              Nueva Transacción
-            </h3>
-            <TransactionForm onTransactionAdded={refreshData} user={user} />
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-(--headings-color)">
+                Nueva Transacción
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsScannerOpen(true)}
+                className="flex items-center gap-1.5 text-xs font-bold text-(--primary-color) bg-(--sidebar-link-hover-bg) hover:bg-(--primary-color)/10 px-3 py-1.5 rounded-xl transition-all duration-200 cursor-pointer"
+                title="Escanear factura o recibo"
+              >
+                <IconScan size={16} />
+                <span>Escanear Factura</span>
+              </button>
+            </div>
+            <TransactionForm
+              onTransactionAdded={refreshData}
+              user={user}
+              initialData={scannedData}
+            />
           </div>
 
           {/* Card Estado de Presupuestos */}
@@ -577,6 +606,13 @@ export default function Dashboard({ user }) {
           </div>
         </div>
       </div>
+
+      {/* Modal para escaneo de facturas */}
+      <ReceiptScanner
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onScanComplete={handleScanComplete}
+      />
     </div>
   );
 }
