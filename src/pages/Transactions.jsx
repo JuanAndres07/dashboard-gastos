@@ -9,6 +9,9 @@ import { Pagination } from "../components/Pagination";
 import Modal from "../components/Modal";
 import Select from "../components/Select";
 import DateInput from "../components/DateInput";
+import { supabase } from "../lib/supabase";
+import { toast } from "sonner";
+import { translateSupabaseError } from "../utilities/supabaseErrors";
 
 export default function Transactions({ user }) {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -28,15 +31,41 @@ export default function Transactions({ user }) {
     setRefreshTrigger((prev) => prev + 1);
   };
 
-  const handleScanComplete = (data) => {
-    setEditingTransaction(null);
-    setScannedData({
-      amount: data.amount,
-      description: data.description,
-      date: data.date,
-    });
-    setIsModalOpen(true);
+  const handleScanComplete = async (data) => {
+    if (data.saveMode === "multiple" && data.items && data.items.length > 0) {
+      const transactionsToInsert = data.items.map((item) => ({
+        amount: item.amount,
+        note: item.description,
+        category_id: item.categoryId || null,
+        user_id: user.id,
+        type: "expense",
+        transaction_date: data.date || new Date().toISOString().split("T")[0],
+      }));
+
+      const { error } = await supabase.from("Transaction").insert(transactionsToInsert);
+
+      if (error) {
+        toast.error("Error al registrar los productos: " + translateSupabaseError(error));
+      } else {
+        toast.success(`${transactionsToInsert.length} productos registrados como gastos independientes`);
+        refreshData();
+      }
+    } else {
+      setEditingTransaction(null);
+      const notesSummary =
+        data.items && data.items.length > 0
+          ? `${data.description} [${data.items.map((i) => `${i.description} ($${i.amount})`).join(", ")}]`
+          : data.description;
+
+      setScannedData({
+        amount: data.amount,
+        description: notesSummary,
+        date: data.date,
+      });
+      setIsModalOpen(true);
+    }
   };
+
 
   // Debounce para el buscador por texto
   useEffect(() => {
@@ -271,7 +300,9 @@ export default function Transactions({ user }) {
         isOpen={isScannerOpen}
         onClose={() => setIsScannerOpen(false)}
         onScanComplete={handleScanComplete}
+        user={user}
       />
     </div>
   );
 }
+

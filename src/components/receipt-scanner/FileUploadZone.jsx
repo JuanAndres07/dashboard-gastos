@@ -8,19 +8,40 @@ export function FileUploadZone({ onFileSelect }) {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (!file.type.startsWith("image/")) {
+      alert("Por favor selecciona un archivo de imagen válido (PNG, JPG, JPEG, etc).");
+      e.target.value = "";
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (event) => {
       if (event.target?.result) {
         onFileSelect(event.target.result);
       }
+      e.target.value = "";
+    };
+    reader.onerror = () => {
+      alert("Error al leer el archivo seleccionado.");
+      e.target.value = "";
     };
     reader.readAsDataURL(file);
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      fileInputRef.current?.click();
+    }
+  };
+
   return (
     <div
+      role="button"
+      tabIndex={0}
       onClick={() => fileInputRef.current?.click()}
-      className="w-full aspect-4/3 border-2 border-dashed border-(--primary-color)/40 hover:border-(--primary-color) bg-(--bg-light) rounded-2xl flex flex-col items-center justify-center p-6 text-center cursor-pointer transition-all duration-300 group"
+      onKeyDown={handleKeyDown}
+      className="w-full aspect-4/3 border-2 border-dashed border-(--primary-color)/40 hover:border-(--primary-color) bg-(--bg-light) rounded-2xl flex flex-col items-center justify-center p-6 text-center cursor-pointer transition-all duration-300 group focus:outline-none focus:ring-2 focus:ring-(--primary-color)"
     >
       <input
         ref={fileInputRef}
@@ -42,3 +63,4 @@ export function FileUploadZone({ onFileSelect }) {
     </div>
   );
 }
+

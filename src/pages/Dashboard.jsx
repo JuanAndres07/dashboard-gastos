@@ -7,6 +7,9 @@ import { Link } from "react-router-dom";
 import iconDictionary from "../utilities/iconDictionary";
 import { Line } from "react-chartjs-2";
 import "../lib/chartConfig";
+import { supabase } from "../lib/supabase";
+import { toast } from "sonner";
+import { translateSupabaseError } from "../utilities/supabaseErrors";
 import {
   IconWallet,
   IconTrendingUp,
@@ -25,6 +28,7 @@ import {
 export default function Dashboard({ user }) {
   const {
     profile,
+    theme,
     isRefreshing,
     loadingSummary,
     summary,
@@ -33,14 +37,17 @@ export default function Dashboard({ user }) {
     loadingTransactions,
     viewMode,
     setViewMode,
+    sixMonthsData,
     loadingSixMonths,
+    budgets,
+    loadingBudgets,
+    subscriptions,
+    loadingSubscriptions,
     getGreeting,
     getFormattedDate,
     refreshData,
     sortedBudgets,
-    loadingBudgets,
     upcomingSubscriptions,
-    loadingSubscriptions,
     savingsRate,
     getRelativeDays,
     getCategoryColor,
@@ -51,12 +58,37 @@ export default function Dashboard({ user }) {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [scannedData, setScannedData] = useState(null);
 
-  const handleScanComplete = (data) => {
-    setScannedData({
-      amount: data.amount,
-      description: data.description,
-      date: data.date,
-    });
+  const handleScanComplete = async (data) => {
+    if (data.saveMode === "multiple" && data.items && data.items.length > 0) {
+      const transactionsToInsert = data.items.map((item) => ({
+        amount: item.amount,
+        note: item.description,
+        category_id: item.categoryId || null,
+        user_id: user.id,
+        type: "expense",
+        transaction_date: data.date || new Date().toISOString().split("T")[0],
+      }));
+
+      const { error } = await supabase.from("Transaction").insert(transactionsToInsert);
+
+      if (error) {
+        toast.error("Error al registrar los productos: " + translateSupabaseError(error));
+      } else {
+        toast.success(`${transactionsToInsert.length} productos registrados como gastos independientes`);
+        refreshData();
+      }
+    } else {
+      const notesSummary =
+        data.items && data.items.length > 0
+          ? `${data.description} [${data.items.map((i) => `${i.description} ($${i.amount})`).join(", ")}]`
+          : data.description;
+
+      setScannedData({
+        amount: data.amount,
+        description: notesSummary,
+        date: data.date,
+      });
+    }
   };
 
   return (
@@ -407,7 +439,10 @@ export default function Dashboard({ user }) {
               </button>
             </div>
             <TransactionForm
-              onTransactionAdded={refreshData}
+              onTransactionAdded={() => {
+                refreshData();
+                setScannedData(null);
+              }}
               user={user}
               initialData={scannedData}
             />
@@ -612,7 +647,9 @@ export default function Dashboard({ user }) {
         isOpen={isScannerOpen}
         onClose={() => setIsScannerOpen(false)}
         onScanComplete={handleScanComplete}
+        user={user}
       />
     </div>
   );
 }
+
