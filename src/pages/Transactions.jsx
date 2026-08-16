@@ -1,7 +1,7 @@
 import { TransactionTable } from "../components/TransactionTable";
 import { TransactionForm } from "../components/TransactionForm";
-import ReceiptScanner from "../components/ReceiptScanner";
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useTransactions } from "../hooks/useTransactions";
 import { useCategories } from "../hooks/useCategories";
 import { IconPlus, IconSearch, IconScan } from "@tabler/icons-react";
@@ -9,9 +9,6 @@ import { Pagination } from "../components/Pagination";
 import Modal from "../components/Modal";
 import Select from "../components/Select";
 import DateInput from "../components/DateInput";
-import { supabase } from "../lib/supabase";
-import { toast } from "sonner";
-import { translateSupabaseError } from "../utilities/supabaseErrors";
 
 export default function Transactions({ user }) {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -23,47 +20,10 @@ export default function Transactions({ user }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
-  const [isScannerOpen, setIsScannerOpen] = useState(false);
-  const [scannedData, setScannedData] = useState(null);
   const pageSize = 20;
 
   const refreshData = () => {
     setRefreshTrigger((prev) => prev + 1);
-  };
-
-  const handleScanComplete = async (data) => {
-    if (data.saveMode === "multiple" && data.items && data.items.length > 0) {
-      const transactionsToInsert = data.items.map((item) => ({
-        amount: item.amount,
-        note: item.description,
-        category_id: item.categoryId || null,
-        user_id: user.id,
-        type: "expense",
-        transaction_date: data.date || new Date().toISOString().split("T")[0],
-      }));
-
-      const { error } = await supabase.from("Transaction").insert(transactionsToInsert);
-
-      if (error) {
-        toast.error("Error al registrar los productos: " + translateSupabaseError(error));
-      } else {
-        toast.success(`${transactionsToInsert.length} productos registrados como gastos independientes`);
-        refreshData();
-      }
-    } else {
-      setEditingTransaction(null);
-      const notesSummary =
-        data.items && data.items.length > 0
-          ? `${data.description} [${data.items.map((i) => `${i.description} ($${i.amount})`).join(", ")}]`
-          : data.description;
-
-      setScannedData({
-        amount: data.amount,
-        description: notesSummary,
-        date: data.date,
-      });
-      setIsModalOpen(true);
-    }
   };
 
 
@@ -125,18 +85,17 @@ export default function Transactions({ user }) {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => setIsScannerOpen(true)}
+          <Link
+            to="/scan"
             className="flex items-center gap-2 bg-(--sidebar-link-hover-bg) hover:bg-(--primary-color)/10 text-(--primary-color) font-semibold py-2.5 px-4 rounded-xl transition-all duration-300 ease-in-out cursor-pointer shrink-0 border border-(--primary-color)/20"
           >
             <IconScan size={18} className="shrink-0" />
             <span>Escanear Factura</span>
-          </button>
+          </Link>
 
           <button
             onClick={() => {
               setEditingTransaction(null);
-              setScannedData(null);
               setIsModalOpen(true);
             }}
             className="flex items-center gap-2 bg-(--primary-color) text-white font-semibold py-2.5 px-5 rounded-xl transition-all duration-300 ease-in-out hover:opacity-90 active:scale-[0.99] shadow-[0_4px_12px_rgba(0,82,204,0.15)] hover:shadow-[0_6px_20px_rgba(0,82,204,0.25)] cursor-pointer shrink-0"
@@ -273,35 +232,23 @@ export default function Transactions({ user }) {
         onClose={() => {
           setIsModalOpen(false);
           setEditingTransaction(null);
-          setScannedData(null);
         }}
         title={editingTransaction ? "Editar Movimiento" : "Registrar Movimiento"}
       >
         <TransactionForm
           transactionToEdit={editingTransaction}
-          initialData={scannedData}
           onTransactionAdded={() => {
             refreshData();
             setIsModalOpen(false);
-            setScannedData(null);
           }}
           onTransactionUpdated={() => {
             refreshData();
             setIsModalOpen(false);
             setEditingTransaction(null);
-            setScannedData(null);
           }}
           user={user}
         />
       </Modal>
-
-      {/* Modal para Escaneo de Facturas */}
-      <ReceiptScanner
-        isOpen={isScannerOpen}
-        onClose={() => setIsScannerOpen(false)}
-        onScanComplete={handleScanComplete}
-        user={user}
-      />
     </div>
   );
 }

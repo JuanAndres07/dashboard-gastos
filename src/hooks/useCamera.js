@@ -6,21 +6,31 @@ import { useState, useRef, useEffect, useCallback } from "react";
 export function useCamera({ isActive, onCapture }) {
   const [facingMode, setFacingMode] = useState("environment");
   const [cameraError, setCameraError] = useState(null);
+  const [cameraReady, setCameraReady] = useState(false);
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
+  const cancelledRef = useRef(false);
 
   const stopCamera = useCallback(() => {
+    cancelledRef.current = true;
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
+    setCameraReady(false);
+  }, []);
+
+  const handleLoadedMetadata = useCallback(() => {
+    setCameraReady(true);
   }, []);
 
   const startCamera = useCallback(async () => {
     stopCamera();
+    cancelledRef.current = false;
     setCameraError(null);
+    setCameraReady(false);
 
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -35,11 +45,17 @@ export function useCamera({ isActive, onCapture }) {
         },
       });
 
+      if (cancelledRef.current) {
+        stream.getTracks().forEach((track) => track.stop());
+        return;
+      }
+
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
     } catch (err) {
+      if (cancelledRef.current) return;
       console.warn("No se pudo iniciar la cámara:", err);
       setCameraError(
         "No se pudo acceder a la cámara. Puedes usar la opción de subir una foto."
@@ -63,7 +79,9 @@ export function useCamera({ isActive, onCapture }) {
   };
 
   const capturePhoto = () => {
-    if (!videoRef.current) return null;
+    if (!videoRef.current || !cameraReady || videoRef.current.videoWidth === 0) {
+      return null;
+    }
     const video = videoRef.current;
     const canvas = canvasRef.current || document.createElement("canvas");
     canvasRef.current = canvas;
@@ -87,10 +105,12 @@ export function useCamera({ isActive, onCapture }) {
     videoRef,
     canvasRef,
     cameraError,
+    cameraReady,
     facingMode,
     startCamera,
     stopCamera,
     toggleFacingMode,
     capturePhoto,
+    handleLoadedMetadata,
   };
 }

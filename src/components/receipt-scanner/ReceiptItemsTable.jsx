@@ -1,5 +1,16 @@
-import { IconTrash, IconPlus, IconReceipt, IconListCheck, IconInfoCircle } from "@tabler/icons-react";
+import { useMemo } from "react";
+import {
+  IconTrash,
+  IconPlus,
+  IconReceipt,
+  IconListCheck,
+  IconSparkles,
+} from "@tabler/icons-react";
 import Select from "../Select";
+import { generateId, sumItems } from "../../utilities/scanTotals";
+import { SAVE_MODES } from "../../utilities/scanConstants";
+import { autoAssignCategories } from "../../utilities/categorySuggester";
+import { toast } from "sonner";
 
 export function ReceiptItemsTable({
   items,
@@ -7,9 +18,8 @@ export function ReceiptItemsTable({
   saveMode,
   onSaveModeChange,
   categories = [],
-  subtotal = null,
-  taxAmount = null,
-  totalAmount = null,
+  singleCategoryId,
+  onSingleCategoryIdChange,
 }) {
   const handleItemChange = (id, field, value) => {
     const updated = items.map((item) => {
@@ -23,7 +33,7 @@ export function ReceiptItemsTable({
 
   const handleAddItem = () => {
     const newItem = {
-      id: Math.random().toString(36).substring(2, 9),
+      id: generateId(),
       description: "",
       amount: "",
       categoryId: "",
@@ -35,121 +45,212 @@ export function ReceiptItemsTable({
     onItemsChange(items.filter((item) => item.id !== id));
   };
 
-  const calculateSum = () => {
-    const sum = items.reduce((acc, item) => {
-      const val = parseFloat(item.amount);
-      return acc + (isNaN(val) ? 0 : val);
-    }, 0);
-    return sum.toFixed(2);
+  const handleAutoCategorize = () => {
+    const prevCategoryMap = new Map(items.map((item) => [item.id, item.categoryId]));
+    const updated = autoAssignCategories(items, categories);
+    const assignedCount = updated.filter(
+      (item) => !prevCategoryMap.get(item.id) && item.categoryId,
+    ).length;
+    onItemsChange(updated);
+
+    if (assignedCount > 0) {
+      toast.success(`Se asignaron automáticamente ${assignedCount} categorías`);
+    } else {
+      toast.info(
+        "No se encontraron nuevas sugerencias para los productos actuales",
+      );
+    }
   };
 
-  const expenseCategories = categories.filter((c) => c.type === "expense");
-  const categoryOptions = expenseCategories.map((cat) => ({
-    value: cat.id,
-    label: cat.name,
-  }));
+  const categoryOptions = useMemo(() => {
+    return categories
+      .filter((c) => c.type === "expense")
+      .map((cat) => ({
+        value: cat.id,
+        label: cat.name,
+      }));
+  }, [categories]);
 
-  const itemsSum = calculateSum();
+  const itemsSum = sumItems(items).toFixed(2);
 
   return (
-    <div className="space-y-4 text-left">
-      {/* Selector de Modalidad de Guardado */}
-      <div className="space-y-1.5">
+    <div className="space-y-5 text-left">
+      {/* Modalidad de Registro */}
+      <div className="space-y-2">
         <label className="text-xs font-semibold text-(--headings-color)">
-          Modalidad de Registro
+          ¿Cómo deseas registrar este gasto?
         </label>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button
             type="button"
-            onClick={() => onSaveModeChange("single")}
-            className={`p-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
-              saveMode === "single"
-                ? "bg-(--primary-color)/10 border-(--primary-color) text-(--primary-color) shadow-xs"
-                : "border-(--sidebar-border) bg-(--bg-light) text-(--text-color) hover:text-(--headings-color)"
+            onClick={() => onSaveModeChange(SAVE_MODES.SINGLE)}
+            className={`p-3 rounded-xl border text-xs font-semibold flex items-center justify-start gap-3 transition-all cursor-pointer ${
+              saveMode === SAVE_MODES.SINGLE
+                ? "bg-(--primary-color)/5 border-(--primary-color) text-(--primary-color) shadow-2xs"
+                : "border-(--sidebar-border) bg-transparent text-(--text-color) hover:text-(--headings-color) hover:border-(--headings-color)/30"
             }`}
           >
-            <IconReceipt size={18} />
-            <span>Factura Completa (1 Gasto)</span>
+            <div
+              className={`p-2 rounded-lg ${
+                saveMode === SAVE_MODES.SINGLE
+                  ? "bg-(--primary-color) text-white"
+                  : "bg-(--bg-light) text-(--text-color)"
+              }`}
+            >
+              <IconReceipt size={18} />
+            </div>
+            <div className="text-left">
+              <div className="font-bold">Factura Completa (1 Gasto)</div>
+              <div className="text-[11px] font-normal text-(--text-color)/80">
+                Guarda el monto total e incluye el detalle en la nota.
+              </div>
+            </div>
           </button>
 
           <button
             type="button"
-            onClick={() => onSaveModeChange("multiple")}
-            className={`p-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
-              saveMode === "multiple"
-                ? "bg-(--primary-color)/10 border-(--primary-color) text-(--primary-color) shadow-xs"
-                : "border-(--sidebar-border) bg-(--bg-light) text-(--text-color) hover:text-(--headings-color)"
+            onClick={() => onSaveModeChange(SAVE_MODES.MULTIPLE)}
+            className={`p-3 rounded-xl border text-xs font-semibold flex items-center justify-start gap-3 transition-all cursor-pointer ${
+              saveMode === SAVE_MODES.MULTIPLE
+                ? "bg-(--primary-color)/5 border-(--primary-color) text-(--primary-color) shadow-2xs"
+                : "border-(--sidebar-border) bg-transparent text-(--text-color) hover:text-(--headings-color) hover:border-(--headings-color)/30"
             }`}
           >
-            <IconListCheck size={18} />
-            <span>Desglose por Producto</span>
+            <div
+              className={`p-2 rounded-lg ${
+                saveMode === SAVE_MODES.MULTIPLE
+                  ? "bg-(--primary-color) text-white"
+                  : "bg-(--bg-light) text-(--text-color)"
+              }`}
+            >
+              <IconListCheck size={18} />
+            </div>
+            <div className="text-left">
+              <div className="font-bold">Desglose por Producto</div>
+              <div className="text-[11px] font-normal text-(--text-color)/80">
+                Registra cada producto como un gasto independiente.
+              </div>
+            </div>
           </button>
         </div>
       </div>
 
-      {/* Tabla Resumen de Productos */}
-      <div className="space-y-2">
-        <div className="flex justify-between items-center">
-          <span className="text-xs font-semibold text-(--headings-color)">
-            Productos Detectados ({items.length})
-          </span>
-          <span className="text-xs font-bold text-(--primary-color)">
-            Suma: ${itemsSum}
+      {/* Selector de categoría única si está en modo SINGLE */}
+      {saveMode === SAVE_MODES.SINGLE && (
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold text-(--headings-color) block">
+            Categoría general del comprobante
+          </label>
+          <Select
+            value={singleCategoryId || ""}
+            onChange={onSingleCategoryIdChange}
+            options={categoryOptions}
+            placeholder="Selecciona una categoría..."
+            btnClassName="!bg-(--bg-light) h-10.5 py-0 px-3.5 text-xs font-semibold rounded-xl"
+          />
+        </div>
+      )}
+
+      {/* Cabecera y Lista de Productos */}
+      <div className="space-y-3 pt-1">
+        <div className="flex flex-wrap justify-between items-center gap-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-(--headings-color)">
+              Productos Detectados ({items.length})
+            </span>
+            {saveMode === SAVE_MODES.MULTIPLE && items.length > 0 && (
+              <button
+                type="button"
+                onClick={handleAutoCategorize}
+                className="px-2.5 py-1 bg-(--primary-color)/10 hover:bg-(--primary-color)/20 text-(--primary-color) text-[11px] font-semibold rounded-lg flex items-center gap-1 transition-colors cursor-pointer border border-(--primary-color)/20"
+                title="Detectar categorías automáticamente según los nombres"
+              >
+                <IconSparkles size={13} />
+                <span>Auto-categorizar</span>
+              </button>
+            )}
+          </div>
+
+          <span className="text-xs font-bold text-(--headings-color)">
+            Suma:{" "}
+            <span className="text-(--primary-color) text-sm font-extrabold">
+              ${itemsSum}
+            </span>
           </span>
         </div>
 
         {/* Encabezados de columna */}
         {items.length > 0 && (
-          <div className="hidden sm:flex gap-2 px-3 text-[11px] font-semibold text-(--text-color)/80 uppercase tracking-wider">
+          <div className="hidden sm:flex gap-2 px-1 text-[11px] font-semibold text-(--text-color)/80 uppercase tracking-wider">
             <span className="flex-1">Descripción del Producto</span>
             <span className="w-32">Monto ($)</span>
-            {saveMode === "multiple" && <span className="w-40">Categoría</span>}
+            {saveMode === SAVE_MODES.MULTIPLE && (
+              <span className="w-44">Categoría</span>
+            )}
             <span className="w-8 text-center"></span>
           </div>
         )}
 
-        <div className="max-h-64 sm:max-h-72 overflow-y-auto space-y-2 pr-1 border border-(--sidebar-border) p-2 rounded-xl bg-(--bg-light)/50">
+        {/* Lista de productos sin cajas grises anidadas */}
+        <div className="max-h-90 overflow-y-auto space-y-2.5 pr-1">
           {items.length === 0 ? (
-            <p className="text-xs text-center py-6 text-(--text-color)">
-              No se detectaron líneas de producto. Haz clic en "Añadir Producto" para ingresar uno manualmente.
-            </p>
+            <div className="text-center py-8 text-(--text-color) space-y-2 border border-dashed border-(--sidebar-border) rounded-2xl">
+              <p className="text-xs">
+                No se encontraron líneas de productos individuales.
+              </p>
+              <button
+                type="button"
+                onClick={handleAddItem}
+                className="text-xs font-semibold text-(--primary-color) hover:underline cursor-pointer"
+              >
+                + Añadir el primer producto manualmente
+              </button>
+            </div>
           ) : (
             items.map((item, index) => (
               <div
                 key={item.id || index}
-                className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center bg-(--settings-card-bg) p-2.5 rounded-xl border border-(--sidebar-border) shadow-2xs"
+                className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center"
               >
                 {/* Nombre de Producto */}
                 <input
                   type="text"
                   placeholder="Nombre del producto"
                   value={item.description}
-                  onChange={(e) => handleItemChange(item.id, "description", e.target.value)}
-                  className="flex-1 min-w-0 px-3 py-2 bg-(--bg-light) border border-(--sidebar-border) rounded-lg text-xs font-medium text-(--headings-color) focus:outline-none focus:border-(--primary-color)"
+                  onChange={(e) =>
+                    handleItemChange(item.id, "description", e.target.value)
+                  }
+                  className="flex-1 min-w-0 h-10 px-3.5 bg-(--bg-light) border border-(--sidebar-border) rounded-xl text-xs font-medium text-(--headings-color) focus:outline-none focus:border-(--primary-color)"
                 />
 
                 {/* Monto */}
-                <div className="w-full sm:w-36 relative flex items-center shrink-0">
-                  <span className="absolute left-2.5 text-xs font-semibold text-(--text-color)">$</span>
+                <div className="w-full sm:w-32 relative flex items-center shrink-0">
+                  <span className="absolute left-3 text-xs font-semibold text-(--text-color)">
+                    $
+                  </span>
                   <input
                     type="number"
                     step="0.01"
                     placeholder="0.00"
                     value={item.amount}
-                    onChange={(e) => handleItemChange(item.id, "amount", e.target.value)}
-                    className="w-full pl-6 pr-2 py-2 bg-(--bg-light) border border-(--sidebar-border) rounded-lg text-xs font-semibold text-(--headings-color) focus:outline-none focus:border-(--primary-color)"
+                    onChange={(e) =>
+                      handleItemChange(item.id, "amount", e.target.value)
+                    }
+                    className="w-full h-10 pl-7 pr-3 bg-(--bg-light) border border-(--sidebar-border) rounded-xl text-xs font-semibold text-(--headings-color) focus:outline-none focus:border-(--primary-color)"
                   />
                 </div>
 
                 {/* Categoría si es Desglose por Producto */}
-                {saveMode === "multiple" && (
-                  <div className="w-full sm:w-40 shrink-0">
+                {saveMode === SAVE_MODES.MULTIPLE && (
+                  <div className="w-full sm:w-44 shrink-0">
                     <Select
                       value={item.categoryId || ""}
-                      onChange={(val) => handleItemChange(item.id, "categoryId", val)}
+                      onChange={(val) =>
+                        handleItemChange(item.id, "categoryId", val)
+                      }
                       options={categoryOptions}
                       placeholder="Categoría..."
-                      btnClassName="py-1.5 pl-3 pr-7 text-xs rounded-lg min-h-[34px]"
+                      btnClassName="!bg-(--bg-light) h-10 py-0 pl-3 pr-7 text-xs font-medium rounded-xl"
                     />
                   </div>
                 )}
@@ -158,7 +259,7 @@ export function ReceiptItemsTable({
                 <button
                   type="button"
                   onClick={() => handleDeleteItem(item.id)}
-                  className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors cursor-pointer self-end sm:self-center shrink-0"
+                  className="p-2 text-red-500 hover:text-red-700 hover:bg-red-500/10 rounded-xl transition-colors cursor-pointer self-end sm:self-center shrink-0"
                   title="Eliminar producto"
                 >
                   <IconTrash size={16} />
@@ -168,43 +269,15 @@ export function ReceiptItemsTable({
           )}
         </div>
 
-        {/* Botón para Añadir Producto */}
+        {/* Botón para Añadir Producto Manual */}
         <button
           type="button"
           onClick={handleAddItem}
           className="w-full py-2.5 px-3 border border-dashed border-(--primary-color)/50 text-(--primary-color) hover:bg-(--primary-color)/5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
         >
           <IconPlus size={16} />
-          <span>Añadir Producto</span>
+          <span>Añadir Producto Manualmente</span>
         </button>
-
-        {/* Resumen de Desglose Fiscal (Subtotal, IVA, Total) si fue detectado */}
-        {(subtotal || taxAmount) && (
-          <div className="p-3 bg-(--bg-light) rounded-xl border border-(--sidebar-border) space-y-1.5 text-xs">
-            <div className="flex items-center gap-1.5 font-semibold text-(--headings-color) pb-1 border-b border-(--sidebar-border)/40">
-              <IconInfoCircle size={14} className="text-(--primary-color)" />
-              <span>Desglose Fiscal Detectado</span>
-            </div>
-            {subtotal && (
-              <div className="flex justify-between text-(--text-color)">
-                <span>Subtotal / Base Imponible:</span>
-                <span className="font-semibold">${subtotal}</span>
-              </div>
-            )}
-            {taxAmount && (
-              <div className="flex justify-between text-(--text-color)">
-                <span>IVA / Impuestos:</span>
-                <span className="font-semibold">${taxAmount}</span>
-              </div>
-            )}
-            {totalAmount && (
-              <div className="flex justify-between font-bold text-(--headings-color) pt-1 border-t border-(--sidebar-border)/40">
-                <span>Total Factura:</span>
-                <span className="text-(--primary-color)">${totalAmount}</span>
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );

@@ -1,15 +1,10 @@
-import { useState } from "react";
 import { TransactionForm } from "../components/TransactionForm";
-import ReceiptScanner from "../components/ReceiptScanner";
 import { useDashboard } from "../hooks/useDashboard";
 import { formatCurrency, parseDate } from "../utilities/formatters";
 import { Link } from "react-router-dom";
 import iconDictionary from "../utilities/iconDictionary";
 import { Line } from "react-chartjs-2";
 import "../lib/chartConfig";
-import { supabase } from "../lib/supabase";
-import { toast } from "sonner";
-import { translateSupabaseError } from "../utilities/supabaseErrors";
 import {
   IconWallet,
   IconTrendingUp,
@@ -55,42 +50,6 @@ export default function Dashboard({ user }) {
     evolutionChartOptions,
   } = useDashboard(user);
 
-  const [isScannerOpen, setIsScannerOpen] = useState(false);
-  const [scannedData, setScannedData] = useState(null);
-
-  const handleScanComplete = async (data) => {
-    if (data.saveMode === "multiple" && data.items && data.items.length > 0) {
-      const transactionsToInsert = data.items.map((item) => ({
-        amount: item.amount,
-        note: item.description,
-        category_id: item.categoryId || null,
-        user_id: user.id,
-        type: "expense",
-        transaction_date: data.date || new Date().toISOString().split("T")[0],
-      }));
-
-      const { error } = await supabase.from("Transaction").insert(transactionsToInsert);
-
-      if (error) {
-        toast.error("Error al registrar los productos: " + translateSupabaseError(error));
-      } else {
-        toast.success(`${transactionsToInsert.length} productos registrados como gastos independientes`);
-        refreshData();
-      }
-    } else {
-      const notesSummary =
-        data.items && data.items.length > 0
-          ? `${data.description} [${data.items.map((i) => `${i.description} ($${i.amount})`).join(", ")}]`
-          : data.description;
-
-      setScannedData({
-        amount: data.amount,
-        description: notesSummary,
-        date: data.date,
-      });
-    }
-  };
-
   return (
     <div className="w-full space-y-8 text-left transition-all duration-300">
       {/* Cabecera Principal */}
@@ -103,17 +62,19 @@ export default function Dashboard({ user }) {
             {getFormattedDate()} • Resumen de tu actividad financiera
           </p>
         </div>
-        <button
-          onClick={refreshData}
-          disabled={isRefreshing}
-          className="flex items-center gap-2 bg-(--settings-card-bg) border border-(--sidebar-border) text-(--text-color) hover:text-(--sidebar-text-hover) hover:bg-(--sidebar-link-hover-bg) font-semibold py-2.5 px-4 rounded-xl transition-all duration-300 ease-in-out cursor-pointer active:scale-[0.98] disabled:opacity-50"
-        >
-          <IconRefresh
-            size={18}
-            className={isRefreshing ? "animate-spin" : ""}
-          />
-          <span className="text-sm">Actualizar datos</span>
-        </button>
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <button
+            onClick={refreshData}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 bg-(--settings-card-bg) border border-(--sidebar-border) text-(--text-color) hover:text-(--sidebar-text-hover) hover:bg-(--sidebar-link-hover-bg) font-semibold py-2.5 px-4 rounded-xl transition-all duration-300 ease-in-out cursor-pointer active:scale-[0.98] disabled:opacity-50"
+          >
+            <IconRefresh
+              size={18}
+              className={isRefreshing ? "animate-spin" : ""}
+            />
+            <span className="text-sm">Actualizar datos</span>
+          </button>
+        </div>
       </header>
 
       {/* Tarjetas de Resumen KPI */}
@@ -383,10 +344,12 @@ export default function Dashboard({ user }) {
                           </span>
                           <span className="text-[10px] font-bold text-(--text-color)/70 block mt-0.5 uppercase tracking-wide">
                             {t.Category?.name || "General"} •{" "}
-                            {parseDate(t.transaction_date || t.created_at).toLocaleDateString(
-                              "es-ES",
-                              { month: "short", day: "numeric" },
-                            )}
+                            {parseDate(
+                              t.transaction_date || t.created_at,
+                            ).toLocaleDateString("es-ES", {
+                              month: "short",
+                              day: "numeric",
+                            })}
                           </span>
                         </div>
                       </div>
@@ -428,24 +391,16 @@ export default function Dashboard({ user }) {
               <h3 className="text-lg font-bold text-(--headings-color)">
                 Nueva Transacción
               </h3>
-              <button
-                type="button"
-                onClick={() => setIsScannerOpen(true)}
+              <Link
+                to="/scan"
                 className="flex items-center gap-1.5 text-xs font-bold text-(--primary-color) bg-(--sidebar-link-hover-bg) hover:bg-(--primary-color)/10 px-3 py-1.5 rounded-xl transition-all duration-200 cursor-pointer"
                 title="Escanear factura o recibo"
               >
                 <IconScan size={16} />
                 <span>Escanear Factura</span>
-              </button>
+              </Link>
             </div>
-            <TransactionForm
-              onTransactionAdded={() => {
-                refreshData();
-                setScannedData(null);
-              }}
-              user={user}
-              initialData={scannedData}
-            />
+            <TransactionForm onTransactionAdded={refreshData} user={user} />
           </div>
 
           {/* Card Estado de Presupuestos */}
@@ -601,10 +556,12 @@ export default function Dashboard({ user }) {
                             className={`text-[10px] font-bold block mt-0.5 ${isDueSoon ? "text-(--danger-color)" : "text-(--text-color)/70"}`}
                           >
                             {relativeDays} (
-                            {parseDate(sub.next_payment_date?.split("T")[0]).toLocaleDateString(
-                              "es-ES",
-                              { month: "short", day: "numeric" },
-                            )}
+                            {parseDate(
+                              sub.next_payment_date?.split("T")[0],
+                            ).toLocaleDateString("es-ES", {
+                              month: "short",
+                              day: "numeric",
+                            })}
                             )
                           </span>
                         </div>
@@ -641,15 +598,6 @@ export default function Dashboard({ user }) {
           </div>
         </div>
       </div>
-
-      {/* Modal para escaneo de facturas */}
-      <ReceiptScanner
-        isOpen={isScannerOpen}
-        onClose={() => setIsScannerOpen(false)}
-        onScanComplete={handleScanComplete}
-        user={user}
-      />
     </div>
   );
 }
-

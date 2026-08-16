@@ -1,3 +1,5 @@
+import { generateId, sumItems } from "./scanTotals";
+
 /**
  * Analizador y extractor estructurado para recibos y facturas fiscales.
  * Diseñado con alta tolerancia a variaciones de OCR, sufijos fiscales (E, G, *) y formatos multilínea.
@@ -18,7 +20,7 @@ function cleanText(str) {
 
 /**
  * Parsea un monto de texto a número flotante.
- * Maneja formatos: 1.234,56 / 1,234.56 / 1234,56 / 1234.56 / 50,00 / 50.00
+ * Maneja formatos: 1.234,56 / 1,234.56 / 1.234.56 / 1,234,56 / 1234,56 / 1234.56 / 50,00 / 50.00 / 1.000.000
  * @param {string} raw
  * @returns {number|null}
  */
@@ -28,22 +30,49 @@ export function parsePriceNumber(raw) {
   let str = raw.replace(/[^\d.,]/g, "").trim();
   if (!str) return null;
 
+  // Limpiar separadores repetidos consecutivos (ej. 12..50 -> 12.50, 12,,50 -> 12,50)
+  str = str.replace(/\.+/g, ".").replace(/,+/g, ",");
+
   if (str.includes(",") && str.includes(".")) {
     const lastComma = str.lastIndexOf(",");
     const lastDot = str.lastIndexOf(".");
     if (lastComma > lastDot) {
-      // 1.234,56 -> 1234.56
-      str = str.replace(/\./g, "").replace(",", ".");
+      // 1.234.567,89 -> 1234567.89
+      const integerPart = str.slice(0, lastComma).replace(/[.,]/g, "");
+      const decimalPart = str.slice(lastComma + 1).replace(/[.,]/g, "");
+      str = `${integerPart}.${decimalPart}`;
     } else {
-      // 1,234.56 -> 1234.56
-      str = str.replace(/,/g, "");
+      // 1,234,567.89 -> 1234567.89
+      const integerPart = str.slice(0, lastDot).replace(/[.,]/g, "");
+      const decimalPart = str.slice(lastDot + 1).replace(/[.,]/g, "");
+      str = `${integerPart}.${decimalPart}`;
     }
   } else if (str.includes(",")) {
     const parts = str.split(",");
     if (parts.length === 2 && parts[1].length <= 2) {
-      str = str.replace(",", ".");
+      // 50,00 / 1234,56 -> 1234.56
+      str = `${parts[0]}.${parts[1]}`;
+    } else if (parts.length > 2 && parts[parts.length - 1].length <= 2) {
+      // 1,234,56 -> 1234.56
+      const last = parts[parts.length - 1];
+      const rest = parts.slice(0, -1).join("");
+      str = `${rest}.${last}`;
     } else {
-      str = str.replace(/,/g, "");
+      // 1,000,000 -> 1000000
+      str = parts.join("");
+    }
+  } else if (str.includes(".")) {
+    const parts = str.split(".");
+    if (parts.length > 2) {
+      if (parts[parts.length - 1].length <= 2) {
+        // 1.234.56 / 1.000.00 -> 1234.56 / 1000.00
+        const last = parts[parts.length - 1];
+        const rest = parts.slice(0, -1).join("");
+        str = `${rest}.${last}`;
+      } else {
+        // 1.000.000 -> 1000000
+        str = parts.join("");
+      }
     }
   }
 
@@ -106,9 +135,9 @@ function extractMerchantName(lines) {
     // Ignorar si coincide con líneas no deseadas
     if (STRICT_EXCLUDE_PATTERNS.some((p) => p.test(line))) continue;
     // Ignorar si es solo números, fechas o caracteres especiales
-    if (/^[\d\s\-\.\/:]+$/.test(line)) continue;
+    if (/^[\d\s./:-]+$/.test(line)) continue;
 
-    const sanitized = line.replace(/[^\w\s\.\-&áéíóúÁÉÍÓÚñÑ]/g, "").trim();
+    const sanitized = line.replace(/[^\w\s.&áéíóúÁÉÍÓÚñÑ-]/g, "").trim();
     if (sanitized.length >= 3) {
       return sanitized;
     }
@@ -278,12 +307,12 @@ function extractReceiptItems(lines) {
             !STRICT_EXCLUDE_PATTERNS.some((p) => p.test(prevLine)) &&
             !/\b\d+[.,]\d{2}\b/.test(prevLine)
           ) {
-            desc = prevLine.replace(/[^\w\s\.\-&áéíóúÁÉÍÓÚñÑ]/g, "").trim();
+            desc = prevLine.replace(/[^\w\s.&áéíóúÁÉÍÓÚñÑ-]/g, "").trim();
           }
         }
 
         items.push({
-          id: Math.random().toString(36).substring(2, 9),
+          id: generateId(),
           description: desc,
           amount: lineTotal.toFixed(2),
           quantity: qty,
@@ -305,7 +334,7 @@ function extractReceiptItems(lines) {
         // La descripción es todo lo que está antes del número del precio
         const textBeforePrice = line.substring(0, lastMatch.index).trim();
         let itemDesc = textBeforePrice
-          .replace(/[^\w\s\.\-&áéíóúÁÉÍÓÚñÑ]/g, "")
+          .replace(/[^\w\s.&áéíóúÁÉÍÓÚñÑ-]/g, "")
           .replace(/^\d+\s*[xX]\s*/i, "")
           .trim();
 
@@ -317,13 +346,13 @@ function extractReceiptItems(lines) {
             !STRICT_EXCLUDE_PATTERNS.some((p) => p.test(prevLine)) &&
             !/\b\d+[.,]\d{2}\b/.test(prevLine)
           ) {
-            itemDesc = prevLine.replace(/[^\w\s\.\-&áéíóúÁÉÍÓÚñÑ]/g, "").trim();
+            itemDesc = prevLine.replace(/[^\w\s.&áéíóúÁÉÍÓÚñÑ-]/g, "").trim();
           }
         }
 
         if (itemDesc.length >= 2) {
           items.push({
-            id: Math.random().toString(36).substring(2, 9),
+            id: generateId(),
             description: itemDesc,
             amount: numVal.toFixed(2),
           });
@@ -373,22 +402,19 @@ export function parseReceiptData(text) {
   const extractedItems = extractReceiptItems(lines);
 
   // 5. Reconciliación matemática
-  const sumItems = extractedItems.reduce((acc, item) => {
-    const v = parseFloat(item.amount);
-    return acc + (isNaN(v) ? 0 : v);
-  }, 0);
+  const totalSumItems = sumItems(extractedItems);
 
   let finalAmount = totals.totalAmount;
 
-  if (!finalAmount && sumItems > 0) {
-    finalAmount = sumItems.toFixed(2);
+  if (!finalAmount && totalSumItems > 0) {
+    finalAmount = totalSumItems.toFixed(2);
   }
 
   let defaultItems = extractedItems;
   if (defaultItems.length === 0 && finalAmount) {
     defaultItems = [
       {
-        id: Math.random().toString(36).substring(2, 9),
+        id: generateId(),
         description: description || "Gasto escaneado",
         amount: finalAmount,
       },
@@ -399,7 +425,7 @@ export function parseReceiptData(text) {
   const hasDiscrepancy =
     extractedItems.length > 0 &&
     totalNum > 0 &&
-    Math.abs(sumItems - totalNum) > 0.05;
+    Math.abs(totalSumItems - totalNum) > 0.05;
 
   return {
     amount: finalAmount || "0.00",
