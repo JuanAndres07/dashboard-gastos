@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 import iconDictionary from "../utilities/iconDictionary";
 import { Line } from "react-chartjs-2";
 import "../lib/chartConfig";
-import { supabase } from "../lib/supabase";
+import { transactionService } from "../services/transactionService";
 import { toast } from "sonner";
 import { translateSupabaseError } from "../utilities/supabaseErrors";
 import {
@@ -23,7 +23,9 @@ import {
   IconCreditCard,
   IconPlus,
   IconScan,
+  IconCoins,
 } from "@tabler/icons-react";
+import { CURRENCIES } from "../constants/currencies";
 
 export default function Dashboard({ user }) {
   const {
@@ -33,6 +35,13 @@ export default function Dashboard({ user }) {
     loadingSummary,
     summary,
     monthlySummary,
+    selectedCurrency,
+    setSelectedCurrency,
+    monthlySummariesByCurrency,
+    wallets,
+    balancesByCurrency,
+    activeWalletId,
+    setActiveWalletId,
     transactions,
     loadingTransactions,
     viewMode,
@@ -59,22 +68,30 @@ export default function Dashboard({ user }) {
   const [scannedData, setScannedData] = useState(null);
 
   const handleScanComplete = async (data) => {
+    const targetWallet = wallets.find((w) => w.id === activeWalletId) || wallets[0] || null;
+    const defaultWalletId = targetWallet?.id || null;
+    const defaultCurrency = targetWallet?.currency || "USD";
+
     if (data.saveMode === "multiple" && data.items && data.items.length > 0) {
       const transactionsToInsert = data.items.map((item) => ({
         amount: item.amount,
         note: item.description,
         category_id: item.categoryId || null,
-        user_id: user.id,
+        wallet_id: defaultWalletId,
+        currency: defaultCurrency,
         type: "expense",
         transaction_date: data.date || new Date().toISOString().split("T")[0],
       }));
 
-      const { error } = await supabase.from("Transaction").insert(transactionsToInsert);
+      const { count, error } = await transactionService.createBatchTransactions(
+        user.id,
+        transactionsToInsert
+      );
 
       if (error) {
         toast.error("Error al registrar los productos: " + translateSupabaseError(error));
       } else {
-        toast.success(`${transactionsToInsert.length} productos registrados como gastos independientes`);
+        toast.success(`${count} productos registrados como gastos independientes`);
         refreshData();
       }
     } else {
@@ -87,6 +104,8 @@ export default function Dashboard({ user }) {
         amount: data.amount,
         description: notesSummary,
         date: data.date,
+        wallet_id: defaultWalletId || "",
+        currency: defaultCurrency,
       });
     }
   };
@@ -116,6 +135,35 @@ export default function Dashboard({ user }) {
         </button>
       </header>
 
+      {/* Selector de Moneda para Resumen Financiero */}
+      {Object.keys(monthlySummariesByCurrency).length > 1 && (
+        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          <span className="text-xs font-bold uppercase tracking-wider text-(--text-color)/70 mr-1 flex items-center gap-1">
+            <IconCoins size={16} />
+            <span>Moneda:</span>
+          </span>
+          {Object.keys(monthlySummariesByCurrency).map((cur) => {
+            const curInfo = CURRENCIES[cur] || CURRENCIES.USD;
+            const isSelected = selectedCurrency === cur;
+            return (
+              <button
+                key={cur}
+                type="button"
+                onClick={() => setSelectedCurrency(cur)}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${
+                  isSelected
+                    ? "bg-(--primary-color) text-white shadow-xs"
+                    : "bg-(--settings-card-bg) border border-(--sidebar-border) text-(--text-color) hover:text-(--headings-color)"
+                }`}
+              >
+                <span>{curInfo.flag}</span>
+                <span>{cur}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* Tarjetas de Resumen KPI */}
       <div className="flex flex-col md:flex-row gap-6 w-full">
         {/* KPI 1: Balance Total */}
@@ -126,7 +174,7 @@ export default function Dashboard({ user }) {
           <div>
             <div className="flex justify-between items-center mb-3">
               <span className="text-xs font-bold uppercase tracking-wider text-(--text-color)/80">
-                Balance General
+                Balance General ({selectedCurrency})
               </span>
               <div className="p-2 rounded-xl bg-(--sidebar-link-hover-bg) text-(--primary-color)">
                 <IconWallet size={20} />
@@ -136,13 +184,13 @@ export default function Dashboard({ user }) {
               <div className="h-9 w-24 bg-(--bg-light) animate-pulse rounded-lg mt-1"></div>
             ) : (
               <h2 className="text-3xl font-extrabold text-(--headings-color) tracking-tight">
-                {formatCurrency(summary.balance)}
+                {formatCurrency(summary.balance, selectedCurrency)}
               </h2>
             )}
           </div>
           <div className="mt-4 pt-3 border-t border-(--sidebar-border)/40 text-xs flex justify-between text-(--text-color)/70">
-            <span>Ingresos: {formatCurrency(summary.total_income)}</span>
-            <span>Gastos: {formatCurrency(summary.total_expense)}</span>
+            <span>Ingresos: {formatCurrency(summary.total_income, selectedCurrency)}</span>
+            <span>Gastos: {formatCurrency(summary.total_expense, selectedCurrency)}</span>
           </div>
         </div>
 
@@ -154,7 +202,7 @@ export default function Dashboard({ user }) {
           <div>
             <div className="flex justify-between items-center mb-3">
               <span className="text-xs font-bold uppercase tracking-wider text-(--text-color)/80">
-                Ingresos del Mes
+                Ingresos del Mes ({selectedCurrency})
               </span>
               <div className="p-2 rounded-xl bg-(--success-color)/10 text-(--success-color)">
                 <IconTrendingUp size={20} />
@@ -164,7 +212,7 @@ export default function Dashboard({ user }) {
               <div className="h-9 w-24 bg-(--bg-light) animate-pulse rounded-lg mt-1"></div>
             ) : (
               <h2 className="text-3xl font-extrabold text-(--success-color) tracking-tight">
-                {formatCurrency(monthlySummary.total_income)}
+                {formatCurrency(monthlySummary.total_income, selectedCurrency)}
               </h2>
             )}
           </div>
@@ -182,7 +230,7 @@ export default function Dashboard({ user }) {
           <div>
             <div className="flex justify-between items-center mb-3">
               <span className="text-xs font-bold uppercase tracking-wider text-(--text-color)/80">
-                Gastos del Mes
+                Gastos del Mes ({selectedCurrency})
               </span>
               <div className="p-2 rounded-xl bg-(--danger-color)/10 text-(--danger-color)">
                 <IconTrendingDown size={20} />
@@ -192,7 +240,7 @@ export default function Dashboard({ user }) {
               <div className="h-9 w-24 bg-(--bg-light) animate-pulse rounded-lg mt-1"></div>
             ) : (
               <h2 className="text-3xl font-extrabold text-(--danger-color) tracking-tight">
-                {formatCurrency(monthlySummary.total_expense)}
+                {formatCurrency(monthlySummary.total_expense, selectedCurrency)}
               </h2>
             )}
           </div>
@@ -239,6 +287,61 @@ export default function Dashboard({ user }) {
           </div>
         </div>
       </div>
+
+      {/* Sección Rápida de Carteras */}
+      {wallets.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-(--text-color)/80">
+              Mis Carteras y Cuentas
+            </h3>
+            <Link
+              to="/wallets"
+              className="text-xs font-bold text-(--primary-color) hover:underline flex items-center gap-1"
+            >
+              <span>Gestionar carteras</span>
+              <IconChevronRight size={14} />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {wallets.slice(0, 4).map((w) => {
+              const IconComp = iconDictionary[w.icon] || iconDictionary.IconWallet;
+              const color = w.color || "#3b82f6";
+              return (
+                <div
+                  key={w.id}
+                  className="p-4 bg-(--settings-card-bg) rounded-2xl border transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm"
+                  style={{ border: "var(--card-border)" }}
+                >
+                  <div className="flex items-center gap-2.5 mb-2">
+                    <div
+                      className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+                      style={{
+                        backgroundColor: `${color}18`,
+                        color: color,
+                      }}
+                    >
+                      <IconComp size={16} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <span className="font-bold text-xs text-(--headings-color) block truncate">
+                        {w.name}
+                      </span>
+                      <span className="text-[10px] text-(--text-color)/60 block">
+                        {w.currency}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-lg font-extrabold text-(--headings-color)">
+                    {formatCurrency(w.balance, w.currency)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Grid Principal (Flexbox adaptado) */}
       <div className="flex flex-col lg:flex-row gap-6 w-full items-start">
@@ -398,7 +501,7 @@ export default function Dashboard({ user }) {
                         }`}
                       >
                         {t.type === "expense" ? "-" : "+"}
-                        {formatCurrency(t.amount)}
+                        {formatCurrency(t.amount, t.currency || t.Wallet?.currency || "USD")}
                       </span>
                     </div>
                   );

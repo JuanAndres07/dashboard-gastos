@@ -1,17 +1,51 @@
+import { CURRENCIES } from "../constants/currencies";
+
 /**
- * Formatea un número como moneda USD.
+ * Formatea un número según su moneda (USD, VES, USDT, EUR, BTC, etc.).
  * @param {number|string} amount - El monto a formatear.
- * @returns {string} El monto formateado como moneda.
+ * @param {string} [currency="USD"] - El código de la moneda.
+ * @returns {string} El monto formateado con símbolo o sufijo correspondiente.
  */
-export const formatCurrency = (amount) => {
-  if (amount === undefined || amount === null) return "$0.00";
-  
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 4,
-  }).format(Number(amount));
+export const formatCurrency = (amount, currency = "USD") => {
+  if (amount === undefined || amount === null || isNaN(Number(amount))) {
+    const cur = CURRENCIES[currency] || CURRENCIES.USD;
+    return `${cur.prefix}0.00${cur.suffix}`;
+  }
+
+  const num = Number(amount);
+  const curInfo = CURRENCIES[currency];
+
+  // Si es una moneda estándar reconocida por Intl (USD, EUR, etc.)
+  if (currency === "USD" || currency === "EUR") {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(num);
+  }
+
+  // Para Bolívares (VES / Bs.)
+  if (currency === "VES") {
+    const formatted = new Intl.NumberFormat("es-VE", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(num);
+    return `Bs. ${formatted}`;
+  }
+
+  // Para Criptomonedas como USDT, BTC o monedas personalizadas
+  const decimals = curInfo?.decimals ?? 2;
+  const formattedNum = new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  }).format(num);
+
+  if (curInfo) {
+    return `${curInfo.prefix}${formattedNum}${curInfo.suffix}`;
+  }
+
+  return `${formattedNum} ${currency}`;
 };
 
 /**

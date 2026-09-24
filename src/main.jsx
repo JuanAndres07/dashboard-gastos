@@ -6,14 +6,18 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ConfirmProvider } from "./contexts/ConfirmContext";
 
+import { WalletProvider } from "./contexts/WalletContext";
+
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <AuthProvider>
-      <ThemeProvider>
-        <ConfirmProvider>
-          <App />
-        </ConfirmProvider>
-      </ThemeProvider>
+      <WalletProvider>
+        <ThemeProvider>
+          <ConfirmProvider>
+            <App />
+          </ConfirmProvider>
+        </ThemeProvider>
+      </WalletProvider>
     </AuthProvider>
   </StrictMode>,
 );

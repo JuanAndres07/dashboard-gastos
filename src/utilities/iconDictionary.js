@@ -49,6 +49,9 @@ import {
   IconPaw,
   IconSofa,
   IconBuilding,
+  IconCurrencyBitcoin,
+  IconCurrencyDollar,
+  IconArrowsExchange,
 } from "@tabler/icons-react";
 
 export const iconDictionary = {
@@ -57,6 +60,9 @@ export const iconDictionary = {
   IconWallet,
   IconCash,
   IconBuildingBank,
+  IconCurrencyBitcoin,
+  IconCurrencyDollar,
+  IconArrowsExchange,
   IconPigMoney,
   IconChartBar,
   IconChartPie,

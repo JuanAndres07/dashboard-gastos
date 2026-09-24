@@ -15,6 +15,7 @@ const ConfirmEmail = lazy(() => import("./pages/auth/ConfirmEmail"));
 const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
 const UpdatePassword = lazy(() => import("./pages/auth/UpdatePassword"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Wallets = lazy(() => import("./pages/Wallets"));
 const Transactions = lazy(() => import("./pages/Transactions"));
 const Categories = lazy(() => import("./pages/Categories"));
 const Subscriptions = lazy(() => import("./pages/Subscriptions"));
@@ -95,6 +96,10 @@ function App() {
                 {/* Routes with Sidebar and Dashboard Layout */}
                 <Route element={<Layout />}>
                   <Route path="/" element={<Dashboard user={session.user} />} />
+                  <Route
+                    path="/wallets"
+                    element={<Wallets user={session.user} />}
+                  />
                   <Route
                     path="/transactions"
                     element={<Transactions user={session.user} />}

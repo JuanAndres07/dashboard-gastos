@@ -4,17 +4,20 @@ import ReceiptScanner from "../components/ReceiptScanner";
 import { useState, useEffect } from "react";
 import { useTransactions } from "../hooks/useTransactions";
 import { useCategories } from "../hooks/useCategories";
+import { useWalletContext } from "../contexts/WalletContext";
 import { IconPlus, IconSearch, IconScan } from "@tabler/icons-react";
 import { Pagination } from "../components/Pagination";
 import Modal from "../components/Modal";
 import Select from "../components/Select";
 import DateInput from "../components/DateInput";
-import { supabase } from "../lib/supabase";
+import { transactionService } from "../services/transactionService";
 import { toast } from "sonner";
 import { translateSupabaseError } from "../utilities/supabaseErrors";
 
 export default function Transactions({ user }) {
+  const { wallets, activeWalletId, refetch: refetchWallets } = useWalletContext();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [selectedWallet, setSelectedWallet] = useState(activeWalletId || "");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -32,22 +35,31 @@ export default function Transactions({ user }) {
   };
 
   const handleScanComplete = async (data) => {
+    const targetWallet = wallets.find((w) => w.id === selectedWallet) || wallets[0] || null;
+    const defaultWalletId = targetWallet?.id || null;
+    const defaultCurrency = targetWallet?.currency || "USD";
+
     if (data.saveMode === "multiple" && data.items && data.items.length > 0) {
       const transactionsToInsert = data.items.map((item) => ({
         amount: item.amount,
         note: item.description,
         category_id: item.categoryId || null,
-        user_id: user.id,
+        wallet_id: defaultWalletId,
+        currency: defaultCurrency,
         type: "expense",
         transaction_date: data.date || new Date().toISOString().split("T")[0],
       }));
 
-      const { error } = await supabase.from("Transaction").insert(transactionsToInsert);
+      const { count, error } = await transactionService.createBatchTransactions(
+        user.id,
+        transactionsToInsert
+      );
 
       if (error) {
         toast.error("Error al registrar los productos: " + translateSupabaseError(error));
       } else {
-        toast.success(`${transactionsToInsert.length} productos registrados como gastos independientes`);
+        toast.success(`${count} productos registrados como gastos independientes`);
+        refetchWallets();
         refreshData();
       }
     } else {
@@ -61,11 +73,12 @@ export default function Transactions({ user }) {
         amount: data.amount,
         description: notesSummary,
         date: data.date,
+        wallet_id: defaultWalletId || "",
+        currency: defaultCurrency,
       });
       setIsModalOpen(true);
     }
   };
-
 
   // Debounce para el buscador por texto
   useEffect(() => {
@@ -89,6 +102,7 @@ export default function Transactions({ user }) {
     user,
     trigger: refreshTrigger,
     categoryId: selectedCategory || null,
+    walletId: selectedWallet || null,
     page: currentPage,
     pageSize: pageSize,
     startDate,
@@ -105,7 +119,7 @@ export default function Transactions({ user }) {
   // Reiniciar página si cambian filtros
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCategory, viewMode, startDate, endDate, debouncedSearch]);
+  }, [selectedCategory, selectedWallet, viewMode, startDate, endDate, debouncedSearch]);
 
   // Reiniciar categoría si cambia el tipo
   const handleSetViewMode = (mode) => {
@@ -174,6 +188,30 @@ export default function Transactions({ user }) {
               />
             </div>
 
+            {/* Filtro de Cartera */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
+              <label
+                htmlFor="walletFilter"
+                className="text-xs font-semibold text-(--text-color) whitespace-nowrap uppercase tracking-wider"
+              >
+                Cartera:
+              </label>
+              <Select
+                id="walletFilter"
+                value={selectedWallet}
+                onChange={setSelectedWallet}
+                options={[
+                  { value: "", label: "Todas las carteras" },
+                  ...wallets.map((w) => ({
+                    value: w.id,
+                    label: `${w.name} (${w.currency})`,
+                  })),
+                ]}
+                btnClassName="!py-2 !text-xs min-w-36"
+                className="w-full sm:w-auto"
+              />
+            </div>
+
             {/* Filtro de Categorías */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
               <label
@@ -225,9 +263,10 @@ export default function Transactions({ user }) {
             </div>
 
             {/* Botón Limpiar Filtros */}
-            {(selectedCategory || startDate || endDate || searchTerm) && (
+            {(selectedCategory || selectedWallet || startDate || endDate || searchTerm) && (
               <button
                 onClick={() => {
+                  setSelectedWallet("");
                   setSelectedCategory("");
                   setStartDate("");
                   setEndDate("");

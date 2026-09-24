@@ -1,14 +1,36 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 
-export function useTransactions({ user, limit, initialViewMode = "expense", trigger, categoryId, page = 1, pageSize = 20, startDate, endDate, search }) {
+export function useTransactions({
+  user,
+  limit,
+  initialViewMode = "expense",
+  trigger,
+  categoryId,
+  walletId,
+  currency,
+  page = 1,
+  pageSize = 20,
+  startDate,
+  endDate,
+  search,
+}) {
   const [transactions, setTransactions] = useState([]);
   const [viewMode, setViewMode] = useState(initialViewMode);
   const [isFetching, setIsFetching] = useState(true);
   const [error, setError] = useState(null);
   const [totalCount, setTotalCount] = useState(0);
   const lastSuccessfullyFetchedFiltersRef = useRef(null);
-  const currentFilterKey = JSON.stringify({ viewMode, categoryId, page, startDate, endDate, search });
+  const currentFilterKey = JSON.stringify({
+    viewMode,
+    categoryId,
+    walletId,
+    currency,
+    page,
+    startDate,
+    endDate,
+    search,
+  });
   const loading = isFetching && lastSuccessfullyFetchedFiltersRef.current !== currentFilterKey;
 
   useEffect(() => {
@@ -29,10 +51,17 @@ export function useTransactions({ user, limit, initialViewMode = "expense", trig
             amount,
             note,
             type,
+            currency,
+            wallet_id,
+            related_wallet_id,
+            transfer_id,
+            is_transfer,
+            exchange_rate,
             transaction_date,
             created_at,
             category_id,
-            Category (name, icon)
+            Category (name, icon),
+            Wallet!wallet_id (id, name, currency, type, color, icon)
             `,
             { count: "exact" }
           )
@@ -44,6 +73,14 @@ export function useTransactions({ user, limit, initialViewMode = "expense", trig
 
         if (categoryId) {
           query = query.eq("category_id", categoryId);
+        }
+
+        if (walletId) {
+          query = query.eq("wallet_id", walletId);
+        }
+
+        if (currency) {
+          query = query.eq("currency", currency);
         }
 
         if (startDate) {
@@ -97,7 +134,21 @@ export function useTransactions({ user, limit, initialViewMode = "expense", trig
     return () => {
       controller.abort();
     };
-  }, [user?.id, limit, viewMode, trigger, categoryId, page, pageSize, startDate, endDate, search, currentFilterKey]);
+  }, [
+    user?.id,
+    limit,
+    viewMode,
+    trigger,
+    categoryId,
+    walletId,
+    currency,
+    page,
+    pageSize,
+    startDate,
+    endDate,
+    search,
+    currentFilterKey,
+  ]);
 
   const updateTransaction = async (id, updatedFields) => {
     try {

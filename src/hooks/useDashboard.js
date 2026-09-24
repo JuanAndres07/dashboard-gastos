@@ -3,6 +3,7 @@ import { supabase } from "../lib/supabase";
 import { useTransactions } from "./useTransactions";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
+import { useWalletContext } from "../contexts/WalletContext";
 import { useAnalytics } from "./useAnalytics";
 import { useBudgets } from "./useBudgets";
 import { useSubscriptions } from "./useSubscriptions";
@@ -10,20 +11,14 @@ import { useSubscriptions } from "./useSubscriptions";
 export function useDashboard(user) {
   const { profile } = useAuth();
   const { theme } = useTheme();
+  const { wallets, balancesByCurrency, activeWalletId, setActiveWalletId, refetch: refetchWallets } = useWalletContext();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [selectedCurrency, setSelectedCurrency] = useState("USD");
 
-  // Estados locales para los resúmenes financieros
-  const [summary, setSummary] = useState({
-    total_income: 0,
-    total_expense: 0,
-    balance: 0,
-  });
-  const [monthlySummary, setMonthlySummary] = useState({
-    total_income: 0,
-    total_expense: 0,
-    balance: 0,
-  });
+  // Estados locales para los resúmenes financieros agrupados por divisa
+  const [summariesByCurrency, setSummariesByCurrency] = useState({});
+  const [monthlySummariesByCurrency, setMonthlySummariesByCurrency] = useState({});
   const [isFetchingSummary, setIsFetchingSummary] = useState(true);
   const lastSuccessfullyFetchedSummaryRef = useRef(null);
   const loadingSummary = isFetchingSummary && lastSuccessfullyFetchedSummaryRef.current === null;
@@ -37,6 +32,7 @@ export function useDashboard(user) {
   } = useTransactions({
     user,
     limit: 5,
+    walletId: activeWalletId || null,
     trigger: refreshTrigger,
   });
 
@@ -78,6 +74,7 @@ export function useDashboard(user) {
     setRefreshTrigger((prev) => prev + 1);
 
     // Ejecutar recargas adicionales si están definidas en los hooks
+    refetchWallets();
     if (refetchAnalytics) refetchAnalytics();
     if (fetchBudgets) fetchBudgets();
     if (fetchSubscriptions) fetchSubscriptions();
@@ -85,9 +82,9 @@ export function useDashboard(user) {
     setTimeout(() => {
       setIsRefreshing(false);
     }, 800);
-  }, [refetchAnalytics, fetchBudgets, fetchSubscriptions]);
+  }, [refetchWallets, refetchAnalytics, fetchBudgets, fetchSubscriptions]);
 
-  // Obtener resumen financiero (RPC)
+  // Obtener resumen financiero (RPC get_financial_summary con GROUP BY currency)
   const fetchSummaryData = useCallback(
     async (signal) => {
       setIsFetchingSummary(true);
@@ -123,21 +120,37 @@ export function useDashboard(user) {
         if (allError) throw allError;
         if (monthError) throw monthError;
 
-        if (allData) {
-          const data = Array.isArray(allData) ? allData[0] : allData;
-          setSummary({
-            ...data,
-            balance: (data.total_income || 0) - (data.total_expense || 0),
+        // Mapear el arreglo por currency
+        const allMap = {};
+        if (Array.isArray(allData)) {
+          allData.forEach((row) => {
+            allMap[row.currency] = {
+              total_income: Number(row.total_income) || 0,
+              total_expense: Number(row.total_expense) || 0,
+              balance: Number(row.balance) || 0,
+            };
           });
+        }
+        setSummariesByCurrency(allMap);
+
+        const monthMap = {};
+        if (Array.isArray(monthData)) {
+          monthData.forEach((row) => {
+            monthMap[row.currency] = {
+              total_income: Number(row.total_income) || 0,
+              total_expense: Number(row.total_expense) || 0,
+              balance: Number(row.balance) || 0,
+            };
+          });
+        }
+        setMonthlySummariesByCurrency(monthMap);
+
+        // Si la moneda actual no tiene datos pero hay otras disponibles, seleccionar la primera
+        const availableCurrencies = Object.keys(monthMap);
+        if (availableCurrencies.length > 0 && !monthMap[selectedCurrency]) {
+          setSelectedCurrency(availableCurrencies[0]);
         }
 
-        if (monthData) {
-          const data = Array.isArray(monthData) ? monthData[0] : monthData;
-          setMonthlySummary({
-            ...data,
-            balance: (data.total_income || 0) - (data.total_expense || 0),
-          });
-        }
         lastSuccessfullyFetchedSummaryRef.current = true;
       } catch (error) {
         if (
@@ -152,7 +165,7 @@ export function useDashboard(user) {
         }
       }
     },
-    [user?.id],
+    [user?.id, selectedCurrency],
   );
 
   useEffect(() => {
@@ -162,6 +175,23 @@ export function useDashboard(user) {
       return () => controller.abort();
     }
   }, [user?.id, refreshTrigger, fetchSummaryData]);
+
+  // Resumen de la divisa activa actual
+  const currentMonthlySummary = useMemo(() => {
+    return monthlySummariesByCurrency[selectedCurrency] || {
+      total_income: 0,
+      total_expense: 0,
+      balance: 0,
+    };
+  }, [monthlySummariesByCurrency, selectedCurrency]);
+
+  const currentSummary = useMemo(() => {
+    return summariesByCurrency[selectedCurrency] || {
+      total_income: 0,
+      total_expense: 0,
+      balance: 0,
+    };
+  }, [summariesByCurrency, selectedCurrency]);
 
   // --- CONFIGURACIÓN DE COLORES PARA EL GRÁFICO ---
   const themeStyles = useMemo(() => {
@@ -314,12 +344,12 @@ export function useDashboard(user) {
 
   // --- CÁLCULO DE TASA DE AHORRO ---
   const savingsRate = useMemo(() => {
-    const income = monthlySummary.total_income || 0;
-    const expense = monthlySummary.total_expense || 0;
+    const income = currentMonthlySummary.total_income || 0;
+    const expense = currentMonthlySummary.total_expense || 0;
     if (income <= 0) return 0;
     const net = income - expense;
     return Math.max(0, (net / income) * 100);
-  }, [monthlySummary]);
+  }, [currentMonthlySummary]);
 
   // --- CONSEGUIR DÍAS RESTANTES DE SUSCRIPCIÓN ---
   const getRelativeDays = useCallback((dateStr) => {
@@ -363,8 +393,16 @@ export function useDashboard(user) {
     theme,
     isRefreshing,
     loadingSummary,
-    summary,
-    monthlySummary,
+    summary: currentSummary,
+    monthlySummary: currentMonthlySummary,
+    summariesByCurrency,
+    monthlySummariesByCurrency,
+    selectedCurrency,
+    setSelectedCurrency,
+    wallets,
+    balancesByCurrency,
+    activeWalletId,
+    setActiveWalletId,
     transactions,
     loadingTransactions,
     viewMode,

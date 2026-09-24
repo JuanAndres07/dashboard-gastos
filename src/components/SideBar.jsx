@@ -3,6 +3,7 @@ import { NavLink } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import {
   IconLayoutDashboard,
+  IconWallet,
   IconReceipt,
   IconCategory,
   IconLogout,
@@ -19,6 +20,7 @@ import "../styles/components/SideBar.css";
 
 const menuItems = [
   { to: "/", label: "Inicio", icon: IconLayoutDashboard, end: true },
+  { to: "/wallets", label: "Carteras", icon: IconWallet },
   { to: "/transactions", label: "Transacciones", icon: IconReceipt },
   { to: "/categories", label: "Categorías", icon: IconCategory },
   { to: "/subscriptions", label: "Suscripciones", icon: IconRefresh },

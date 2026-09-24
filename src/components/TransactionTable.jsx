@@ -1,36 +1,53 @@
 import { formatCurrency, parseDate } from "../utilities/formatters";
 import { iconDictionary } from "../utilities/iconDictionary";
 import { IconTrash, IconEdit } from "@tabler/icons-react";
-import { supabase } from "../lib/supabase";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useConfirm } from "../contexts/ConfirmContext";
-import { translateSupabaseError } from "../utilities/supabaseErrors";
+import { useAuth } from "../contexts/AuthContext";
+import { useWalletContext } from "../contexts/WalletContext";
+import { transactionService } from "../services/transactionService";
+import { transferService } from "../services/transferService";
 
 export function TransactionTable({ transactions, loading, viewMode, setViewMode, onTransactionDeleted, onEditTransaction }) {
+  const { user } = useAuth();
+  const { refetch: refetchWallets } = useWalletContext();
   const [deletingId, setDeletingId] = useState(null);
   const confirm = useConfirm();
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (transaction) => {
+    const isTransfer = Boolean(transaction.transfer_id);
+
     const isConfirmed = await confirm({
-      title: "Eliminar movimiento",
-      message: "¿Estás seguro de que quieres eliminar este movimiento? Esta acción no se puede deshacer.",
-      confirmText: "Eliminar",
+      title: isTransfer ? "Revertir transferencia" : "Eliminar movimiento",
+      message: isTransfer
+        ? "¿Estás seguro de revertir esta transferencia? Se eliminarán tanto el egreso como el ingreso de las carteras asociadas para mantener la conciliación contable."
+        : "¿Estás seguro de que quieres eliminar este movimiento? Esta acción no se puede deshacer.",
+      confirmText: isTransfer ? "Revertir transferencia" : "Eliminar",
       cancelText: "Cancelar",
       type: "danger",
     });
 
-    if (isConfirmed) {
-      setDeletingId(id);
+    if (isConfirmed && user?.id) {
+      setDeletingId(transaction.id);
       try {
-        const { error } = await supabase.from("Transaction").delete().eq("id", id);
-        if (error) {
-          toast.error("Error al eliminar el movimiento: " + translateSupabaseError(error));
+        let result;
+        if (isTransfer) {
+          result = await transferService.deleteTransfer(user.id, transaction.transfer_id);
         } else {
+          result = await transactionService.deleteTransaction(user.id, transaction.id);
+        }
+
+        if (!result.success) {
+          toast.error("Error al eliminar: " + (result.error?.message || "Ocurrió un error"));
+        } else {
+          refetchWallets();
           if (onTransactionDeleted) {
             onTransactionDeleted();
           }
-          toast.success("Movimiento eliminado con éxito");
+          toast.success(
+            isTransfer ? "Transferencia revertida con éxito" : "Movimiento eliminado con éxito"
+          );
         }
       } catch (err) {
         console.error("Error al eliminar transacción:", err);
@@ -79,7 +96,11 @@ export function TransactionTable({ transactions, loading, viewMode, setViewMode,
           <div className="block lg:hidden space-y-3.5">
             {transactions.map((t) => {
               const CategoryIcon = iconDictionary[t.Category?.icon] || iconDictionary.IconCoin;
+              const WalletIcon = iconDictionary[t.Wallet?.icon] || iconDictionary.IconWallet;
               const isDeleting = deletingId === t.id;
+              const txCurrency = t.currency || t.Wallet?.currency || "USD";
+              const walletColor = t.Wallet?.color || "#3b82f6";
+
               return (
                 <div 
                   key={t.id}
@@ -108,7 +129,7 @@ export function TransactionTable({ transactions, loading, viewMode, setViewMode,
                         t.type === "expense" ? "text-(--danger-color)" : "text-(--success-color)"
                       }`}>
                         {t.type === "expense" ? "-" : "+"}
-                        {formatCurrency(t.amount)}
+                        {formatCurrency(t.amount, txCurrency)}
                       </span>
                     </div>
                   </div>
@@ -116,12 +137,34 @@ export function TransactionTable({ transactions, loading, viewMode, setViewMode,
                   {/* Línea divisoria sutil */}
                   <hr className="border-(--sidebar-border)/30 my-0.5" />
 
-                  {/* Fila inferior: Badge de categoría, Fecha y Acciones */}
+                  {/* Fila inferior: Badges de Cartera, Categoría, Fecha y Acciones */}
                   <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[10px] font-bold tracking-wider uppercase text-(--primary-color) bg-(--sidebar-link-hover-bg) border border-(--sidebar-border)/30 px-2 py-0.5 rounded-md">
-                        {t.Category?.name || "General"}
-                      </span>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {/* Badge de Cartera */}
+                      {t.Wallet && (
+                        <span
+                          className="inline-flex items-center gap-1 text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-md"
+                          style={{
+                            backgroundColor: `${walletColor}18`,
+                            color: walletColor,
+                          }}
+                        >
+                          <WalletIcon size={12} />
+                          {t.Wallet.name}
+                        </span>
+                      )}
+
+                      {/* Badge de Transferencia o Categoría */}
+                      {t.is_transfer ? (
+                        <span className="text-[10px] font-bold tracking-wider uppercase text-(--primary-color) bg-(--primary-color)/10 border border-(--primary-color)/20 px-2 py-0.5 rounded-md">
+                          Transferencia
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold tracking-wider uppercase text-(--text-color) bg-(--bg-light) border border-(--sidebar-border)/50 px-2 py-0.5 rounded-md">
+                          {t.Category?.name || "General"}
+                        </span>
+                      )}
+
                       <span className="text-[10px] font-medium text-(--text-color)/70">
                         {parseDate(t.transaction_date || t.created_at).toLocaleDateString(undefined, {
                           month: 'short',
@@ -132,18 +175,33 @@ export function TransactionTable({ transactions, loading, viewMode, setViewMode,
                     </div>
 
                     <div className="flex items-center gap-1.5 shrink-0">
+                      {t.is_transfer ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            toast.info(
+                              "Las transferencias no admiten edición directa para mantener la conciliación contable. Puedes revertirla y realizar una nueva."
+                            )
+                          }
+                          className="p-1.5 rounded-lg text-(--text-color)/30 hover:text-(--text-color)/60 transition-all duration-200 cursor-help inline-flex items-center justify-center"
+                          title="Las transferencias no admiten edición directa"
+                        >
+                          <IconEdit size={16} />
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => onEditTransaction && onEditTransaction(t)}
+                          className="p-1.5 rounded-lg text-(--text-color)/50 hover:text-(--primary-color) hover:bg-(--primary-color)/10 transition-all duration-200 cursor-pointer inline-flex items-center justify-center"
+                          title="Editar movimiento"
+                        >
+                          <IconEdit size={16} />
+                        </button>
+                      )}
                       <button
-                        onClick={() => onEditTransaction && onEditTransaction(t)}
-                        className="p-1.5 rounded-lg text-(--text-color)/50 hover:text-(--primary-color) hover:bg-(--primary-color)/10 transition-all duration-200 cursor-pointer inline-flex items-center justify-center"
-                        title="Editar movimiento"
-                      >
-                        <IconEdit size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(t.id)}
+                        onClick={() => handleDelete(t)}
                         disabled={isDeleting}
                         className="p-1.5 rounded-lg text-(--text-color)/50 hover:text-(--danger-color) hover:bg-(--danger-color)/10 transition-all duration-200 cursor-pointer inline-flex items-center justify-center disabled:opacity-50"
-                        title="Eliminar movimiento"
+                        title={t.is_transfer ? "Revertir transferencia" : "Eliminar movimiento"}
                       >
                         <IconTrash size={16} />
                       </button>
@@ -164,6 +222,7 @@ export function TransactionTable({ transactions, loading, viewMode, setViewMode,
                 <tr>
                   <th className="px-6 py-4 text-xs font-bold text-(--headings-color) uppercase tracking-wider">Fecha</th>
                   <th className="px-6 py-4 text-xs font-bold text-(--headings-color) uppercase tracking-wider">Descripción</th>
+                  <th className="px-6 py-4 text-xs font-bold text-(--headings-color) uppercase tracking-wider">Cartera</th>
                   <th className="px-6 py-4 text-xs font-bold text-(--headings-color) uppercase tracking-wider">Categoría</th>
                   <th className="px-6 py-4 text-[11px] sm:text-xs font-bold text-(--headings-color) uppercase tracking-wider text-right">Monto</th>
                   <th className="px-6 py-4 text-[11px] sm:text-xs font-bold text-(--headings-color) uppercase tracking-wider text-center w-20">Acciones</th>
@@ -172,7 +231,11 @@ export function TransactionTable({ transactions, loading, viewMode, setViewMode,
               <tbody className="divide-y divide-(--sidebar-border)/40 bg-(--settings-card-bg)">
                 {transactions.map((t) => {
                   const CategoryIcon = iconDictionary[t.Category?.icon] || iconDictionary.IconCoin;
+                  const WalletIcon = iconDictionary[t.Wallet?.icon] || iconDictionary.IconWallet;
                   const isDeleting = deletingId === t.id;
+                  const txCurrency = t.currency || t.Wallet?.currency || "USD";
+                  const walletColor = t.Wallet?.color || "#3b82f6";
+
                   return (
                     <tr 
                       key={t.id}
@@ -189,31 +252,68 @@ export function TransactionTable({ transactions, loading, viewMode, setViewMode,
                         {t.note || <span className="italic text-(--text-color)/40 font-normal">Sin descripción</span>}
                       </td>
                       <td className="px-6 py-4">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-(--sidebar-link-hover-bg) text-(--primary-color) border border-(--sidebar-border)/50">
-                          <CategoryIcon size={14} className="shrink-0" />
-                          {t.Category?.name || "General"}
-                        </span>
+                        {t.Wallet ? (
+                          <span
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold"
+                            style={{
+                              backgroundColor: `${walletColor}18`,
+                              color: walletColor,
+                            }}
+                          >
+                            <WalletIcon size={14} className="shrink-0" />
+                            {t.Wallet.name}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-(--text-color)/50 italic">Sin asignar</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        {t.is_transfer ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-(--primary-color)/10 text-(--primary-color) border border-(--primary-color)/20">
+                            Transferencia
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-(--sidebar-link-hover-bg) text-(--primary-color) border border-(--sidebar-border)/50">
+                            <CategoryIcon size={14} className="shrink-0" />
+                            {t.Category?.name || "General"}
+                          </span>
+                        )}
                       </td>
                       <td className={`px-6 py-4 text-right font-bold text-sm whitespace-nowrap ${
                         t.type === "expense" ? "text-(--danger-color)" : "text-(--success-color)"
                       }`}>
                         {t.type === "expense" ? "-" : "+"}
-                        {formatCurrency(t.amount)}
+                        {formatCurrency(t.amount, txCurrency)}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-center gap-1.5">
+                          {t.is_transfer ? (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                toast.info(
+                                  "Las transferencias no admiten edición directa para mantener la conciliación contable. Puedes revertirla y realizar una nueva."
+                                )
+                              }
+                              className="p-1.5 rounded-lg text-(--text-color)/30 hover:text-(--text-color)/60 transition-all duration-200 cursor-help inline-flex items-center justify-center"
+                              title="Las transferencias no admiten edición directa"
+                            >
+                              <IconEdit size={16} />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => onEditTransaction && onEditTransaction(t)}
+                              className="p-1.5 rounded-lg text-(--text-color)/50 hover:text-(--primary-color) hover:bg-(--primary-color)/10 transition-all duration-200 cursor-pointer inline-flex items-center justify-center"
+                              title="Editar movimiento"
+                            >
+                              <IconEdit size={16} />
+                            </button>
+                          )}
                           <button
-                            onClick={() => onEditTransaction && onEditTransaction(t)}
-                            className="p-1.5 rounded-lg text-(--text-color)/50 hover:text-(--primary-color) hover:bg-(--primary-color)/10 transition-all duration-200 cursor-pointer inline-flex items-center justify-center"
-                            title="Editar movimiento"
-                          >
-                            <IconEdit size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(t.id)}
+                            onClick={() => handleDelete(t)}
                             disabled={isDeleting}
                             className="p-1.5 rounded-lg text-(--text-color)/50 hover:text-(--danger-color) hover:bg-(--danger-color)/10 transition-all duration-200 cursor-pointer inline-flex items-center justify-center disabled:opacity-50"
-                            title="Eliminar movimiento"
+                            title={t.is_transfer ? "Revertir transferencia" : "Eliminar movimiento"}
                           >
                             <IconTrash size={16} />
                           </button>
