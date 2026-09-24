@@ -22,6 +22,7 @@ const Subscriptions = lazy(() => import("./pages/Subscriptions"));
 const Budgets = lazy(() => import("./pages/Budgets"));
 const Analysis = lazy(() => import("./pages/Analysis"));
 const Configuration = lazy(() => import("./pages/Configuration"));
+const ScanReceipt = lazy(() => import("./pages/ScanReceipt"));
 
 // Components
 import Layout from "./components/Layout";
@@ -123,6 +124,10 @@ function App() {
                   <Route
                     path="/configuration"
                     element={<Configuration user={session.user} />}
+                  />
+                  <Route
+                    path="/scan"
+                    element={<ScanReceipt user={session.user} />}
                   />
                 </Route>
                 <Route path="*" element={<Navigate to="/" />} />

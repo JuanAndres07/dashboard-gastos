@@ -14,53 +14,80 @@ export function useReceiptOCR() {
 
   const workerRef = useRef(null);
   const isCancelledRef = useRef(false);
-
-  const cancelOCR = useCallback(async () => {
-    isCancelledRef.current = true;
-    if (workerRef.current) {
-      try {
-        await workerRef.current.terminate();
-      } catch (err) {
-        console.warn("Error al terminar worker de Tesseract:", err);
-      }
-      workerRef.current = null;
-    }
-    setIsScanning(false);
-    setProgress(0);
-    setStatusText("");
-    setErrorText(null);
-  }, []);
+  const mountedRef = useRef(true);
+  const scanIdRef = useRef(0);
 
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
+      mountedRef.current = false;
       if (workerRef.current) {
-        workerRef.current.terminate();
+        workerRef.current.terminate().catch(() => {});
         workerRef.current = null;
       }
     };
   }, []);
 
+  const cancelOCR = useCallback(async () => {
+    isCancelledRef.current = true;
+    scanIdRef.current++;
+    if (workerRef.current) {
+      const workerToTerminate = workerRef.current;
+      workerRef.current = null;
+      try {
+        await workerToTerminate.terminate();
+      } catch (err) {
+        console.warn("Error al terminar worker de Tesseract:", err);
+      }
+    }
+    if (mountedRef.current) {
+      setIsScanning(false);
+      setProgress(0);
+      setStatusText("");
+      setErrorText(null);
+    }
+  }, []);
+
   const processReceipt = useCallback(async (imageSrc, onComplete) => {
     if (!imageSrc) return;
 
+    // Incrementar ID de escaneo para invalidar cualquier proceso anterior
+    const currentScanId = ++scanIdRef.current;
     isCancelledRef.current = false;
-    setIsScanning(true);
-    setProgress(5);
-    setStatusText("Preparando imagen...");
-    setErrorText(null);
+
+    // Si había un worker previo en ejecución, liberarlo
+    if (workerRef.current) {
+      const prevWorker = workerRef.current;
+      workerRef.current = null;
+      prevWorker.terminate().catch(() => {});
+    }
+
+    const isStale = () =>
+      !mountedRef.current ||
+      isCancelledRef.current ||
+      scanIdRef.current !== currentScanId;
+
+    if (mountedRef.current) {
+      setIsScanning(true);
+      setProgress(5);
+      setStatusText("Preparando imagen...");
+      setErrorText(null);
+    }
 
     try {
       // Normalización suave de resolución
       const imageToProcess = await preprocessReceiptImage(imageSrc);
 
-      if (isCancelledRef.current) return;
+      if (isStale()) return;
 
-      setProgress(15);
-      setStatusText("Iniciando motor de reconocimiento OCR...");
+      if (mountedRef.current) {
+        setProgress(15);
+        setStatusText("Iniciando motor de reconocimiento OCR...");
+      }
 
       const worker = await Tesseract.createWorker("spa+eng", 1, {
         logger: (m) => {
-          if (isCancelledRef.current) return;
+          if (isStale()) return;
 
           if (m.status === "recognizing text") {
             const rawProg = m.progress || 0;
@@ -75,8 +102,8 @@ export function useReceiptOCR() {
         },
       });
 
-      if (isCancelledRef.current) {
-        await worker.terminate();
+      if (isStale()) {
+        await worker.terminate().catch(() => {});
         return;
       }
 
@@ -87,43 +114,53 @@ export function useReceiptOCR() {
         preserve_interword_spaces: "1",
       });
 
-      if (isCancelledRef.current) {
-        await worker.terminate();
+      if (isStale()) {
+        await worker.terminate().catch(() => {});
         return;
       }
 
       const result = await worker.recognize(imageToProcess);
 
-      if (isCancelledRef.current) {
-        await worker.terminate();
+      if (isStale()) {
+        await worker.terminate().catch(() => {});
         return;
       }
 
-      setProgress(95);
-      setStatusText("Estructurando productos y totales...");
+      if (mountedRef.current) {
+        setProgress(95);
+        setStatusText("Estructurando productos y totales...");
+      }
 
-      await worker.terminate();
-      workerRef.current = null;
+      await worker.terminate().catch(() => {});
+      if (workerRef.current === worker) {
+        workerRef.current = null;
+      }
 
       const rawText = result?.data?.text || "";
       const extracted = parseReceiptData(rawText);
 
-      setProgress(100);
-      setIsScanning(false);
-      setStatusText("");
+      if (!isStale()) {
+        setProgress(100);
+        setIsScanning(false);
+        setStatusText("");
 
-      if (onComplete && !isCancelledRef.current) {
-        onComplete(extracted);
+        if (onComplete) {
+          onComplete(extracted);
+        }
       }
     } catch (err) {
-      if (isCancelledRef.current) return;
+      if (isStale()) return;
       console.error("Error durante el OCR:", err);
-      setErrorText("No se pudo leer la factura con suficiente claridad. Puedes editar o ingresar los datos manualmente.");
-      setIsScanning(false);
+      if (mountedRef.current) {
+        setErrorText("No se pudo leer la factura con suficiente claridad. Puedes editar o ingresar los datos manualmente.");
+        setIsScanning(false);
+      }
       if (workerRef.current) {
         try {
           await workerRef.current.terminate();
-        } catch (_) {}
+        } catch (terminateErr) {
+          console.warn("Error al terminar worker en catch:", terminateErr);
+        }
         workerRef.current = null;
       }
     }
@@ -135,7 +172,6 @@ export function useReceiptOCR() {
     statusText,
     errorText,
     processReceipt,
-    resetOCR: cancelOCR,
     cancelOCR,
   };
 }

@@ -1,24 +1,38 @@
-import { IconCamera, IconSwitchHorizontal, IconAlertCircle } from "@tabler/icons-react";
+import {
+  IconCamera,
+  IconSwitchHorizontal,
+  IconAlertCircle,
+} from "@tabler/icons-react";
 
 export function CameraView({
   videoRef,
   canvasRef,
   cameraError,
+  cameraReady,
+  onLoadedMetadata,
   onToggleCamera,
   onCapture,
   onSwitchToUpload,
 }) {
   return (
-    <div className="relative w-full aspect-4/3 bg-black rounded-2xl overflow-hidden flex items-center justify-center shadow-inner border border-(--sidebar-border)">
+    <div className="relative w-full min-h-75 sm:min-h-95 bg-black rounded-2xl overflow-hidden flex items-center justify-center shadow-inner border border-(--sidebar-border)">
       {cameraError ? (
-        <div className="p-6 text-center text-white space-y-3">
-          <IconAlertCircle size={36} className="mx-auto text-amber-400" />
-          <p className="text-sm font-medium">{cameraError}</p>
+        <div className="p-8 text-center text-white space-y-4 max-w-sm">
+          <div className="w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto">
+            <IconAlertCircle size={28} />
+          </div>
+          <div>
+            <h4 className="text-sm font-semibold mb-1">
+              Acceso a cámara no disponible
+            </h4>
+            <p className="text-xs text-white/70">{cameraError}</p>
+          </div>
           <button
+            type="button"
             onClick={onSwitchToUpload}
-            className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-xl text-xs font-semibold transition-all cursor-pointer"
+            className="w-full py-2.5 px-4 bg-white/20 hover:bg-white/30 text-white rounded-xl text-xs font-semibold transition-all cursor-pointer"
           >
-            Seleccionar foto desde archivo
+            Subir foto desde archivo
           </button>
         </div>
       ) : (
@@ -28,24 +42,28 @@ export function CameraView({
             autoPlay
             playsInline
             muted
-            className="w-full h-full object-cover"
+            onLoadedMetadata={onLoadedMetadata}
+            className="w-full h-full object-cover min-h-75 sm:min-h-95"
           />
           <canvas ref={canvasRef} className="hidden" />
 
-          {/* Guía visual para centrar la factura */}
-          <div className="absolute inset-6 border-2 border-dashed border-white/60 rounded-xl pointer-events-none flex items-center justify-center">
-            <span className="bg-black/50 text-white/90 text-xs px-3 py-1 rounded-full backdrop-blur-xs">
-              Centra tu factura aquí
+          {/* Guía visual para encuadrar la factura */}
+          <div className="absolute inset-6 sm:inset-10 border-2 border-dashed border-white/60 rounded-2xl pointer-events-none flex flex-col items-center justify-between p-3">
+            <span className="bg-black/60 text-white text-[11px] font-medium px-3 py-1 rounded-full backdrop-blur-xs">
+              Alinea el recibo dentro del marco
+            </span>
+            <span className="text-[10px] text-white/70">
+              Procura buena iluminación y sin sombras
             </span>
           </div>
 
-          {/* Botones de acción en visor */}
-          <div className="absolute bottom-4 left-0 right-0 flex justify-center items-center gap-4 px-4">
+          {/* Barra de control inferior en visor */}
+          <div className="absolute bottom-5 left-0 right-0 flex justify-center items-center gap-6 px-4">
             <button
               type="button"
               onClick={onToggleCamera}
-              className="p-3 bg-black/60 hover:bg-black/80 text-white rounded-full transition-all cursor-pointer backdrop-blur-xs"
-              title="Cambiar cámara"
+              className="p-3 bg-black/60 hover:bg-black/80 text-white rounded-full transition-all cursor-pointer backdrop-blur-xs active:scale-95 shadow-md"
+              title="Cambiar entre cámara trasera y frontal"
             >
               <IconSwitchHorizontal size={20} />
             </button>
@@ -53,11 +71,18 @@ export function CameraView({
             <button
               type="button"
               onClick={onCapture}
-              className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg transition-transform active:scale-95 cursor-pointer border-4 border-white/40"
-              title="Tomar Foto"
+              disabled={!cameraReady}
+              className={`w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-xl transition-all border-4 border-white/50 ${
+                cameraReady
+                  ? "active:scale-90 hover:scale-105 cursor-pointer"
+                  : "opacity-50 cursor-not-allowed disabled:pointer-events-none"
+              }`}
+              title={
+                cameraReady ? "Capturar foto del recibo" : "Iniciando visor..."
+              }
             >
-              <div className="w-10 h-10 bg-(--primary-color) rounded-full flex items-center justify-center text-white">
-                <IconCamera size={22} />
+              <div className="w-11 h-11 bg-(--primary-color) rounded-full flex items-center justify-center text-white shadow-inner">
+                <IconCamera size={24} />
               </div>
             </button>
           </div>
